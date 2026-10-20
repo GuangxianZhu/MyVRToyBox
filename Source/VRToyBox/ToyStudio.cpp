@@ -102,10 +102,11 @@ AToyStudio::AToyStudio()
 	MotorMount->SetupAttachment(Root);
 	MotorMount->SetRelativeLocationAndRotation(FVector(TableX + 15.f, -10.f, TableHeight), FRotator(0.f, -90.f, 0.f));
 
-	// 阀门：同一个位置，不转。阀门模型的 Y（执行器缸体长轴）就沿桌子长边
+	// 球阀：同一个位置，Yaw 90。球阀模型的 X（管道方向 = 执行器缸体长轴）转到桌子长边上，端盖、活塞往左右两边飞，
+	// 不会朝玩家脸上飞；电磁阀（模型 +Y）转到朝着玩家的一面
 	ValveMount = CreateDefaultSubobject<USceneComponent>(TEXT("ValveMount"));
 	ValveMount->SetupAttachment(Root);
-	ValveMount->SetRelativeLocation(FVector(TableX + 15.f, -10.f, TableHeight));
+	ValveMount->SetRelativeLocationAndRotation(FVector(TableX + 15.f, -10.f, TableHeight), FRotator(0.f, 90.f, 0.f));
 
 	// 无人机：同一个位置。模型 +Y 是机头（相机那边），Yaw 90 让机头朝向玩家（-X）
 	DroneMount = CreateDefaultSubobject<USceneComponent>(TEXT("DroneMount"));

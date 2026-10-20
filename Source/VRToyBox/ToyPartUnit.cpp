@@ -393,6 +393,16 @@ FTransform AToyPartUnit::PinchHold(const FToyGripContext& Grip) const
 
 FTransform AToyPartUnit::ComputeHoldTransform(const FToyGripContext& Grip) const
 {
+	// 自由捏取（Meta Interaction SDK 捏取的做法）：小件把中心吸到捏合点；其余零件保持抓起那一刻相对手的位置和角度，
+	// 不再把手掌吸到表面上。parts.json 里的 cylinder / box / surface 数据留着，toy.PalmSnap 1 时还用旧的贴合
+	if (Grab.Type == EToyPartGrab::Pinch)
+	{
+		return PinchHold(Grip);
+	}
+	if (!ToyBox::PalmSnap())
+	{
+		return FTransform(GetActorQuat(), GetActorLocation()).GetRelativeTransform(Grip.GripWorld);
+	}
 	switch (Grab.Type)
 	{
 	case EToyPartGrab::Cylinder:
@@ -508,7 +518,7 @@ void AToyPartUnit::RefreshOverlay()
 
 EToyGripStyle AToyPartUnit::GetGripStyle() const
 {
-	return Grab.Type == EToyPartGrab::Pinch ? EToyGripStyle::Pinch : EToyGripStyle::Power;
+	return EToyGripStyle::Pinch;
 }
 
 bool AToyPartUnit::GetGrabInfo(FText& OutTitle, FText& OutBody) const

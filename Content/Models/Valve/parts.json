@@ -1,25 +1,45 @@
 {
- "source": "valve.glb",
+ "source": "ball_valve.glb",
  "model": {
-  "title": "气动蝶阀 DN80（对夹式 + 齿轮齿条单作用执行器）",
-  "body": "球铁阀体 · EPDM 衬里 · 不锈钢蝶板 · 弹簧复位（断气即关）\n装配状态：抓任意位置拿起整个阀门看。点 EXPLODE 拆开后，每个零件都能单独抓。",
-  "explode_scale": 0.55
+  "title": "气动球阀（三片式球阀 + 齿轮齿条单作用执行器）",
+  "body": "SUS316 阀体 · 镜面抛光球体 · PTFE 阀座 · 弹簧复位（断气即关）\n装配状态：抓任意位置拿起整个阀门看。点 EXPLODE 拆开后，每个零件都能单独抓。",
+  "explode_scale": 0.4
  },
  "units": [
   {
    "id": "base",
    "grabbable": false,
    "name_cn": "阀体",
-   "material": "球墨铸铁 GGG40 · 环氧涂层",
-   "desc": "对夹式阀体，被两片管道法兰夹住。中间的通孔是介质通道，上部铸出阀颈和 ISO 5211 F05 安装平台，执行器直接坐在平台上，阀杆从阀颈中穿过。",
+   "material": "SUS316 (CF8M) 精铸",
+   "desc": "三片式球阀的中间体，承受管道压力。顶部铸出阀颈和 ISO 5211 F05 安装平台，执行器直接坐在上面。",
    "grab": null
   },
   {
-   "id": "P02_SEATLINER",
+   "id": "P02_EndCap_1",
    "grabbable": true,
-   "name_cn": "阀座衬圈",
-   "material": "EPDM",
-   "desc": "整圈橡胶衬里，同时充当两端法兰的密封垫。蝶板压在衬里内壁上形成软密封，所以这种阀门只适合常温水、暖通和弱腐蚀介质。",
+   "name_cn": "端盖",
+   "material": "SUS316",
+   "desc": "两端的管道连接件（内螺纹 Rc1）。内侧凸台压住阀座，拆下 4 根螺柱就能把阀芯整体抽出维修，这就是三片式的好处。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P02_EndCap_2",
+   "grabbable": true,
+   "name_cn": "端盖",
+   "material": "SUS316",
+   "desc": "两端的管道连接件（内螺纹 Rc1）。内侧凸台压住阀座，拆下 4 根螺柱就能把阀芯整体抽出维修，这就是三片式的好处。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P03_Ball",
+   "grabbable": true,
+   "name_cn": "球体",
+   "material": "SUS316 镜面抛光",
+   "desc": "带通孔的球。通孔与管道同轴时全开，绕阀杆转 90° 后实心面挡住流道即全关。表面抛光是为了和 PTFE 阀座贴合得更紧。",
    "grab": {
     "type": "cylinder",
     "axis": [
@@ -34,19 +54,127 @@
     ],
     "segments": [
      [
-      -2.5,
-      2.5,
-      5.2
+      -1.56,
+      1.56,
+      2.0
      ]
     ]
    }
   },
   {
-   "id": "P03_DISC",
+   "id": "P04_Seat_1",
    "grabbable": true,
-   "name_cn": "蝶板",
-   "material": "CF8M 不锈钢 · 电解抛光",
-   "desc": "圆盘形阀芯，绕阀杆转 90°：盘面与流向平行即全开，垂直即全关。盘缘做成球面，转动时会刮过橡胶衬里，把附着物带走。",
+   "name_cn": "阀座",
+   "material": "PTFE",
+   "desc": "软密封环。内侧锥面贴住球面，靠介质压力和端盖预紧把球压实，实现“零泄漏”关断。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     1.75,
+     0.0,
+     0.0
+    ],
+    "segments": [
+     [
+      -0.45,
+      0.45,
+      1.95
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P04_Seat_2",
+   "grabbable": true,
+   "name_cn": "阀座",
+   "material": "PTFE",
+   "desc": "软密封环。内侧锥面贴住球面，靠介质压力和端盖预紧把球压实，实现“零泄漏”关断。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     -1.75,
+     0.0,
+     0.0
+    ],
+    "segments": [
+     [
+      -0.45,
+      0.45,
+      1.95
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P05_BodyGasket_1",
+   "grabbable": true,
+   "name_cn": "阀体垫片",
+   "material": "PTFE",
+   "desc": "夹在阀体与端盖之间的密封圈，防止介质从中缝漏出。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     2.9,
+     0.0,
+     0.0
+    ],
+    "segments": [
+     [
+      -0.1,
+      0.1,
+      2.7
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P05_BodyGasket_2",
+   "grabbable": true,
+   "name_cn": "阀体垫片",
+   "material": "PTFE",
+   "desc": "夹在阀体与端盖之间的密封圈，防止介质从中缝漏出。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     -2.9,
+     0.0,
+     0.0
+    ],
+    "segments": [
+     [
+      -0.1,
+      0.1,
+      2.7
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P06_Stud_1",
+   "grabbable": true,
+   "name_cn": "双头螺柱",
+   "material": "SUS304 M8",
+   "desc": "贯穿两个端盖和阀体，把三片夹成一体。",
    "grab": {
     "type": "cylinder",
     "axis": [
@@ -56,24 +184,185 @@
     ],
     "center": [
      0.0,
+     -2.4,
+     2.4
+    ],
+    "segments": [
+     [
+      -5.0,
+      5.0,
+      0.4
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P06_Stud_2",
+   "grabbable": true,
+   "name_cn": "双头螺柱",
+   "material": "SUS304 M8",
+   "desc": "贯穿两个端盖和阀体，把三片夹成一体。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
      0.0,
      0.0
     ],
+    "center": [
+     0.0,
+     2.4,
+     2.4
+    ],
     "segments": [
      [
-      -1.1,
-      1.1,
-      3.92
+      -5.0,
+      5.0,
+      0.4
      ]
     ]
    }
   },
   {
-   "id": "P04_STEM",
+   "id": "P06_Stud_3",
    "grabbable": true,
-   "name_cn": "上阀杆",
-   "material": "17-4PH 沉淀硬化不锈钢",
-   "desc": "把执行器的扭矩送进阀内。中段轴肩被阀体内部台肩挡住，介质压力再高也顶不出去（防吹出结构）；顶端方头插进齿轮轴。",
+   "name_cn": "双头螺柱",
+   "material": "SUS304 M8",
+   "desc": "贯穿两个端盖和阀体，把三片夹成一体。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     0.0,
+     2.4,
+     -2.4
+    ],
+    "segments": [
+     [
+      -5.0,
+      5.0,
+      0.4
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P06_Stud_4",
+   "grabbable": true,
+   "name_cn": "双头螺柱",
+   "material": "SUS304 M8",
+   "desc": "贯穿两个端盖和阀体，把三片夹成一体。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     0.0,
+     -2.4,
+     -2.4
+    ],
+    "segments": [
+     [
+      -5.0,
+      5.0,
+      0.4
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P07_HexNut_1",
+   "grabbable": true,
+   "name_cn": "六角螺母",
+   "material": "SUS304 M8",
+   "desc": "两端各 4 个，按对角顺序均匀拧紧，避免端盖歪斜导致阀座受力不均。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P07_HexNut_2",
+   "grabbable": true,
+   "name_cn": "六角螺母",
+   "material": "SUS304 M8",
+   "desc": "两端各 4 个，按对角顺序均匀拧紧，避免端盖歪斜导致阀座受力不均。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P07_HexNut_3",
+   "grabbable": true,
+   "name_cn": "六角螺母",
+   "material": "SUS304 M8",
+   "desc": "两端各 4 个，按对角顺序均匀拧紧，避免端盖歪斜导致阀座受力不均。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P07_HexNut_4",
+   "grabbable": true,
+   "name_cn": "六角螺母",
+   "material": "SUS304 M8",
+   "desc": "两端各 4 个，按对角顺序均匀拧紧，避免端盖歪斜导致阀座受力不均。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P07_HexNut_5",
+   "grabbable": true,
+   "name_cn": "六角螺母",
+   "material": "SUS304 M8",
+   "desc": "两端各 4 个，按对角顺序均匀拧紧，避免端盖歪斜导致阀座受力不均。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P07_HexNut_6",
+   "grabbable": true,
+   "name_cn": "六角螺母",
+   "material": "SUS304 M8",
+   "desc": "两端各 4 个，按对角顺序均匀拧紧，避免端盖歪斜导致阀座受力不均。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P07_HexNut_7",
+   "grabbable": true,
+   "name_cn": "六角螺母",
+   "material": "SUS304 M8",
+   "desc": "两端各 4 个，按对角顺序均匀拧紧，避免端盖歪斜导致阀座受力不均。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P07_HexNut_8",
+   "grabbable": true,
+   "name_cn": "六角螺母",
+   "material": "SUS304 M8",
+   "desc": "两端各 4 个，按对角顺序均匀拧紧，避免端盖歪斜导致阀座受力不均。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P08_Stem",
+   "grabbable": true,
+   "name_cn": "阀杆",
+   "material": "SUS316",
+   "desc": "把执行器的扭矩传给球体。下端扁榫插进球体槽口；台肩从阀体内侧顶住，压力再高也不会被顶飞（防飞出结构）。",
    "grab": {
     "type": "cylinder",
     "axis": [
@@ -84,160 +373,170 @@
     "center": [
      0.0,
      0.0,
-     7.8
+     4.3
     ],
     "segments": [
      [
-      -5.6,
-      5.6,
-      1.05
+      -2.9,
+      2.9,
+      0.9
      ]
     ]
    }
   },
   {
-   "id": "P05_LOWERSTEM",
-   "grabbable": true,
-   "name_cn": "下阀杆",
-   "material": "17-4PH 不锈钢",
-   "desc": "阀杆的下支点。蝶板上下都有支承，转动时不会偏摆，衬里磨损也更均匀。",
-   "grab": {
-    "type": "cylinder",
-    "axis": [
-     0.0,
-     0.0,
-     1.0
-    ],
-    "center": [
-     0.0,
-     0.0,
-     -5.6
-    ],
-    "segments": [
-     [
-      -3.0,
-      3.0,
-      1.0
-     ]
-    ]
-   }
-  },
-  {
-   "id": "P06_BUSHING_1",
-   "grabbable": true,
-   "name_cn": "轴套",
-   "material": "PTFE 复合铜背衬",
-   "desc": "上下各一个，承受阀杆传来的径向力，同时把钢对钢的摩擦换成自润滑摩擦，操作扭矩能降一半。",
-   "grab": {
-    "type": "pinch"
-   }
-  },
-  {
-   "id": "P06_BUSHING_2",
-   "grabbable": true,
-   "name_cn": "轴套",
-   "material": "PTFE 复合铜背衬",
-   "desc": "上下各一个，承受阀杆传来的径向力，同时把钢对钢的摩擦换成自润滑摩擦，操作扭矩能降一半。",
-   "grab": {
-    "type": "pinch"
-   }
-  },
-  {
-   "id": "P07_ORING_1",
-   "grabbable": true,
-   "name_cn": "O 形圈",
-   "material": "NBR 70 Shore A",
-   "desc": "阀杆处的第一道密封：拦住沿阀杆往上爬的介质，防止从阀颈泄漏到执行器里。",
-   "grab": {
-    "type": "pinch"
-   }
-  },
-  {
-   "id": "P07_ORING_2",
-   "grabbable": true,
-   "name_cn": "O 形圈",
-   "material": "NBR 70 Shore A",
-   "desc": "阀杆处的第一道密封：拦住沿阀杆往上爬的介质，防止从阀颈泄漏到执行器里。",
-   "grab": {
-    "type": "pinch"
-   }
-  },
-  {
-   "id": "P08_THRUSTWASHER",
+   "id": "P09_ThrustWasher",
    "grabbable": true,
    "name_cn": "止推垫片",
    "material": "PTFE",
-   "desc": "夹在阀杆轴肩与阀体之间，把轴向的压紧力变成低摩擦的端面滑动。",
+   "desc": "垫在阀杆台肩上方，减小转动摩擦，同时是第一道阀杆密封。",
    "grab": {
     "type": "pinch"
    }
   },
   {
-   "id": "P09_CYLINDERBODY",
+   "id": "P10_StemPacking_1",
    "grabbable": true,
-   "name_cn": "执行器缸体",
-   "material": "A6063 铝型材 · 硬质阳极氧化",
-   "desc": "铝挤压缸体，内孔就是气缸。两侧装端盖、中间穿出齿轮轴；侧面按 NAMUR 标准布置气口，可以直接贴装电磁阀。",
+   "name_cn": "阀杆填料",
+   "material": "PTFE V 形",
+   "desc": "V 形截面，被轴向压紧后唇口张开贴住阀杆，是阀杆处的主密封。",
    "grab": {
-    "type": "box",
-    "center": [
-     0.63,
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P10_StemPacking_2",
+   "grabbable": true,
+   "name_cn": "阀杆填料",
+   "material": "PTFE V 形",
+   "desc": "V 形截面，被轴向压紧后唇口张开贴住阀杆，是阀杆处的主密封。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P11_Gland",
+   "grabbable": true,
+   "name_cn": "填料压盖",
+   "material": "SUS304",
+   "desc": "把螺母的压紧力均匀传到填料上。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
      0.0,
-     15.75
+     0.0,
+     1.0
     ],
-    "extent": [
-     3.63,
-     5.2,
-     3.55
+    "center": [
+     0.0,
+     0.0,
+     4.73
+    ],
+    "segments": [
+     [
+      -0.22,
+      0.22,
+      1.5
+     ]
     ]
    }
   },
   {
-   "id": "P10_ENDCAP_1",
+   "id": "P12_DiscSpring_1",
    "grabbable": true,
-   "name_cn": "执行器端盖",
-   "material": "ADC12 压铸 · 粉末喷涂",
-   "desc": "封住气缸两端，内侧是弹簧的支承面，中心装行程调节螺钉。拆下它就能抽出活塞、更换密封件。",
+   "name_cn": "碟形弹簧",
+   "material": "SUS631",
+   "desc": "两片对扣串联。填料磨损变薄时，碟簧回弹补偿，压紧力不会掉，减少日常补拧。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P12_DiscSpring_2",
+   "grabbable": true,
+   "name_cn": "碟形弹簧",
+   "material": "SUS631",
+   "desc": "两片对扣串联。填料磨损变薄时，碟簧回弹补偿，压紧力不会掉，减少日常补拧。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P13_StemNut",
+   "grabbable": true,
+   "name_cn": "阀杆螺母",
+   "material": "SUS304 M12 薄型",
+   "desc": "压紧碟簧和填料。拧得过紧会让操作扭矩变大，执行器选型时要算进去。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P14_Coupling",
+   "grabbable": true,
+   "name_cn": "连接轴套",
+   "material": "S45C 镀镍",
+   "desc": "外方内扁：把阀杆的双扁头转接到执行器齿轮轴的方孔，让不同厂家的阀和执行器能配在一起。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P15_MountBolt_1",
+   "grabbable": true,
+   "name_cn": "安装螺栓",
+   "material": "SUS304 M6",
+   "desc": "从阀体平台下方穿上来，拧进执行器底部螺孔。F05 法兰的螺孔分布圆直径 50 mm。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P15_MountBolt_2",
+   "grabbable": true,
+   "name_cn": "安装螺栓",
+   "material": "SUS304 M6",
+   "desc": "从阀体平台下方穿上来，拧进执行器底部螺孔。F05 法兰的螺孔分布圆直径 50 mm。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P15_MountBolt_3",
+   "grabbable": true,
+   "name_cn": "安装螺栓",
+   "material": "SUS304 M6",
+   "desc": "从阀体平台下方穿上来，拧进执行器底部螺孔。F05 法兰的螺孔分布圆直径 50 mm。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P15_MountBolt_4",
+   "grabbable": true,
+   "name_cn": "安装螺栓",
+   "material": "SUS304 M6",
+   "desc": "从阀体平台下方穿上来，拧进执行器底部螺孔。F05 法兰的螺孔分布圆直径 50 mm。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P16_ActuatorBody",
+   "grabbable": true,
+   "name_cn": "执行器缸体",
+   "material": "A6063 硬质阳极氧化",
+   "desc": "铝型材缸体。内腔是活塞的气缸；侧面是 NAMUR 标准接口，可直接安装电磁阀；顶面平台可装限位开关盒。",
    "grab": {
     "type": "surface"
    }
   },
   {
-   "id": "P10_ENDCAP_2",
-   "grabbable": true,
-   "name_cn": "执行器端盖",
-   "material": "ADC12 压铸 · 粉末喷涂",
-   "desc": "封住气缸两端，内侧是弹簧的支承面，中心装行程调节螺钉。拆下它就能抽出活塞、更换密封件。",
-   "grab": {
-    "type": "surface"
-   }
-  },
-  {
-   "id": "P11_PISTONRACK_1",
-   "grabbable": true,
-   "name_cn": "活塞（带齿条）",
-   "material": "ADC12 + NBR 密封圈",
-   "desc": "活塞与齿条做成一体。两只活塞相对运动，齿条分别咬在齿轮两侧，于是直线推力变成 90° 转角——这就是齿轮齿条执行器的全部秘密。",
-   "grab": {
-    "type": "surface"
-   }
-  },
-  {
-   "id": "P11_PISTONRACK_2",
-   "grabbable": true,
-   "name_cn": "活塞（带齿条）",
-   "material": "ADC12 + NBR 密封圈",
-   "desc": "活塞与齿条做成一体。两只活塞相对运动，齿条分别咬在齿轮两侧，于是直线推力变成 90° 转角——这就是齿轮齿条执行器的全部秘密。",
-   "grab": {
-    "type": "surface"
-   }
-  },
-  {
-   "id": "P12_PINION",
+   "id": "P17_Pinion",
    "grabbable": true,
    "name_cn": "齿轮轴",
-   "material": "合金钢 · 镀镍",
-   "desc": "执行器的输出轴。下端方孔接阀杆方头，中间是和齿条啮合的齿轮，顶端扁槽按 NAMUR 标准做阀位指示或限位开关接口。",
+   "material": "合金钢 镀镍",
+   "desc": "整台执行器的输出轴。两根齿条从两侧咬住它，活塞走直线、它就转圈；顶端扁槽是 NAMUR 标准，用来带动指示器或限位开关。",
    "grab": {
     "type": "cylinder",
     "axis": [
@@ -248,250 +547,468 @@
     "center": [
      0,
      0,
-     15.9
+     10.25
     ],
     "segments": [
      [
-      -4.3,
-      -1.5,
-      0.7
-     ],
-     [
-      -1.5,
-      1.0,
-      1.16
-     ],
-     [
-      1.0,
-      4.3,
-      0.7
+      -3.25,
+      3.25,
+      1.2
      ]
     ],
-    "override": "P12_PINION"
+    "override": "P17_Pinion"
    }
   },
   {
-   "id": "P13_RETURNSPRING_1",
+   "id": "P18_PistonRack_1",
+   "grabbable": true,
+   "name_cn": "活塞（带齿条）",
+   "material": "ADC12 + NBR O 形圈",
+   "desc": "头部装有 O 形圈（密封）和导向环（防偏磨），后面伸出齿条。两只活塞反向移动，齿条分别在齿轮两侧，于是直线推力变成 90° 转动。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     1.3,
+     0.0,
+     8.8
+    ],
+    "segments": [
+     [
+      -3.5,
+      3.5,
+      2.76
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P18_PistonRack_2",
+   "grabbable": true,
+   "name_cn": "活塞（带齿条）",
+   "material": "ADC12 + NBR O 形圈",
+   "desc": "头部装有 O 形圈（密封）和导向环（防偏磨），后面伸出齿条。两只活塞反向移动，齿条分别在齿轮两侧，于是直线推力变成 90° 转动。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     -1.3,
+     0.0,
+     8.8
+    ],
+    "segments": [
+     [
+      -3.5,
+      3.5,
+      2.76
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P19_ReturnSpring_1",
    "grabbable": true,
    "name_cn": "复位弹簧",
-   "material": "60Si2Mn 磷化",
-   "desc": "单作用执行器的储能元件。通气时被压缩；一旦断气或断电，它把活塞推回中间，阀门自动回到关闭位——这就是“失气关”（FC）。",
+   "material": "60Si2Mn 涂层",
+   "desc": "每侧 3 根。通气时被活塞压缩储能；一旦断气，它们把活塞推回中间，阀门自动关闭，这就是“失气关”（FC）。",
    "grab": {
-    "type": "pinch"
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     6.2,
+     -0.0,
+     10.0
+    ],
+    "segments": [
+     [
+      -1.4,
+      1.4,
+      0.77
+     ]
+    ]
    }
   },
   {
-   "id": "P13_RETURNSPRING_2",
+   "id": "P19_ReturnSpring_2",
    "grabbable": true,
    "name_cn": "复位弹簧",
-   "material": "60Si2Mn 磷化",
-   "desc": "单作用执行器的储能元件。通气时被压缩；一旦断气或断电，它把活塞推回中间，阀门自动回到关闭位——这就是“失气关”（FC）。",
+   "material": "60Si2Mn 涂层",
+   "desc": "每侧 3 根。通气时被活塞压缩储能；一旦断气，它们把活塞推回中间，阀门自动关闭，这就是“失气关”（FC）。",
    "grab": {
-    "type": "pinch"
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     6.2,
+     -1.04,
+     8.2
+    ],
+    "segments": [
+     [
+      -1.4,
+      1.4,
+      0.77
+     ]
+    ]
    }
   },
   {
-   "id": "P13_RETURNSPRING_3",
+   "id": "P19_ReturnSpring_3",
    "grabbable": true,
    "name_cn": "复位弹簧",
-   "material": "60Si2Mn 磷化",
-   "desc": "单作用执行器的储能元件。通气时被压缩；一旦断气或断电，它把活塞推回中间，阀门自动回到关闭位——这就是“失气关”（FC）。",
+   "material": "60Si2Mn 涂层",
+   "desc": "每侧 3 根。通气时被活塞压缩储能；一旦断气，它们把活塞推回中间，阀门自动关闭，这就是“失气关”（FC）。",
    "grab": {
-    "type": "pinch"
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     6.2,
+     1.04,
+     8.2
+    ],
+    "segments": [
+     [
+      -1.4,
+      1.4,
+      0.77
+     ]
+    ]
    }
   },
   {
-   "id": "P13_RETURNSPRING_4",
+   "id": "P19_ReturnSpring_4",
    "grabbable": true,
    "name_cn": "复位弹簧",
-   "material": "60Si2Mn 磷化",
-   "desc": "单作用执行器的储能元件。通气时被压缩；一旦断气或断电，它把活塞推回中间，阀门自动回到关闭位——这就是“失气关”（FC）。",
+   "material": "60Si2Mn 涂层",
+   "desc": "每侧 3 根。通气时被活塞压缩储能；一旦断气，它们把活塞推回中间，阀门自动关闭，这就是“失气关”（FC）。",
    "grab": {
-    "type": "pinch"
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     -6.2,
+     -0.0,
+     10.0
+    ],
+    "segments": [
+     [
+      -1.4,
+      1.4,
+      0.77
+     ]
+    ]
    }
   },
   {
-   "id": "P14_CAPSCREW_1",
+   "id": "P19_ReturnSpring_5",
+   "grabbable": true,
+   "name_cn": "复位弹簧",
+   "material": "60Si2Mn 涂层",
+   "desc": "每侧 3 根。通气时被活塞压缩储能；一旦断气，它们把活塞推回中间，阀门自动关闭，这就是“失气关”（FC）。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     -6.2,
+     1.04,
+     8.2
+    ],
+    "segments": [
+     [
+      -1.4,
+      1.4,
+      0.77
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P19_ReturnSpring_6",
+   "grabbable": true,
+   "name_cn": "复位弹簧",
+   "material": "60Si2Mn 涂层",
+   "desc": "每侧 3 根。通气时被活塞压缩储能；一旦断气，它们把活塞推回中间，阀门自动关闭，这就是“失气关”（FC）。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     -6.2,
+     -1.04,
+     8.2
+    ],
+    "segments": [
+     [
+      -1.4,
+      1.4,
+      0.77
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P20_ActuatorCap_1",
+   "grabbable": true,
+   "name_cn": "执行器端盖",
+   "material": "ADC12 粉末喷涂",
+   "desc": "封住气缸两端，内侧托住弹簧。外侧中央是行程调节螺钉。",
+   "grab": {
+    "type": "surface",
+    "override": "P20_ActuatorCap_*"
+   }
+  },
+  {
+   "id": "P20_ActuatorCap_2",
+   "grabbable": true,
+   "name_cn": "执行器端盖",
+   "material": "ADC12 粉末喷涂",
+   "desc": "封住气缸两端，内侧托住弹簧。外侧中央是行程调节螺钉。",
+   "grab": {
+    "type": "surface",
+    "override": "P20_ActuatorCap_*"
+   }
+  },
+  {
+   "id": "P21_CapScrew_1",
    "grabbable": true,
    "name_cn": "端盖螺钉",
-   "material": "SUS304 M5 × 22",
-   "desc": "内六角圆柱头螺钉，每个端盖 4 颗，按对角顺序拧紧，避免端盖被压歪、活塞偏磨。",
+   "material": "SCM435 发黑 M5",
+   "desc": "内六角圆柱头螺钉，每个端盖 4 颗。",
    "grab": {
     "type": "pinch"
    }
   },
   {
-   "id": "P14_CAPSCREW_2",
+   "id": "P21_CapScrew_2",
    "grabbable": true,
    "name_cn": "端盖螺钉",
-   "material": "SUS304 M5 × 22",
-   "desc": "内六角圆柱头螺钉，每个端盖 4 颗，按对角顺序拧紧，避免端盖被压歪、活塞偏磨。",
+   "material": "SCM435 发黑 M5",
+   "desc": "内六角圆柱头螺钉，每个端盖 4 颗。",
    "grab": {
     "type": "pinch"
    }
   },
   {
-   "id": "P14_CAPSCREW_3",
+   "id": "P21_CapScrew_3",
    "grabbable": true,
    "name_cn": "端盖螺钉",
-   "material": "SUS304 M5 × 22",
-   "desc": "内六角圆柱头螺钉，每个端盖 4 颗，按对角顺序拧紧，避免端盖被压歪、活塞偏磨。",
+   "material": "SCM435 发黑 M5",
+   "desc": "内六角圆柱头螺钉，每个端盖 4 颗。",
    "grab": {
     "type": "pinch"
    }
   },
   {
-   "id": "P14_CAPSCREW_4",
+   "id": "P21_CapScrew_4",
    "grabbable": true,
    "name_cn": "端盖螺钉",
-   "material": "SUS304 M5 × 22",
-   "desc": "内六角圆柱头螺钉，每个端盖 4 颗，按对角顺序拧紧，避免端盖被压歪、活塞偏磨。",
+   "material": "SCM435 发黑 M5",
+   "desc": "内六角圆柱头螺钉，每个端盖 4 颗。",
    "grab": {
     "type": "pinch"
    }
   },
   {
-   "id": "P14_CAPSCREW_5",
+   "id": "P21_CapScrew_5",
    "grabbable": true,
    "name_cn": "端盖螺钉",
-   "material": "SUS304 M5 × 22",
-   "desc": "内六角圆柱头螺钉，每个端盖 4 颗，按对角顺序拧紧，避免端盖被压歪、活塞偏磨。",
+   "material": "SCM435 发黑 M5",
+   "desc": "内六角圆柱头螺钉，每个端盖 4 颗。",
    "grab": {
     "type": "pinch"
    }
   },
   {
-   "id": "P14_CAPSCREW_6",
+   "id": "P21_CapScrew_6",
    "grabbable": true,
    "name_cn": "端盖螺钉",
-   "material": "SUS304 M5 × 22",
-   "desc": "内六角圆柱头螺钉，每个端盖 4 颗，按对角顺序拧紧，避免端盖被压歪、活塞偏磨。",
+   "material": "SCM435 发黑 M5",
+   "desc": "内六角圆柱头螺钉，每个端盖 4 颗。",
    "grab": {
     "type": "pinch"
    }
   },
   {
-   "id": "P14_CAPSCREW_7",
+   "id": "P21_CapScrew_7",
    "grabbable": true,
    "name_cn": "端盖螺钉",
-   "material": "SUS304 M5 × 22",
-   "desc": "内六角圆柱头螺钉，每个端盖 4 颗，按对角顺序拧紧，避免端盖被压歪、活塞偏磨。",
+   "material": "SCM435 发黑 M5",
+   "desc": "内六角圆柱头螺钉，每个端盖 4 颗。",
    "grab": {
     "type": "pinch"
    }
   },
   {
-   "id": "P14_CAPSCREW_8",
+   "id": "P21_CapScrew_8",
    "grabbable": true,
    "name_cn": "端盖螺钉",
-   "material": "SUS304 M5 × 22",
-   "desc": "内六角圆柱头螺钉，每个端盖 4 颗，按对角顺序拧紧，避免端盖被压歪、活塞偏磨。",
+   "material": "SCM435 发黑 M5",
+   "desc": "内六角圆柱头螺钉，每个端盖 4 颗。",
    "grab": {
     "type": "pinch"
    }
   },
   {
-   "id": "P15_STROKESTOP_1",
+   "id": "P22_StrokeStop_1",
    "grabbable": true,
    "name_cn": "行程调节螺钉",
-   "material": "SUS304 M8 × 30",
-   "desc": "限制活塞的行程终点，可以把 0° 和 90° 两个位置各微调几度，让蝶板与管道对得更正。",
+   "material": "SUS304 M8",
+   "desc": "顶住活塞的行程终点，可以把 0° 和 90° 两个终点各微调约 ±5°，让球孔和管道对得更正。",
    "grab": {
     "type": "pinch"
    }
   },
   {
-   "id": "P15_STROKESTOP_2",
+   "id": "P22_StrokeStop_2",
    "grabbable": true,
    "name_cn": "行程调节螺钉",
-   "material": "SUS304 M8 × 30",
-   "desc": "限制活塞的行程终点，可以把 0° 和 90° 两个位置各微调几度，让蝶板与管道对得更正。",
+   "material": "SUS304 M8",
+   "desc": "顶住活塞的行程终点，可以把 0° 和 90° 两个终点各微调约 ±5°，让球孔和管道对得更正。",
    "grab": {
     "type": "pinch"
    }
   },
   {
-   "id": "P16_POSITIONINDICATOR",
+   "id": "P23_Circlip",
+   "grabbable": true,
+   "name_cn": "卡簧",
+   "material": "弹簧钢",
+   "desc": "卡在齿轮轴的环槽里，限制齿轮轴的上下窜动。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P24_PositionIndicator",
    "grabbable": true,
    "name_cn": "位置指示器",
    "material": "PA66 + 色标",
-   "desc": "装在齿轮轴顶端，随轴一起转。红色箭头与管道平行是开，转到垂直是关——现场不接线也能一眼看出阀位。",
+   "desc": "装在齿轮轴顶端随轴转动。红色箭头与管道平行表示开，转到垂直表示关，现场一眼就能看出阀位。",
    "grab": {
     "type": "pinch",
     "point": [
-     0.94,
-     -0.2,
-     20.69
+     0.53,
+     -0.23,
+     14.78
     ],
-    "override": "P16_POSITIONINDICATOR"
+    "override": "P24_PositionIndicator"
    }
   },
   {
-   "id": "P17_SOLENOIDVALVE",
+   "id": "P25_SolenoidValve",
    "grabbable": true,
    "name_cn": "电磁阀",
-   "material": "铝合金阀体 + NBR 密封",
-   "desc": "NAMUR 贴面安装的二位五通阀。通电时把压缩空气送进执行器中间腔，断电时把中间腔接排气口——一套电信号就完成了“开 / 关”。",
+   "material": "铝合金阀体 + 24 V DC 线圈",
+   "desc": "NAMUR 安装的二位三通电磁阀。线圈通电，压缩空气进入执行器中间腔；断电，中间腔经消声器排气，弹簧关阀。",
    "grab": {
-    "type": "surface"
+    "type": "box",
+    "center": [
+     1.65,
+     4.7,
+     8.8
+    ],
+    "extent": [
+     4.65,
+     1.1,
+     1.3
+    ]
    }
   },
   {
-   "id": "P18_SOLENOIDCOIL",
+   "id": "P26_Connector",
    "grabbable": true,
-   "name_cn": "线圈",
-   "material": "24 V DC · 6 W",
-   "desc": "通电产生电磁力推动阀芯换向。外壳上带手动应急按钮，调试时不给电也能捅一下试阀。",
+   "name_cn": "线圈插头",
+   "material": "DIN 43650 A 型",
+   "desc": "接线插头，压住线圈并引出电缆。",
    "grab": {
-    "type": "pinch"
+    "type": "box",
+    "center": [
+     4.6,
+     7.2,
+     8.5
+    ],
+    "extent": [
+     1.1,
+     0.8,
+     1.5
+    ]
    }
   },
   {
-   "id": "P19_SILENCER_1",
+   "id": "P27_Silencer_1",
    "grabbable": true,
    "name_cn": "消声器",
    "material": "烧结青铜",
-   "desc": "拧在电磁阀的排气口上。多孔青铜把排气的啸叫压下去，顺便挡住灰尘从排气口吸进阀内。",
+   "desc": "排气口的多孔青铜塞，降低排气噪声，也挡住灰尘进入阀内。",
    "grab": {
     "type": "pinch"
    }
   },
   {
-   "id": "P19_SILENCER_2",
+   "id": "P27_Silencer_2",
    "grabbable": true,
    "name_cn": "消声器",
    "material": "烧结青铜",
-   "desc": "拧在电磁阀的排气口上。多孔青铜把排气的啸叫压下去，顺便挡住灰尘从排气口吸进阀内。",
+   "desc": "排气口的多孔青铜塞，降低排气噪声，也挡住灰尘进入阀内。",
    "grab": {
     "type": "pinch"
    }
   },
   {
-   "id": "P20_PUSHINFITTING",
+   "id": "P28_PushInFitting",
    "grabbable": true,
    "name_cn": "快插接头",
-   "material": "黄铜镀镍 + PBT",
-   "desc": "Φ8 气管插进去就被卡爪锁住，按下蓝色释放环即可拔出。装在电磁阀的进气口上。",
+   "material": "镀镍黄铜 + PBT",
+   "desc": "Φ6 气管插进去就锁住，按下蓝色释放环可拔出。",
    "grab": {
     "type": "pinch"
    }
   },
   {
-   "id": "P21_MOUNTINGSCREW_1",
+   "id": "P29_SolenoidScrew_1",
    "grabbable": true,
    "name_cn": "电磁阀螺钉",
-   "material": "SUS304 M5 × 30",
-   "desc": "把电磁阀压在 NAMUR 界面上，中间夹着 O 形圈对准两个气口。",
+   "material": "SUS304 M5",
+   "desc": "把电磁阀固定在 NAMUR 接口上，中间夹着 O 形圈对准气口。",
    "grab": {
     "type": "pinch"
    }
   },
   {
-   "id": "P21_MOUNTINGSCREW_2",
+   "id": "P29_SolenoidScrew_2",
    "grabbable": true,
    "name_cn": "电磁阀螺钉",
-   "material": "SUS304 M5 × 30",
-   "desc": "把电磁阀压在 NAMUR 界面上，中间夹着 O 形圈对准两个气口。",
+   "material": "SUS304 M5",
+   "desc": "把电磁阀固定在 NAMUR 接口上，中间夹着 O 形圈对准气口。",
    "grab": {
     "type": "pinch"
    }
@@ -499,37 +1016,127 @@
  ],
  "parts": [
   {
-   "name": "P01_BODY",
+   "name": "P01_Body",
    "name_cn": "阀体",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P01_BODY.P01_BODY",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P01_Body.P01_Body",
    "spin": 0,
    "unit": "base",
    "ex": []
   },
   {
-   "name": "P02_SEATLINER",
-   "name_cn": "阀座衬圈",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P02_SEATLINER.P02_SEATLINER",
+   "name": "P02_EndCap_1",
+   "name_cn": "端盖",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P02_EndCap_1.P02_EndCap_1",
    "spin": 0,
-   "unit": "P02_SEATLINER",
+   "unit": "P02_EndCap_1",
    "ex": [
     [
-     17.808000000000003,
+     10.5,
      0.0,
      0.0,
-     0.1
+     0.28
     ]
    ]
   },
   {
-   "name": "P03_DISC",
-   "name_cn": "蝶板",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P03_DISC.P03_DISC",
+   "name": "P02_EndCap_2",
+   "name_cn": "端盖",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P02_EndCap_2.P02_EndCap_2",
    "spin": 0,
-   "unit": "P03_DISC",
+   "unit": "P02_EndCap_2",
    "ex": [
     [
-     -20.352000000000004,
+     -10.5,
+     0.0,
+     0.0,
+     0.28
+    ]
+   ]
+  },
+  {
+   "name": "P03_Ball",
+   "name_cn": "球体",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P03_Ball.P03_Ball",
+   "spin": 0,
+   "unit": "P03_Ball",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -8.5,
+     0.7
+    ]
+   ]
+  },
+  {
+   "name": "P04_Seat_1",
+   "name_cn": "阀座",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P04_Seat_1.P04_Seat_1",
+   "spin": 0,
+   "unit": "P04_Seat_1",
+   "ex": [
+    [
+     4.800000000000001,
+     0.0,
+     0.0,
+     0.48
+    ]
+   ]
+  },
+  {
+   "name": "P04_Seat_2",
+   "name_cn": "阀座",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P04_Seat_2.P04_Seat_2",
+   "spin": 0,
+   "unit": "P04_Seat_2",
+   "ex": [
+    [
+     -4.800000000000001,
+     0.0,
+     0.0,
+     0.48
+    ]
+   ]
+  },
+  {
+   "name": "P05_BodyGasket_1",
+   "name_cn": "阀体垫片",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P05_BodyGasket_1.P05_BodyGasket_1",
+   "spin": 0,
+   "unit": "P05_BodyGasket_1",
+   "ex": [
+    [
+     7.0,
+     0.0,
+     0.0,
+     0.38
+    ]
+   ]
+  },
+  {
+   "name": "P05_BodyGasket_2",
+   "name_cn": "阀体垫片",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P05_BodyGasket_2.P05_BodyGasket_2",
+   "spin": 0,
+   "unit": "P05_BodyGasket_2",
+   "ex": [
+    [
+     -7.0,
+     0.0,
+     0.0,
+     0.38
+    ]
+   ]
+  },
+  {
+   "name": "P06_Stud_1",
+   "name_cn": "双头螺柱",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P06_Stud_1.P06_Stud_1",
+   "spin": 0,
+   "unit": "P06_Stud_1",
+   "ex": [
+    [
+     21.0,
      0.0,
      0.0,
      0.18
@@ -537,575 +1144,1055 @@
    ]
   },
   {
-   "name": "P04_STEM",
-   "name_cn": "上阀杆",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P04_STEM.P04_STEM",
+   "name": "P06_Stud_2",
+   "name_cn": "双头螺柱",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P06_Stud_2.P06_Stud_2",
    "spin": 0,
-   "unit": "P04_STEM",
+   "unit": "P06_Stud_2",
    "ex": [
     [
+     21.0,
      0.0,
      0.0,
-     15.488,
-     0.26
+     0.18
     ]
    ]
   },
   {
-   "name": "P05_LOWERSTEM",
-   "name_cn": "下阀杆",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P05_LOWERSTEM.P05_LOWERSTEM",
+   "name": "P06_Stud_3",
+   "name_cn": "双头螺柱",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P06_Stud_3.P06_Stud_3",
    "spin": 0,
-   "unit": "P05_LOWERSTEM",
+   "unit": "P06_Stud_3",
    "ex": [
     [
+     21.0,
      0.0,
      0.0,
-     -13.728000000000002,
-     0.22
+     0.18
     ]
    ]
   },
   {
-   "name": "P06_BUSHING_1",
-   "name_cn": "轴套",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P06_BUSHING_1.P06_BUSHING_1",
+   "name": "P06_Stud_4",
+   "name_cn": "双头螺柱",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P06_Stud_4.P06_Stud_4",
    "spin": 0,
-   "unit": "P06_BUSHING_1",
+   "unit": "P06_Stud_4",
    "ex": [
     [
+     21.0,
      0.0,
      0.0,
-     9.856000000000002,
-     0.28
+     0.18
     ]
    ]
   },
   {
-   "name": "P06_BUSHING_2",
-   "name_cn": "轴套",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P06_BUSHING_2.P06_BUSHING_2",
+   "name": "P07_HexNut_1",
+   "name_cn": "六角螺母",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P07_HexNut_1.P07_HexNut_1",
    "spin": 0,
-   "unit": "P06_BUSHING_2",
+   "unit": "P07_HexNut_1",
    "ex": [
     [
+     23.200000000000003,
      0.0,
      0.0,
-     -9.856000000000002,
-     0.28
+     0.1
     ]
    ]
   },
   {
-   "name": "P07_ORING_1",
-   "name_cn": "O 形圈",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P07_ORING_1.P07_ORING_1",
+   "name": "P07_HexNut_2",
+   "name_cn": "六角螺母",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P07_HexNut_2.P07_HexNut_2",
    "spin": 0,
-   "unit": "P07_ORING_1",
+   "unit": "P07_HexNut_2",
    "ex": [
     [
+     23.200000000000003,
      0.0,
      0.0,
-     12.32,
-     0.3
+     0.1
     ]
    ]
   },
   {
-   "name": "P07_ORING_2",
-   "name_cn": "O 形圈",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P07_ORING_2.P07_ORING_2",
+   "name": "P07_HexNut_3",
+   "name_cn": "六角螺母",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P07_HexNut_3.P07_HexNut_3",
    "spin": 0,
-   "unit": "P07_ORING_2",
+   "unit": "P07_HexNut_3",
    "ex": [
     [
+     23.200000000000003,
      0.0,
      0.0,
-     11.264000000000001,
-     0.3
+     0.1
     ]
    ]
   },
   {
-   "name": "P08_THRUSTWASHER",
+   "name": "P07_HexNut_4",
+   "name_cn": "六角螺母",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P07_HexNut_4.P07_HexNut_4",
+   "spin": 0,
+   "unit": "P07_HexNut_4",
+   "ex": [
+    [
+     23.200000000000003,
+     0.0,
+     0.0,
+     0.1
+    ]
+   ]
+  },
+  {
+   "name": "P07_HexNut_5",
+   "name_cn": "六角螺母",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P07_HexNut_5.P07_HexNut_5",
+   "spin": 0,
+   "unit": "P07_HexNut_5",
+   "ex": [
+    [
+     -16.0,
+     0.0,
+     0.0,
+     0.1
+    ]
+   ]
+  },
+  {
+   "name": "P07_HexNut_6",
+   "name_cn": "六角螺母",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P07_HexNut_6.P07_HexNut_6",
+   "spin": 0,
+   "unit": "P07_HexNut_6",
+   "ex": [
+    [
+     -16.0,
+     0.0,
+     0.0,
+     0.1
+    ]
+   ]
+  },
+  {
+   "name": "P07_HexNut_7",
+   "name_cn": "六角螺母",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P07_HexNut_7.P07_HexNut_7",
+   "spin": 0,
+   "unit": "P07_HexNut_7",
+   "ex": [
+    [
+     -16.0,
+     0.0,
+     0.0,
+     0.1
+    ]
+   ]
+  },
+  {
+   "name": "P07_HexNut_8",
+   "name_cn": "六角螺母",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P07_HexNut_8.P07_HexNut_8",
+   "spin": 0,
+   "unit": "P07_HexNut_8",
+   "ex": [
+    [
+     -16.0,
+     0.0,
+     0.0,
+     0.1
+    ]
+   ]
+  },
+  {
+   "name": "P08_Stem",
+   "name_cn": "阀杆",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P08_Stem.P08_Stem",
+   "spin": 0,
+   "unit": "P08_Stem",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     4.0,
+     0.54
+    ]
+   ]
+  },
+  {
+   "name": "P09_ThrustWasher",
    "name_cn": "止推垫片",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P08_THRUSTWASHER.P08_THRUSTWASHER",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P09_ThrustWasher.P09_ThrustWasher",
    "spin": 0,
-   "unit": "P08_THRUSTWASHER",
+   "unit": "P09_ThrustWasher",
    "ex": [
     [
      0.0,
      0.0,
-     8.8,
-     0.26
+     2.8000000000000003,
+     0.6
     ]
    ]
   },
   {
-   "name": "P09_CYLINDERBODY",
-   "name_cn": "执行器缸体",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P09_CYLINDERBODY.P09_CYLINDERBODY",
+   "name": "P10_StemPacking_1",
+   "name_cn": "阀杆填料",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P10_StemPacking_1.P10_StemPacking_1",
    "spin": 0,
-   "unit": "P09_CYLINDERBODY",
+   "unit": "P10_StemPacking_1",
    "ex": [
     [
      0.0,
      0.0,
-     16.368000000000002,
-     0.14
+     6.4,
+     0.46
     ]
    ]
   },
   {
-   "name": "P10_ENDCAP_1",
-   "name_cn": "执行器端盖",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P10_ENDCAP_1.P10_ENDCAP_1",
+   "name": "P10_StemPacking_2",
+   "name_cn": "阀杆填料",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P10_StemPacking_2.P10_StemPacking_2",
    "spin": 0,
-   "unit": "P10_ENDCAP_1",
+   "unit": "P10_StemPacking_2",
    "ex": [
     [
      0.0,
-     27.84,
-     16.368000000000002,
-     0.2
+     0.0,
+     7.0,
+     0.44
     ]
    ]
   },
   {
-   "name": "P10_ENDCAP_2",
-   "name_cn": "执行器端盖",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P10_ENDCAP_2.P10_ENDCAP_2",
+   "name": "P11_Gland",
+   "name_cn": "填料压盖",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P11_Gland.P11_Gland",
    "spin": 0,
-   "unit": "P10_ENDCAP_2",
+   "unit": "P11_Gland",
    "ex": [
     [
      0.0,
-     -27.84,
-     16.368000000000002,
-     0.2
+     0.0,
+     8.0,
+     0.4
     ]
    ]
   },
   {
-   "name": "P11_PISTONRACK_1",
-   "name_cn": "活塞（带齿条）",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P11_PISTONRACK_1.P11_PISTONRACK_1",
+   "name": "P12_DiscSpring_1",
+   "name_cn": "碟形弹簧",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P12_DiscSpring_1.P12_DiscSpring_1",
    "spin": 0,
-   "unit": "P11_PISTONRACK_1",
+   "unit": "P12_DiscSpring_1",
    "ex": [
     [
      0.0,
-     14.879999999999999,
-     16.368000000000002,
-     0.22
+     0.0,
+     9.0,
+     0.36
     ]
    ]
   },
   {
-   "name": "P11_PISTONRACK_2",
-   "name_cn": "活塞（带齿条）",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P11_PISTONRACK_2.P11_PISTONRACK_2",
+   "name": "P12_DiscSpring_2",
+   "name_cn": "碟形弹簧",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P12_DiscSpring_2.P12_DiscSpring_2",
    "spin": 0,
-   "unit": "P11_PISTONRACK_2",
-   "ex": [
-    [
-     0.0,
-     -14.879999999999999,
-     16.368000000000002,
-     0.22
-    ]
-   ]
-  },
-  {
-   "name": "P12_PINION",
-   "name_cn": "齿轮轴",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P12_PINION.P12_PINION",
-   "spin": 0,
-   "unit": "P12_PINION",
+   "unit": "P12_DiscSpring_2",
    "ex": [
     [
      0.0,
      0.0,
-     25.695999999999998,
-     0.28
-    ]
-   ]
-  },
-  {
-   "name": "P13_RETURNSPRING_1",
-   "name_cn": "复位弹簧",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P13_RETURNSPRING_1.P13_RETURNSPRING_1",
-   "spin": 0,
-   "unit": "P13_RETURNSPRING_1",
-   "ex": [
-    [
-     0.0,
-     20.64,
-     16.368000000000002,
-     0.24
-    ]
-   ]
-  },
-  {
-   "name": "P13_RETURNSPRING_2",
-   "name_cn": "复位弹簧",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P13_RETURNSPRING_2.P13_RETURNSPRING_2",
-   "spin": 0,
-   "unit": "P13_RETURNSPRING_2",
-   "ex": [
-    [
-     0.0,
-     20.64,
-     16.368000000000002,
-     0.24
-    ]
-   ]
-  },
-  {
-   "name": "P13_RETURNSPRING_3",
-   "name_cn": "复位弹簧",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P13_RETURNSPRING_3.P13_RETURNSPRING_3",
-   "spin": 0,
-   "unit": "P13_RETURNSPRING_3",
-   "ex": [
-    [
-     0.0,
-     -20.64,
-     16.368000000000002,
-     0.24
-    ]
-   ]
-  },
-  {
-   "name": "P13_RETURNSPRING_4",
-   "name_cn": "复位弹簧",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P13_RETURNSPRING_4.P13_RETURNSPRING_4",
-   "spin": 0,
-   "unit": "P13_RETURNSPRING_4",
-   "ex": [
-    [
-     0.0,
-     -20.64,
-     16.368000000000002,
-     0.24
-    ]
-   ]
-  },
-  {
-   "name": "P14_CAPSCREW_1",
-   "name_cn": "端盖螺钉",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P14_CAPSCREW_1.P14_CAPSCREW_1",
-   "spin": 0,
-   "unit": "P14_CAPSCREW_1",
-   "ex": [
-    [
-     0.0,
-     32.16,
-     16.368000000000002,
-     0.26
-    ]
-   ]
-  },
-  {
-   "name": "P14_CAPSCREW_2",
-   "name_cn": "端盖螺钉",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P14_CAPSCREW_2.P14_CAPSCREW_2",
-   "spin": 0,
-   "unit": "P14_CAPSCREW_2",
-   "ex": [
-    [
-     0.0,
-     -32.16,
-     16.368000000000002,
-     0.26
-    ]
-   ]
-  },
-  {
-   "name": "P14_CAPSCREW_3",
-   "name_cn": "端盖螺钉",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P14_CAPSCREW_3.P14_CAPSCREW_3",
-   "spin": 0,
-   "unit": "P14_CAPSCREW_3",
-   "ex": [
-    [
-     0.0,
-     32.16,
-     16.368000000000002,
-     0.26
-    ]
-   ]
-  },
-  {
-   "name": "P14_CAPSCREW_4",
-   "name_cn": "端盖螺钉",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P14_CAPSCREW_4.P14_CAPSCREW_4",
-   "spin": 0,
-   "unit": "P14_CAPSCREW_4",
-   "ex": [
-    [
-     0.0,
-     -32.16,
-     16.368000000000002,
-     0.26
-    ]
-   ]
-  },
-  {
-   "name": "P14_CAPSCREW_5",
-   "name_cn": "端盖螺钉",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P14_CAPSCREW_5.P14_CAPSCREW_5",
-   "spin": 0,
-   "unit": "P14_CAPSCREW_5",
-   "ex": [
-    [
-     0.0,
-     32.16,
-     16.368000000000002,
-     0.26
-    ]
-   ]
-  },
-  {
-   "name": "P14_CAPSCREW_6",
-   "name_cn": "端盖螺钉",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P14_CAPSCREW_6.P14_CAPSCREW_6",
-   "spin": 0,
-   "unit": "P14_CAPSCREW_6",
-   "ex": [
-    [
-     0.0,
-     -32.16,
-     16.368000000000002,
-     0.26
-    ]
-   ]
-  },
-  {
-   "name": "P14_CAPSCREW_7",
-   "name_cn": "端盖螺钉",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P14_CAPSCREW_7.P14_CAPSCREW_7",
-   "spin": 0,
-   "unit": "P14_CAPSCREW_7",
-   "ex": [
-    [
-     0.0,
-     32.16,
-     16.368000000000002,
-     0.26
-    ]
-   ]
-  },
-  {
-   "name": "P14_CAPSCREW_8",
-   "name_cn": "端盖螺钉",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P14_CAPSCREW_8.P14_CAPSCREW_8",
-   "spin": 0,
-   "unit": "P14_CAPSCREW_8",
-   "ex": [
-    [
-     0.0,
-     -32.16,
-     16.368000000000002,
-     0.26
-    ]
-   ]
-  },
-  {
-   "name": "P15_STROKESTOP_1",
-   "name_cn": "行程调节螺钉",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P15_STROKESTOP_1.P15_STROKESTOP_1",
-   "spin": 0,
-   "unit": "P15_STROKESTOP_1",
-   "ex": [
-    [
-     0.0,
-     35.04,
-     16.368000000000002,
-     0.3
-    ]
-   ]
-  },
-  {
-   "name": "P15_STROKESTOP_2",
-   "name_cn": "行程调节螺钉",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P15_STROKESTOP_2.P15_STROKESTOP_2",
-   "spin": 0,
-   "unit": "P15_STROKESTOP_2",
-   "ex": [
-    [
-     0.0,
-     -35.04,
-     16.368000000000002,
-     0.3
-    ]
-   ]
-  },
-  {
-   "name": "P16_POSITIONINDICATOR",
-   "name_cn": "位置指示器",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P16_POSITIONINDICATOR.P16_POSITIONINDICATOR",
-   "spin": 0,
-   "unit": "P16_POSITIONINDICATOR",
-   "ex": [
-    [
-     0.0,
-     0.0,
-     16.368000000000002,
-     0.12
-    ],
-    [
-     0.0,
-     0.0,
-     10.208,
-     0.32
-    ]
-   ]
-  },
-  {
-   "name": "P17_SOLENOIDVALVE",
-   "name_cn": "电磁阀",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P17_SOLENOIDVALVE.P17_SOLENOIDVALVE",
-   "spin": 0,
-   "unit": "P17_SOLENOIDVALVE",
-   "ex": [
-    [
-     0.0,
-     0.0,
-     16.368000000000002,
-     0.16
-    ],
-    [
-     16.112000000000002,
-     0.0,
-     0.0,
-     0.3
-    ]
-   ]
-  },
-  {
-   "name": "P18_SOLENOIDCOIL",
-   "name_cn": "线圈",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P18_SOLENOIDCOIL.P18_SOLENOIDCOIL",
-   "spin": 0,
-   "unit": "P18_SOLENOIDCOIL",
-   "ex": [
-    [
-     0.0,
-     0.0,
-     16.368000000000002,
-     0.16
-    ],
-    [
-     23.956000000000003,
-     0.0,
-     0.0,
+     9.5,
      0.34
     ]
    ]
   },
   {
-   "name": "P19_SILENCER_1",
-   "name_cn": "消声器",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P19_SILENCER_1.P19_SILENCER_1",
+   "name": "P13_StemNut",
+   "name_cn": "阀杆螺母",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P13_StemNut.P13_StemNut",
    "spin": 0,
-   "unit": "P19_SILENCER_1",
+   "unit": "P13_StemNut",
    "ex": [
     [
      0.0,
      0.0,
-     16.368000000000002,
+     10.5,
+     0.3
+    ]
+   ]
+  },
+  {
+   "name": "P14_Coupling",
+   "name_cn": "连接轴套",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P14_Coupling.P14_Coupling",
+   "spin": 0,
+   "unit": "P14_Coupling",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     12.0,
+     0.22
+    ]
+   ]
+  },
+  {
+   "name": "P15_MountBolt_1",
+   "name_cn": "安装螺栓",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P15_MountBolt_1.P15_MountBolt_1",
+   "spin": 0,
+   "unit": "P15_MountBolt_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -0.9,
+     0.2
+    ]
+   ]
+  },
+  {
+   "name": "P15_MountBolt_2",
+   "name_cn": "安装螺栓",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P15_MountBolt_2.P15_MountBolt_2",
+   "spin": 0,
+   "unit": "P15_MountBolt_2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -0.9,
+     0.2
+    ]
+   ]
+  },
+  {
+   "name": "P15_MountBolt_3",
+   "name_cn": "安装螺栓",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P15_MountBolt_3.P15_MountBolt_3",
+   "spin": 0,
+   "unit": "P15_MountBolt_3",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -0.9,
+     0.2
+    ]
+   ]
+  },
+  {
+   "name": "P15_MountBolt_4",
+   "name_cn": "安装螺栓",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P15_MountBolt_4.P15_MountBolt_4",
+   "spin": 0,
+   "unit": "P15_MountBolt_4",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -0.9,
+     0.2
+    ]
+   ]
+  },
+  {
+   "name": "P16_ActuatorBody",
+   "name_cn": "执行器缸体",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P16_ActuatorBody.P16_ActuatorBody",
+   "spin": 0,
+   "unit": "P16_ActuatorBody",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ]
+   ]
+  },
+  {
+   "name": "P17_Pinion",
+   "name_cn": "齿轮轴",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P17_Pinion.P17_Pinion",
+   "spin": 0,
+   "unit": "P17_Pinion",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
      0.16
     ],
     [
-     13.144,
-     10.32,
+     0.0,
+     0.0,
+     7.5,
+     0.56
+    ]
+   ]
+  },
+  {
+   "name": "P18_PistonRack_1",
+   "name_cn": "活塞（带齿条）",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P18_PistonRack_1.P18_PistonRack_1",
+   "spin": 0,
+   "unit": "P18_PistonRack_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     8.5,
+     0.0,
+     0.0,
+     0.48
+    ]
+   ]
+  },
+  {
+   "name": "P18_PistonRack_2",
+   "name_cn": "活塞（带齿条）",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P18_PistonRack_2.P18_PistonRack_2",
+   "spin": 0,
+   "unit": "P18_PistonRack_2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     -8.5,
+     0.0,
+     0.0,
+     0.48
+    ]
+   ]
+  },
+  {
+   "name": "P19_ReturnSpring_1",
+   "name_cn": "复位弹簧",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P19_ReturnSpring_1.P19_ReturnSpring_1",
+   "spin": 0,
+   "unit": "P19_ReturnSpring_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     11.5,
+     0.0,
+     0.0,
+     0.4
+    ]
+   ]
+  },
+  {
+   "name": "P19_ReturnSpring_2",
+   "name_cn": "复位弹簧",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P19_ReturnSpring_2.P19_ReturnSpring_2",
+   "spin": 0,
+   "unit": "P19_ReturnSpring_2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     11.5,
+     0.0,
+     0.0,
+     0.4
+    ]
+   ]
+  },
+  {
+   "name": "P19_ReturnSpring_3",
+   "name_cn": "复位弹簧",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P19_ReturnSpring_3.P19_ReturnSpring_3",
+   "spin": 0,
+   "unit": "P19_ReturnSpring_3",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     11.5,
+     0.0,
+     0.0,
+     0.4
+    ]
+   ]
+  },
+  {
+   "name": "P19_ReturnSpring_4",
+   "name_cn": "复位弹簧",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P19_ReturnSpring_4.P19_ReturnSpring_4",
+   "spin": 0,
+   "unit": "P19_ReturnSpring_4",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     -11.5,
+     0.0,
+     0.0,
+     0.4
+    ]
+   ]
+  },
+  {
+   "name": "P19_ReturnSpring_5",
+   "name_cn": "复位弹簧",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P19_ReturnSpring_5.P19_ReturnSpring_5",
+   "spin": 0,
+   "unit": "P19_ReturnSpring_5",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     -11.5,
+     0.0,
+     0.0,
+     0.4
+    ]
+   ]
+  },
+  {
+   "name": "P19_ReturnSpring_6",
+   "name_cn": "复位弹簧",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P19_ReturnSpring_6.P19_ReturnSpring_6",
+   "spin": 0,
+   "unit": "P19_ReturnSpring_6",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     -11.5,
+     0.0,
+     0.0,
+     0.4
+    ]
+   ]
+  },
+  {
+   "name": "P20_ActuatorCap_1",
+   "name_cn": "执行器端盖",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P20_ActuatorCap_1.P20_ActuatorCap_1",
+   "spin": 0,
+   "unit": "P20_ActuatorCap_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     15.0,
+     0.0,
+     0.0,
+     0.32
+    ]
+   ]
+  },
+  {
+   "name": "P20_ActuatorCap_2",
+   "name_cn": "执行器端盖",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P20_ActuatorCap_2.P20_ActuatorCap_2",
+   "spin": 0,
+   "unit": "P20_ActuatorCap_2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     -15.0,
+     0.0,
+     0.0,
+     0.32
+    ]
+   ]
+  },
+  {
+   "name": "P21_CapScrew_1",
+   "name_cn": "端盖螺钉",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P21_CapScrew_1.P21_CapScrew_1",
+   "spin": 0,
+   "unit": "P21_CapScrew_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     19.5,
+     0.0,
+     0.0,
+     0.26
+    ]
+   ]
+  },
+  {
+   "name": "P21_CapScrew_2",
+   "name_cn": "端盖螺钉",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P21_CapScrew_2.P21_CapScrew_2",
+   "spin": 0,
+   "unit": "P21_CapScrew_2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     19.5,
+     0.0,
+     0.0,
+     0.26
+    ]
+   ]
+  },
+  {
+   "name": "P21_CapScrew_3",
+   "name_cn": "端盖螺钉",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P21_CapScrew_3.P21_CapScrew_3",
+   "spin": 0,
+   "unit": "P21_CapScrew_3",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     19.5,
+     0.0,
+     0.0,
+     0.26
+    ]
+   ]
+  },
+  {
+   "name": "P21_CapScrew_4",
+   "name_cn": "端盖螺钉",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P21_CapScrew_4.P21_CapScrew_4",
+   "spin": 0,
+   "unit": "P21_CapScrew_4",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     19.5,
+     0.0,
+     0.0,
+     0.26
+    ]
+   ]
+  },
+  {
+   "name": "P21_CapScrew_5",
+   "name_cn": "端盖螺钉",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P21_CapScrew_5.P21_CapScrew_5",
+   "spin": 0,
+   "unit": "P21_CapScrew_5",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     -19.5,
+     0.0,
+     0.0,
+     0.26
+    ]
+   ]
+  },
+  {
+   "name": "P21_CapScrew_6",
+   "name_cn": "端盖螺钉",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P21_CapScrew_6.P21_CapScrew_6",
+   "spin": 0,
+   "unit": "P21_CapScrew_6",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     -19.5,
+     0.0,
+     0.0,
+     0.26
+    ]
+   ]
+  },
+  {
+   "name": "P21_CapScrew_7",
+   "name_cn": "端盖螺钉",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P21_CapScrew_7.P21_CapScrew_7",
+   "spin": 0,
+   "unit": "P21_CapScrew_7",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     -19.5,
+     0.0,
+     0.0,
+     0.26
+    ]
+   ]
+  },
+  {
+   "name": "P21_CapScrew_8",
+   "name_cn": "端盖螺钉",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P21_CapScrew_8.P21_CapScrew_8",
+   "spin": 0,
+   "unit": "P21_CapScrew_8",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     -19.5,
+     0.0,
+     0.0,
+     0.26
+    ]
+   ]
+  },
+  {
+   "name": "P22_StrokeStop_1",
+   "name_cn": "行程调节螺钉",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P22_StrokeStop_1.P22_StrokeStop_1",
+   "spin": 0,
+   "unit": "P22_StrokeStop_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     15.0,
+     0.0,
+     0.0,
+     0.32
+    ],
+    [
+     2.5,
+     0.0,
      0.0,
      0.3
     ]
    ]
   },
   {
-   "name": "P19_SILENCER_2",
-   "name_cn": "消声器",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P19_SILENCER_2.P19_SILENCER_2",
+   "name": "P22_StrokeStop_2",
+   "name_cn": "行程调节螺钉",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P22_StrokeStop_2.P22_StrokeStop_2",
    "spin": 0,
-   "unit": "P19_SILENCER_2",
+   "unit": "P22_StrokeStop_2",
    "ex": [
     [
      0.0,
      0.0,
-     16.368000000000002,
+     15.0,
      0.16
     ],
     [
-     13.144,
-     -10.32,
+     -15.0,
+     0.0,
+     0.0,
+     0.32
+    ],
+    [
+     -2.5,
+     0.0,
      0.0,
      0.3
     ]
    ]
   },
   {
-   "name": "P20_PUSHINFITTING",
+   "name": "P23_Circlip",
+   "name_cn": "卡簧",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P23_Circlip.P23_Circlip",
+   "spin": 0,
+   "unit": "P23_Circlip",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     0.0,
+     0.0,
+     6.2,
+     0.5
+    ]
+   ]
+  },
+  {
+   "name": "P24_PositionIndicator",
+   "name_cn": "位置指示器",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P24_PositionIndicator.P24_PositionIndicator",
+   "spin": 0,
+   "unit": "P24_PositionIndicator",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     0.0,
+     0.0,
+     10.0,
+     0
+    ]
+   ]
+  },
+  {
+   "name": "P25_SolenoidValve",
+   "name_cn": "电磁阀",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P25_SolenoidValve.P25_SolenoidValve",
+   "spin": 0,
+   "unit": "P25_SolenoidValve",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     0.0,
+     8.5,
+     0.0,
+     0.06
+    ]
+   ]
+  },
+  {
+   "name": "P26_Connector",
+   "name_cn": "线圈插头",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P26_Connector.P26_Connector",
+   "spin": 0,
+   "unit": "P26_Connector",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     0.0,
+     8.5,
+     0.0,
+     0.06
+    ],
+    [
+     0.0,
+     3.5,
+     0.0,
+     0.04
+    ]
+   ]
+  },
+  {
+   "name": "P27_Silencer_1",
+   "name_cn": "消声器",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P27_Silencer_1.P27_Silencer_1",
+   "spin": 0,
+   "unit": "P27_Silencer_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     0.0,
+     8.5,
+     0.0,
+     0.06
+    ],
+    [
+     -3.0,
+     0.0,
+     0.0,
+     0.04
+    ]
+   ]
+  },
+  {
+   "name": "P27_Silencer_2",
+   "name_cn": "消声器",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P27_Silencer_2.P27_Silencer_2",
+   "spin": 0,
+   "unit": "P27_Silencer_2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.16
+    ],
+    [
+     0.0,
+     8.5,
+     0.0,
+     0.06
+    ],
+    [
+     -3.0,
+     0.0,
+     0.0,
+     0.04
+    ]
+   ]
+  },
+  {
+   "name": "P28_PushInFitting",
    "name_cn": "快插接头",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P20_PUSHINFITTING.P20_PUSHINFITTING",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P28_PushInFitting.P28_PushInFitting",
    "spin": 0,
-   "unit": "P20_PUSHINFITTING",
+   "unit": "P28_PushInFitting",
    "ex": [
     [
      0.0,
      0.0,
-     16.368000000000002,
+     15.0,
      0.16
     ],
     [
-     16.748,
      0.0,
-     5.104,
-     0.32
+     8.5,
+     0.0,
+     0.06
+    ],
+    [
+     0.0,
+     0.0,
+     2.5,
+     0.04
     ]
    ]
   },
   {
-   "name": "P21_MOUNTINGSCREW_1",
+   "name": "P29_SolenoidScrew_1",
    "name_cn": "电磁阀螺钉",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P21_MOUNTINGSCREW_1.P21_MOUNTINGSCREW_1",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P29_SolenoidScrew_1.P29_SolenoidScrew_1",
    "spin": 0,
-   "unit": "P21_MOUNTINGSCREW_1",
+   "unit": "P29_SolenoidScrew_1",
    "ex": [
     [
      0.0,
      0.0,
-     16.368000000000002,
+     15.0,
      0.16
     ],
     [
-     17.808000000000003,
-     5.303999999999999,
      0.0,
-     0.32
+     8.5,
+     0.0,
+     0.06
+    ],
+    [
+     0.0,
+     4.0,
+     0.0,
+     0.02
     ]
    ]
   },
   {
-   "name": "P21_MOUNTINGSCREW_2",
+   "name": "P29_SolenoidScrew_2",
    "name_cn": "电磁阀螺钉",
-   "mesh": "/Game/Models/Valve/valve/StaticMeshes/P21_MOUNTINGSCREW_2.P21_MOUNTINGSCREW_2",
+   "mesh": "/Game/Models/Valve/ball_valve/StaticMeshes/P29_SolenoidScrew_2.P29_SolenoidScrew_2",
    "spin": 0,
-   "unit": "P21_MOUNTINGSCREW_2",
+   "unit": "P29_SolenoidScrew_2",
    "ex": [
     [
      0.0,
      0.0,
-     16.368000000000002,
+     15.0,
      0.16
     ],
     [
-     17.808000000000003,
-     -5.303999999999999,
      0.0,
-     0.32
+     8.5,
+     0.0,
+     0.06
+    ],
+    [
+     0.0,
+     4.0,
+     0.0,
+     0.02
     ]
    ]
   }

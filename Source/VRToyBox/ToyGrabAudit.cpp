@@ -234,7 +234,7 @@ void AToyGrabAudit::Tick(float DeltaSeconds)
 	}
 	case EStep::Close:
 	{
-		Hand->SetInputs(1.f, 0.f);
+		Hand->SetInputs(0.f, 1.f);   // 扳机 = 捏
 		Goto(EStep::Present, 0.35f);
 		break;
 	}

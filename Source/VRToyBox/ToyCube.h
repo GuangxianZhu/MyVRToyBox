@@ -13,6 +13,9 @@ namespace ToyBox
 {
 	/** 控制台变量 toy.ShowGrabPoints：1 = 游戏里显示抓点箭头。 */
 	bool ShowGrabPoints();
+
+	/** 控制台变量 toy.PalmSnap：1 = 旧的手掌贴合抓法（方块贴面、零件贴圆柱 / 盒面 / 实物表面）；0 = 自由捏取（默认）。 */
+	bool PalmSnap();
 }
 
 /**

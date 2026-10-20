@@ -10,7 +10,9 @@ class IToyGrabbable;
 class STextBlock;
 class UAnimSequence;
 class UArrowComponent;
+class UMaterialInstanceDynamic;
 class UPoseableMeshComponent;
+class UStaticMeshComponent;
 class UPrimitiveComponent;
 class USkeletalMesh;
 class UWidgetComponent;
@@ -18,7 +20,10 @@ class UWidgetComponent;
 /**
  * 一只手，挂在动作控制器（握把姿态）上。模型用 UE VR 模板自带的 MannyXR 手（Content/XRMannequins），
  * 左右手各用自己的网格；手指不用动画蓝图，而是每帧在"张开"（Idle）和"握拳"（Grasp）两个姿势之间按手指分组插值：
- * 握把 → 中指、无名指、小指、拇指；扳机 → 食指（见 TickCurls / ApplyFingerPose）。
+ * 扳机 → 拇指和食指合拢成"捏"；握把 → 中指、无名指、小指（见 TickCurls / ApplyFingerPose）。
+ *
+ * 抓取只看扳机（像拇指食指捏东西）：扳机过 0.6 捏起、低于 0.4 松开；握把完全不参与抓取。
+ * 捏合点处画一个半透明小球（RangeSphere，半径 = GrabRadius）：平时淡白，有东西进范围变绿，捏住后缩小变淡。
  *
  * 坐标约定（右手；左手是镜像）：
  *   手指朝 +X，掌心朝 -Y（左手 +Y），原点 = 控制器握把姿态。网格怎么摆由 InitHand 从骨骼自动算：
@@ -78,6 +83,24 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<UWidgetComponent> InfoLabel;
 
+	/** 捏合点的范围小球：只显示，不碰撞、不投影。 */
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<UStaticMeshComponent> RangeSphere;
+
+	/** 扳机按过这个值捏起，松到 ReleaseThreshold 以下放开（迟滞，防止扳机在中间值抖动时反复抓放）。 */
+	UPROPERTY(EditAnywhere, Category = "ToyBox")
+	float PinchThreshold = 0.6f;
+
+	UPROPERTY(EditAnywhere, Category = "ToyBox")
+	float ReleaseThreshold = 0.4f;
+
+	/** 扳机按满时食指和拇指的弯曲程度（0 = 张开，1 = 握拳），这个组合下两个指尖刚好碰在一起。 */
+	UPROPERTY(EditAnywhere, Category = "ToyBox")
+	float PinchIndexCurl = 0.45f;
+
+	UPROPERTY(EditAnywhere, Category = "ToyBox")
+	float PinchThumbCurl = 0.55f;
+
 	/** 抓取判定半径：捏合点到物体碰撞表面的距离不超过这么多（厘米）才算碰到。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float GrabRadius = 2.f;
@@ -89,6 +112,9 @@ public:
 	/** 全手握着东西时手指至少弯到"握拳"的这么多（0~1），看起来像握住了 10cm 的方块。捏和托见 TickCurls。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float HoldCurl = 0.6f;
+
+	/** 现在有没有捏住东西 / 有没有东西在捏合范围里（范围小球的颜色用，调试也用）。 */
+	bool IsPinchHovering() const { return HoveredActor.IsValid(); }
 
 protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -108,6 +134,7 @@ private:
 	void RecordMotion();
 	FVector GetThrowVelocity() const;
 	void Pulse(float Amplitude, float Duration) const;
+	void TickRangeSphere(float DeltaSeconds);
 
 	UPROPERTY()
 	TObjectPtr<USkeletalMesh> RightMesh;
@@ -144,7 +171,7 @@ private:
 	float Trigger = 0.f;
 	float FingerCurl = 0.f;
 	float IndexCurl = 0.f;
-	bool bGripDown = false;
+	bool bTriggerDown = false;
 	bool bPokeEnabled = true;
 
 	TWeakObjectPtr<AActor> HeldActor;
@@ -157,6 +184,10 @@ private:
 	float SnapAlpha = 1.f;
 
 	TArray<TWeakObjectPtr<UPrimitiveComponent>> Touching;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> RangeMaterial;
+	float RangeScale = 1.f;
 
 	struct FMotionSample
 	{

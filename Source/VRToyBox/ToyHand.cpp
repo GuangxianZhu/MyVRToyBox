@@ -8,6 +8,9 @@
 #include "Animation/AnimSequence.h"
 #include "Components/ArrowComponent.h"
 #include "Components/PoseableMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Components/WidgetComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/CollisionProfile.h"
@@ -41,6 +44,12 @@ namespace
 	constexpr float LabelScale = 0.04f;
 	constexpr float LabelWidthPx = 560.f;
 	constexpr float LabelBoost = 12.f;
+
+	// 范围小球：引擎自带的球（半径 50cm），材质用零件虚影那个半透明发光材质（参数 Color、Opacity）
+	const TCHAR* SphereMeshPath = TEXT("/Engine/BasicShapes/Sphere.Sphere");
+	const TCHAR* RangeMaterialPath = TEXT("/Game/Materials/M_ToyGhost.M_ToyGhost");
+	constexpr float SphereMeshRadius = 50.f;
+	constexpr float RangeBoost = 12.f;
 
 	IToyGrabbable* AsGrabbable(AActor* Actor)
 	{
@@ -181,6 +190,17 @@ AToyHand::AToyHand()
 	InfoLabel->SetHiddenInGame(true);
 	// 不受光照的 UI 在自动曝光下会显得很暗（颜色值 1 ≈ 1 尼特，房间是几十尼特），整体提亮
 	InfoLabel->SetTintColorAndOpacity(FLinearColor(LabelBoost, LabelBoost, LabelBoost, 1.f));
+
+	// 捏合范围小球：每帧挪到捏合点，不碰撞、不投影、不挡鼠标射线
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereFinder(SphereMeshPath);
+	RangeSphere = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RangeSphere"));
+	RangeSphere->SetupAttachment(Root);
+	RangeSphere->SetStaticMesh(SphereFinder.Object);
+	RangeSphere->SetUsingAbsoluteScale(true);
+	RangeSphere->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
+	RangeSphere->SetCastShadow(false);
+	RangeSphere->SetReceivesDecals(false);
+	RangeSphere->bSelectable = false;
 }
 
 void AToyHand::InitHand(AToyBoxPawn* InPawn, EControllerHand InSide)
@@ -196,6 +216,16 @@ void AToyHand::InitHand(AToyBoxPawn* InPawn, EControllerHand InSide)
 	GripPoint->SetRelativeLocationAndRotation(PalmSurface, GripRotation);
 
 	SetupHandMesh();
+
+	if (UMaterialInterface* Base = LoadObject<UMaterialInterface>(nullptr, RangeMaterialPath))
+	{
+		RangeMaterial = UMaterialInstanceDynamic::Create(Base, this);
+		RangeSphere->SetMaterial(0, RangeMaterial);
+	}
+	else
+	{
+		RangeSphere->SetHiddenInGame(true);
+	}
 
 	// 信息牌：标题一行，下面材料和作用自动换行。字体用引擎默认字体，它带中文后备字形
 	SAssignNew(InfoTitle, STextBlock)
@@ -433,18 +463,18 @@ void AToyHand::Tick(float DeltaSeconds)
 
 	RecordMotion();
 
-	// 滞回阈值：按过 0.6 才算抓，松到 0.35 以下才算放，避免握把在中间值抖动时反复抓放
-	if (!bGripDown && Grip > 0.6f)
+	// 抓取只看扳机（拇指食指捏）：按过 PinchThreshold 捏起，松到 ReleaseThreshold 以下放开。握把不参与
+	if (!bTriggerDown && Trigger > PinchThreshold)
 	{
-		bGripDown = true;
+		bTriggerDown = true;
 		if (AActor* Candidate = FindGrabCandidate())
 		{
 			Grab(Candidate);
 		}
 	}
-	else if (bGripDown && Grip < 0.35f)
+	else if (bTriggerDown && Trigger < ReleaseThreshold)
 	{
-		bGripDown = false;
+		bTriggerDown = false;
 		ReleaseHeld(true);
 	}
 
@@ -458,6 +488,7 @@ void AToyHand::Tick(float DeltaSeconds)
 	TickHeld(DeltaSeconds);
 	TickCurls(DeltaSeconds);
 	TickInfo();
+	TickRangeSphere(DeltaSeconds);
 	if (bPokeEnabled)
 	{
 		TickPoke();
@@ -587,6 +618,9 @@ void AToyHand::UpdateHover()
 	{
 		Grabbable->AddHover();
 	}
+	// 范围小球跟着变色（见 TickRangeSphere）；VR 里看不清时可以查日志
+	UE_LOG(LogTemp, Log, TEXT("ToyBox: %s手捏合范围内：%s"), Side == EControllerHand::Left ? TEXT("左") : TEXT("右"),
+		Candidate ? *Candidate->GetName() : TEXT("（空，小球变回淡白）"));
 }
 
 void AToyHand::ShowInfo(AActor* Target)
@@ -643,26 +677,32 @@ void AToyHand::TickHeld(float DeltaSeconds)
 void AToyHand::TickCurls(float DeltaSeconds)
 {
 	// 弯曲程度 0 = 张开（Idle），1 = 握拳（Grasp）。
-	// 拿着东西时按抓法定最小弯曲：全手握 = HoldCurl；捏 = 食指和拇指半弯、其余三指收起；托整机 = 手指微弯
-	float MinFinger = 0.f;
-	float MinIndex = 0.f;
-	float MinThumb = 0.f;
-	bool bPinch = false;
-	if (const IToyGrabbable* Held = AsGrabbable(HeldActor.Get()))
-	{
-		switch (Held->GetGripStyle())
-		{
-		case EToyGripStyle::Power: MinFinger = HoldCurl; MinIndex = HoldCurl; MinThumb = HoldCurl; break;
-		case EToyGripStyle::Pinch: MinFinger = 1.f; MinIndex = 0.45f; MinThumb = 0.55f; bPinch = true; break;
-		case EToyGripStyle::Palm:  MinFinger = 0.25f; MinIndex = 0.25f; MinThumb = 0.2f; break;
-		}
-	}
+	// 扳机 → 拇指和食指一起合拢到"捏"的姿势（不按扳机时食指伸直，用来戳触屏）；握把 → 中指、无名指、小指。
+	// 捏着东西时拇指食指保持捏合，扳机松一点也不张开（真正松手由 Tick 里的迟滞决定）
+	const float Pinch = HeldActor.IsValid() ? 1.f : Trigger;
 	const float Speed = 20.f;
-	FingerCurl = FMath::FInterpTo(FingerCurl, FMath::Max(Grip, MinFinger), DeltaSeconds, Speed);
-	// 捏的时候握把按满食指和拇指也不弯到底，保持捏的样子
-	IndexCurl = FMath::FInterpTo(IndexCurl, bPinch ? MinIndex : FMath::Max(Trigger, MinIndex), DeltaSeconds, Speed);
-	ThumbCurl = FMath::FInterpTo(ThumbCurl, bPinch ? MinThumb : FMath::Max(Grip, MinThumb), DeltaSeconds, Speed);
+	FingerCurl = FMath::FInterpTo(FingerCurl, Grip, DeltaSeconds, Speed);
+	IndexCurl = FMath::FInterpTo(IndexCurl, Pinch * PinchIndexCurl, DeltaSeconds, Speed);
+	ThumbCurl = FMath::FInterpTo(ThumbCurl, Pinch * PinchThumbCurl, DeltaSeconds, Speed);
 	ApplyFingerPose();
+}
+
+void AToyHand::TickRangeSphere(float DeltaSeconds)
+{
+	if (!RangeMaterial)
+	{
+		return;
+	}
+	// 平时淡白；有东西进范围（零件同时高亮）变绿；捏住后缩到一半、更淡，不挡着看手里的零件
+	const bool bHolding = HeldActor.IsValid();
+	const bool bHover = !bHolding && HoveredActor.IsValid();
+	const FLinearColor Color = bHover ? FLinearColor(0.2f, 1.f, 0.35f) : FLinearColor(1.f, 1.f, 1.f);
+	const float Opacity = bHolding ? 0.06f : (bHover ? 0.35f : 0.12f);
+	RangeScale = FMath::FInterpTo(RangeScale, bHolding ? 0.5f : 1.f, DeltaSeconds, 15.f);
+	RangeMaterial->SetVectorParameterValue(TEXT("Color"), Color * (bHover ? RangeBoost : RangeBoost * 0.25f));
+	RangeMaterial->SetScalarParameterValue(TEXT("Opacity"), Opacity);
+	RangeSphere->SetWorldLocation(GetPinchLocation());
+	RangeSphere->SetWorldScale3D(FVector(GrabRadius * RangeScale / SphereMeshRadius));
 }
 
 void AToyHand::TickPoke()

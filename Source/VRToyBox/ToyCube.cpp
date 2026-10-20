@@ -16,6 +16,16 @@ bool ToyBox::ShowGrabPoints()
 	return CVarShowGrabPoints.GetValueOnGameThread() != 0;
 }
 
+static TAutoConsoleVariable<int32> CVarPalmSnap(
+	TEXT("toy.PalmSnap"),
+	0,
+	TEXT("1 = 用旧的手掌贴合抓法（方块贴面，零件贴圆柱面 / 盒面 / 实物表面）；0 = 自由捏取（默认：保持抓起那一刻物体相对手的位置和角度，小零件中心吸到捏合点）"));
+
+bool ToyBox::PalmSnap()
+{
+	return CVarPalmSnap.GetValueOnGameThread() != 0;
+}
+
 AToyCube::AToyCube()
 {
 	Mesh = CreateDefaultSubobject<UToyShapeComponent>(TEXT("Mesh"));
@@ -61,6 +71,11 @@ void AToyCube::BeginPlay()
 
 FTransform AToyCube::ComputeHoldTransform(const FToyGripContext& Grip) const
 {
+	// 自由捏取：保持捏起那一刻方块相对手的位置和角度（toy.PalmSnap 1 时用下面旧的 6 面贴合）
+	if (!ToyBox::PalmSnap())
+	{
+		return FTransform(GetActorQuat(), GetActorLocation()).GetRelativeTransform(Grip.GripWorld);
+	}
 	const FTransform& GripWorld = Grip.GripWorld;
 	const FVector HandX = GripWorld.GetUnitAxis(EAxis::X);
 	const FVector HandZ = GripWorld.GetUnitAxis(EAxis::Z);

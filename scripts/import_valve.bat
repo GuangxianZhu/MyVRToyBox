@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions
-rem 气动蝶阀模型：three.js 写的爆炸图（codex_localAI\work\valve）导出 valve.glb → 导入成 UE 资产 + 爆炸图清单
+rem 气动球阀模型：打包好的单个 html（three.js 写的爆炸图）→ 无头 Chrome 导出 glb → 导入成 UE 资产 + 爆炸图清单
 rem 只有模型改了才需要跑；导入结果（Content\Models\Valve）会提交到仓库，平时不用管
 cd /d "%~dp0.."
 set "PROJECT=%CD%\VRToyBox.uproject"
@@ -9,13 +9,20 @@ set "PROJECT=%CD%\VRToyBox.uproject"
 rem ---- 先检查 VRToyBox 自己 main 上有没有更新 ----
 call "%~dp0update.bat"
 
-rem ---- 阀门工程：环境变量 VALVE_DIR > ITBasics\气动阀门爆炸图（同级目录或 ITBASICS_DIR）> 原来的 C:\work\codex_localAI ----
+rem ---- 球阀 html：环境变量 BALL_VALVE_HTML > ITBasics\气动阀门爆炸图\气动球阀爆炸图.html > C:\work\codex_localAI ----
 if not defined ITBASICS_DIR set "ITBASICS_DIR=%CD%\..\ITBasics"
-if not defined VALVE_DIR if exist "%ITBASICS_DIR%\气动阀门爆炸图\work\valve\src\10-parts.js" set "VALVE_DIR=%ITBASICS_DIR%\气动阀门爆炸图\work\valve"
-if not defined VALVE_DIR set "VALVE_DIR=C:\work\codex_localAI\work\valve"
-if not exist "%VALVE_DIR%\src\10-parts.js" (
-  echo [导入] 找不到阀门工程：%VALVE_DIR%
-  echo [导入] 设置环境变量 VALVE_DIR 指向 work\valve 目录（里面有 src\ 和 build.mjs，上一级有 node_modules）
+if not defined BALL_VALVE_HTML if exist "%ITBASICS_DIR%\气动阀门爆炸图\气动球阀爆炸图.html" set "BALL_VALVE_HTML=%ITBASICS_DIR%\气动阀门爆炸图\气动球阀爆炸图.html"
+if not defined BALL_VALVE_HTML set "BALL_VALVE_HTML=C:\work\codex_localAI\气动球阀爆炸图.html"
+if not exist "%BALL_VALVE_HTML%" (
+  echo [导入] 找不到球阀 html：%BALL_VALVE_HTML%
+  echo [导入] 设置环境变量 BALL_VALVE_HTML 指向 气动球阀爆炸图.html
+  goto :fail
+)
+rem 导出要用一个有 three、esbuild、puppeteer-core 的 node_modules
+if not defined VALVE_NODE_MODULES set "VALVE_NODE_MODULES=C:\work\codex_localAI\work\node_modules"
+if not exist "%VALVE_NODE_MODULES%\three" (
+  echo [导入] 找不到 node_modules（要有 three、esbuild、puppeteer-core）：%VALVE_NODE_MODULES%
+  echo [导入] 设置环境变量 VALVE_NODE_MODULES 指向它
   goto :fail
 )
 where node >nul 2>nul
@@ -24,9 +31,10 @@ if errorlevel 1 (
   goto :fail
 )
 
-set "VALVE_GLB=%VALVE_DIR%\.build\valve.glb"
-echo [导入] 用无头 Chrome 跑阀门页面，导出 valve.glb ...
-node "%CD%\Tools\export_valve_glb.mjs" "%VALVE_DIR%" "%VALVE_GLB%"
+set "VALVE_GLB=%VALVE_NODE_MODULES%\..\.build\ball_valve.glb"
+echo [导入] 用无头 Chrome 打开球阀页面，导出 ball_valve.glb ...
+node "%CD%\Tools\export_ball_valve_glb.mjs" "%BALL_VALVE_HTML%" "%VALVE_GLB%"
+if errorlevel 1 goto :fail
 if not exist "%VALVE_GLB%" goto :fail
 set "MODEL_GLB=%VALVE_GLB%"
 set "MODEL_NAME=Valve"

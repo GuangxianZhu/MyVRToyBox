@@ -74,7 +74,7 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<USceneComponent> MotorMount;
 
-	/** 阀门放在同一个位置（一次只摆一个模型），朝向不同：执行器缸体长轴沿桌子长边，爆炸时端盖、弹簧往左右两边飞。 */
+	/** 球阀放在同一个位置（一次只摆一个模型），转 90°：管道 / 执行器缸体长轴沿桌子长边，爆炸时端盖、活塞往左右两边飞。 */
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<USceneComponent> ValveMount;
 

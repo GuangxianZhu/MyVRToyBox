@@ -63,15 +63,15 @@ MODELS = {
     ),
     'Valve': dict(
         info=dict(
-            title='气动蝶阀 DN80（对夹式 + 齿轮齿条单作用执行器）',
-            body='球铁阀体 · EPDM 衬里 · 不锈钢蝶板 · 弹簧复位（断气即关）\n装配状态：抓任意位置拿起整个阀门看。点 EXPLODE 拆开后，每个零件都能单独抓。',
+            title='气动球阀（三片式球阀 + 齿轮齿条单作用执行器）',
+            body='SUS316 阀体 · 镜面抛光球体 · PTFE 阀座 · 弹簧复位（断气即关）\n装配状态：抓任意位置拿起整个阀门看。点 EXPLODE 拆开后，每个零件都能单独抓。',
         ),
         named={},
         units={},
         rotor=None,
-        # 网页版的爆炸距离是按 29cm 的阀门、整个屏幕来定的；放大 1.7 倍摆在桌上会飞出视野，缩到 0.55
-        explode_scale=0.55,
-        check={'P09_CYLINDERBODY': (0, 0, 1)},
+        # 网页版的爆炸距离是按整个屏幕来定的：执行器整体往上飞 15cm、里面的零件再往上飞，放大 2.5 倍摆在桌上会飞出视野，缩到 0.4
+        explode_scale=0.4,
+        check={'P16_ActuatorBody': (0, 0, 1)},
     ),
     'Drone': dict(
         info=dict(
