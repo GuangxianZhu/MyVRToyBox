@@ -55,6 +55,9 @@ public:
 
 	static FString KindName(EToyModelKind Kind);
 
+	/** 桌上现在摆着的模型，没有就是空（调试命令 toy.GrabAudit 用）。 */
+	AToyExplodedModel* GetModel() const { return Model; }
+
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	int32 MaxCubes = 20;
 

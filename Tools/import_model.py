@@ -18,11 +18,14 @@ glb 的约定（ITBasics 的 Blender 脚本、Tools/export_valve_glb.mjs 都按�
 坐标换算：
     UE 导入 glTF 时把 (x, y, z) 换成 (x, z, y)（右手 Y 朝上 → 左手 Z 朝上），米换成厘米（用电机的 84 个零件逐个核对过，误差 0）。
 """
+import fnmatch
 import json
+import math
 import os
 import re
 import struct
 import sys
+from array import array
 from collections import Counter
 
 import unreal
@@ -96,15 +99,48 @@ MODELS = {
 CONFIG = MODELS.get(MODEL, dict(info=dict(title=MODEL, body=''), named={}, units={}, rotor=None, check={}))
 
 
-def read_glb_json(path):
+def read_glb(path):
+    """返回 (glTF JSON, 二进制块)。"""
     with open(path, 'rb') as f:
-        magic, _version, _length = struct.unpack('<4sII', f.read(12))
-        if magic != b'glTF':
-            raise RuntimeError(f'{path} 不是 glb 文件')
-        chunk_len, chunk_type = struct.unpack('<II', f.read(8))
-        if chunk_type != 0x4E4F534A:  # 'JSON'
-            raise RuntimeError('glb 第一个块不是 JSON')
-        return json.loads(f.read(chunk_len).decode('utf-8'))
+        data = f.read()
+    magic, _version, _length = struct.unpack_from('<4sII', data, 0)
+    if magic != b'glTF':
+        raise RuntimeError(f'{path} 不是 glb 文件')
+    chunk_len, chunk_type = struct.unpack_from('<II', data, 12)
+    if chunk_type != 0x4E4F534A:  # 'JSON'
+        raise RuntimeError('glb 第一个块不是 JSON')
+    gltf = json.loads(data[20:20 + chunk_len].decode('utf-8'))
+    off = 20 + chunk_len
+    binary = b''
+    if off + 8 <= len(data):
+        bin_len, _ = struct.unpack_from('<II', data, off)
+        binary = data[off + 8: off + 8 + bin_len]
+    return gltf, binary
+
+
+def node_geometry(gltf, binary, node):
+    """节点网格的顶点和三角形，UE 坐标、厘米、模型未缩放（加上节点平移）。只认 float VEC3 的 POSITION。"""
+    t = node.get('translation', [0.0, 0.0, 0.0])
+    verts, tris = [], []
+    for prim in gltf['meshes'][node['mesh']]['primitives']:
+        acc = gltf['accessors'][prim['attributes']['POSITION']]
+        view = gltf['bufferViews'][acc['bufferView']]
+        start = view.get('byteOffset', 0) + acc.get('byteOffset', 0)
+        stride = view.get('byteStride', 12)
+        base = len(verts)
+        for i in range(acc['count']):
+            x, y, z = struct.unpack_from('<3f', binary, start + i * stride)
+            verts.append(((x + t[0]) * 100.0, (z + t[2]) * 100.0, (y + t[1]) * 100.0))
+        if 'indices' in prim:
+            iacc = gltf['accessors'][prim['indices']]
+            iview = gltf['bufferViews'][iacc['bufferView']]
+            fmt, width = {5121: ('B', 1), 5123: ('H', 2), 5125: ('I', 4)}[iacc['componentType']]
+            istart = iview.get('byteOffset', 0) + iacc.get('byteOffset', 0)
+            idx = struct.unpack_from(f'<{iacc["count"]}{fmt}', binary, istart)
+        else:
+            idx = range(acc['count'])
+        tris.extend((base + idx[i], base + idx[i + 1], base + idx[i + 2]) for i in range(0, len(idx) - 2, 3))
+    return verts, tris
 
 
 def normalize(name):
@@ -170,10 +206,101 @@ def merge(boxes):
     return lo, hi
 
 
-def grab_spec(unit_id, nodes, bounds, scale):
-    """抓点描述（模型坐标，厘米，未缩放）。C++ 的 AToyPartUnit 按 type 选抓法。"""
+ROUND_BINS = 36
+
+
+def round_axis(verts, lo, hi):
+    """零件是不是绕 X / Y / Z 某根轴的回转体（圆心不要求在原点）。
+    是：返回 (轴序号, 圆心, 外圆半径)；否：None。
+    判定：垂直于轴的两个方向一样宽（差 15% 以内）；绕轴分成 36 个角度格，每格取最远的顶点，
+    至少 60% 的格子离中位数不超过 8% 才算圆。正方形截面的角比边远 41%，所以方形板子、芯片不会被当成圆的；
+    电机端盖这种圆盘上凸出 4 个螺栓耳朵的（36 格里 12 格偏大），仍然算圆，半径取中位数（手掌贴在圆盘边上，不贴耳朵）。"""
+    best = None
+    size = [h - l for l, h in zip(lo, hi)]
+    for axis in range(3):
+        a, b = [i for i in range(3) if i != axis]
+        if max(size[a], size[b]) < 1e-3 or abs(size[a] - size[b]) > 0.15 * max(size[a], size[b]):
+            continue
+        c = [(lo[i] + hi[i]) * 0.5 for i in range(3)]
+        bins = [0.0] * ROUND_BINS
+        for v in verts:
+            da, db = v[a] - c[a], v[b] - c[b]
+            k = int((math.atan2(db, da) + math.pi) / (2 * math.pi) * ROUND_BINS) % ROUND_BINS
+            bins[k] = max(bins[k], math.hypot(da, db))
+        filled = sorted(r for r in bins if r > 0)
+        if len(filled) < ROUND_BINS * 0.75:
+            continue
+        median = filled[len(filled) // 2]
+        good = sum(1 for r in bins if abs(r - median) <= 0.08 * median)
+        score = good / ROUND_BINS
+        if score >= 0.6 and (best is None or score > best[3]):
+            best = (axis, c, median, score)
+    return best[:3] if best else None
+
+
+def ray_hits(verts, tris, axis, pa, pb, a, b):
+    """沿 axis 方向穿过 (pa, pb) 的直线和三角形的交点坐标（axis 方向上的值）列表。"""
+    hits = []
+    for i0, i1, i2 in tris:
+        p0, p1, p2 = verts[i0], verts[i1], verts[i2]
+        # 投影到 (a, b) 平面做二维点在三角形内判断（重心坐标）
+        x0, y0 = p0[a], p0[b]
+        x1, y1 = p1[a], p1[b]
+        x2, y2 = p2[a], p2[b]
+        if pa < min(x0, x1, x2) or pa > max(x0, x1, x2) or pb < min(y0, y1, y2) or pb > max(y0, y1, y2):
+            continue
+        det = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2)
+        if abs(det) < 1e-12:
+            continue
+        l0 = ((y1 - y2) * (pa - x2) + (x2 - x1) * (pb - y2)) / det
+        l1 = ((y2 - y0) * (pa - x2) + (x0 - x2) * (pb - y2)) / det
+        l2 = 1.0 - l0 - l1
+        if min(l0, l1, l2) < -1e-6:
+            continue
+        hits.append(l0 * p0[axis] + l1 * p1[axis] + l2 * p2[axis])
+    return hits
+
+
+def solid_box(verts, tris, lo, hi):
+    """从包围盒中心沿 X / Y / Z 各打一条穿透射线，碰到的第一层和最后一层真实三角形围成"实心盒"，返回 (lo, hi)。
+    任何一个方向没碰到东西、或者实心盒不到包围盒的一半（圆环、一对天线、绕一圈的绑带、中间空的支架），
+    手掌按包围盒贴上去会抓在空气里，返回 None，改用"贴实物表面"。
+    拖出去的电线、凸出的插头不在中心线上，不会把盒子撑大（电池、接线盒的手掌贴在盒体上，不贴在电线末端）。"""
+    out_lo, out_hi = list(lo), list(hi)
+    for axis in range(3):
+        a, b = [i for i in range(3) if i != axis]
+        hits = ray_hits(verts, tris, axis, (lo[a] + hi[a]) * 0.5, (lo[b] + hi[b]) * 0.5, a, b)
+        if len(hits) < 2:
+            return None
+        out_lo[axis], out_hi[axis] = min(hits), max(hits)
+        if out_hi[axis] - out_lo[axis] < 0.5 * (hi[axis] - lo[axis]):
+            return None
+    return out_lo, out_hi
+
+
+def resolve_point(point, nodes, bounds, verts):
+    """覆盖文件里 pinch 的 point、cylinder 的 center 可以写坐标，也可以写 "top"（最高的顶点）或 "node"（第一个零件节点的原点）。"""
+    if point == 'top':
+        v = max(verts, key=lambda q: q[2])
+        return [round(x, 2) for x in v]
+    if point == 'node':
+        return [round(x, 2) for x in NODE_ORIGIN[nodes[0]['name']]]
+    return point
+
+
+def grab_spec(unit_id, nodes, bounds, scale, verts):
+    """抓点描述（模型坐标，厘米，未缩放）。C++ 的 AToyPartUnit 按 type 选抓法。
+    顺序：覆盖文件 > 转子 > 小件捏 > 任意轴回转体握外圆 > 实心块状贴面 > 贴实物表面。"""
     lo, hi = merge([bounds[n['name']] for n in nodes])
     size = [h - l for l, h in zip(lo, hi)]
+    for pattern, entry in OVERRIDES.items():
+        if fnmatch.fnmatchcase(unit_id, pattern):
+            grab = dict(entry['grab'])
+            for key in ('point', 'center'):
+                if key in grab:
+                    grab[key] = resolve_point(grab[key], nodes, bounds, verts)
+            grab['override'] = pattern
+            return grab
     rotor = CONFIG.get('rotor')
     if unit_id == 'rotor' and rotor:
         shaft = bounds[rotor[0]]
@@ -186,15 +313,41 @@ def grab_spec(unit_id, nodes, bounds, scale):
         ])
     if max(size) * scale <= PINCH_MAX_CM:
         return dict(type='pinch')
-    center_yz = [(lo[i] + hi[i]) * 0.5 for i in (1, 2)]
-    round_yz = abs(size[1] - size[2]) <= 0.15 * max(size[1], size[2])
-    if round_yz and abs(center_yz[0]) < 1.5 and abs(center_yz[1]) < 1.5:
-        # 绕模型 X 轴的回转体（电机的端盖、风扇、风罩；阀门的衬圈）：握外缘
-        return dict(type='cylinder', segments=[[round(lo[0], 2), round(hi[0], 2), round(max(size[1], size[2]) * 0.5, 2)]])
-    # 其他：按单元里第一个零件（"主零件"，比如接线盒的盒座，不是拖得很长的电源线）的包围盒，像方块一样手掌贴一个面
+    found = round_axis(verts, lo, hi)
+    if found:
+        # 回转体（端盖、风罩、涵道、电机钟罩、阀杆……）：手掌贴在外圆上，轴可以是 X / Y / Z，圆心取包围盒中心
+        axis, c, r = found
+        direction = [0.0, 0.0, 0.0]
+        direction[axis] = 1.0
+        return dict(type='cylinder', axis=direction, center=[round(x, 2) for x in c],
+                    segments=[[round(lo[axis] - c[axis], 2), round(hi[axis] - c[axis], 2), round(r, 2)]])
+    # 块状：按单元里第一个零件（"主零件"，比如接线盒的盒座，不是拖得很长的电源线）的实心盒，像方块一样手掌贴一个面
     mlo, mhi = bounds[nodes[0]['name']]
-    return dict(type='box', center=[round((a + b) * 0.5, 2) for a, b in zip(mlo, mhi)],
-                extent=[round((b - a) * 0.5, 2) for a, b in zip(mlo, mhi)])
+    box = solid_box(VERTS[nodes[0]['name']], TRIS[nodes[0]['name']], mlo, mhi)
+    if box:
+        blo, bhi = box
+        return dict(type='box', center=[round((a + b) * 0.5, 2) for a, b in zip(blo, bhi)],
+                    extent=[round((b - a) * 0.5, 2) for a, b in zip(blo, bhi)])
+    # 兜底：抓的那一刻从指尖往零件打一条射线，手掌贴在碰到的真实表面上（C++ 里算）
+    return dict(type='surface')
+
+
+VERTS = {}
+TRIS = {}
+NODE_ORIGIN = {}
+
+
+def load_overrides():
+    """Tools/grab_overrides/<模型名>.json：{单元 id 或通配符: {"grab": {...}, "why": "为什么要手写"}}。"""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'grab_overrides', f'{MODEL}.json')
+    if not os.path.exists(path):
+        return {}
+    with open(path, encoding='utf-8') as f:
+        data = json.load(f)
+    return {k: v for k, v in data.items() if not k.startswith('_')}
+
+
+OVERRIDES = load_overrides()
 
 
 def part_no(node):
@@ -202,9 +355,15 @@ def part_no(node):
     return extras.get('part_no', extras.get('no'))
 
 
-def build_units(gltf, part_nodes):
+def build_units(gltf, binary, part_nodes):
     """按爆炸路线分组，返回 (零件名 → 单元 id, 单元列表, 缩放倍数)。"""
     bounds = {n['name']: ue_bounds(gltf, n) for n in part_nodes}
+    VERTS.clear()
+    TRIS.clear()
+    for n in part_nodes:
+        VERTS[n['name']], TRIS[n['name']] = node_geometry(gltf, binary, n)
+        t = n.get('translation', [0.0, 0.0, 0.0])
+        NODE_ORIGIN[n['name']] = (t[0] * 100.0, t[2] * 100.0, t[1] * 100.0)
     lo, hi = merge(list(bounds.values()))
     scale = TARGET_LENGTH_CM / max(h - l for l, h in zip(lo, hi))
     instances = Counter(part_no(n) for n in part_nodes)
@@ -235,7 +394,8 @@ def build_units(gltf, part_nodes):
             name_cn=info['name_cn'],
             material=info['material'],
             desc=info['desc'],
-            grab=None if unit_id == 'base' else grab_spec(unit_id, nodes, bounds, scale),
+            grab=None if unit_id == 'base' else grab_spec(unit_id, nodes, bounds, scale,
+                                                           [v for n in nodes for v in VERTS[n['name']]]),
         ))
     return unit_of, units, scale, [round(h - l, 1) for l, h in zip(lo, hi)]
 
@@ -245,7 +405,7 @@ def main():
     if not glb or not os.path.exists(glb):
         raise RuntimeError(f'找不到 glb：{glb!r}（设置环境变量 MODEL_GLB）')
 
-    gltf = read_glb_json(glb)
+    gltf, binary = read_glb(glb)
     # MODEL_MANIFEST_ONLY=1：资产已经导入过、只想重写 parts.json（比如改了抓点规则），就不重新导入，
     # 免得几十上百个 uasset 全部变成新的二进制、在 git 里白白多出十几 MB
     manifest_only = '1' in (os.environ.get('MODEL_MANIFEST_ONLY'), os.environ.get('MOTOR_MANIFEST_ONLY'))
@@ -256,7 +416,7 @@ def main():
 
     # 不是零件的节点：CAP 开头的是电机网页"剖开"模式用的剖切盖面，FX_ 开头的是无人机飞行时的桨叶模糊特效盘
     part_nodes = [n for n in gltf.get('nodes', []) if 'mesh' in n and not n.get('name', '').startswith(('CAP', 'FX_'))]
-    unit_of, units, scale, size = build_units(gltf, part_nodes)
+    unit_of, units, scale, size = build_units(gltf, binary, part_nodes)
 
     parts, missing, used = [], [], set()
     for node in part_nodes:

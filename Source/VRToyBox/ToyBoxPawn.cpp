@@ -128,7 +128,7 @@ void AToyBoxPawn::Tick(float DeltaSeconds)
 	{
 		TickVR();
 	}
-	else
+	else if (!bExternalControl)
 	{
 		TickDesktop();
 	}

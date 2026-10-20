@@ -30,6 +30,11 @@ public:
 
 	void PlayHaptic(EControllerHand Hand, float Amplitude, float Duration);
 
+	AToyHand* GetRightHand() const { return RightHand; }
+
+	/** 调试命令（toy.GrabAudit）接管右手时打开：桌面模式不再读鼠标、不再摆手。 */
+	void SetExternalControl(bool bEnabled) { bExternalControl = bEnabled; }
+
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<USceneComponent> VROrigin;
 
@@ -74,6 +79,7 @@ private:
 	TArray<FKey> TurnKeys;
 
 	bool bVR = false;
+	bool bExternalControl = false;
 	bool bModeApplied = false;
 	bool bInputModeApplied = false;
 	bool bSnapTurnArmed = true;

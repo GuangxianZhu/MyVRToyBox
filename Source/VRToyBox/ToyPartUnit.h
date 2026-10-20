@@ -23,20 +23,38 @@ enum class EToyPartGrab : uint8
 {
 	/** 不能抓（定子 + 机座这个基座） */
 	None,
-	/** 绕电机轴的回转体：手贴在一段圆柱面上，位置和角度取离手最近的那一点 */
+	/** 回转体（轴可以是任意方向、圆心任意）：手贴在一段圆柱面上，位置和角度取离手最近的那一点 */
 	Cylinder,
-	/** 方块一样：手掌贴包围盒的一个面 */
+	/** 方块一样：手掌贴实心盒的一个面 */
 	Box,
-	/** 小件：零件中心对到拇指和食指之间，保持抓起瞬间的朝向 */
-	Pinch
+	/** 小件：零件中心（或指定的捏点）对到拇指和食指之间，保持抓起瞬间的朝向 */
+	Pinch,
+	/** 兜底：抓的那一刻从手掌朝零件打射线（网格复杂碰撞），手掌贴在碰到的真实表面上 */
+	Surface
 };
 
-/** 一段抓取圆柱：沿电机轴（模型 X）从 X0 到 X1，半径 Radius（厘米，未缩放）。 */
+/** 一段抓取圆柱：沿轴从 X0 到 X1（相对圆心），半径 Radius（厘米，未缩放）。 */
 struct FToyCylinderSegment
 {
 	float X0;
 	float X1;
 	float Radius;
+};
+
+/** parts.json 里 units[].grab 解析出来的抓法（模型坐标，厘米，未缩放）。 */
+struct FToyGrabSpec
+{
+	EToyPartGrab Type = EToyPartGrab::None;
+	/** Cylinder：轴方向和圆心。老数据没写时是模型 X 轴、过原点（电机轴心）。 */
+	FVector Axis = FVector::XAxisVector;
+	FVector Center = FVector::ZeroVector;
+	TArray<FToyCylinderSegment> Segments;
+	/** Box：实心盒。无效时用网格包围盒。 */
+	FBox Box = FBox(ForceInit);
+	/** Pinch：捏在哪一点（覆盖文件指定，比如螺旋桨的桨毂）。没有时捏零件中心。 */
+	TOptional<FVector> Point;
+	/** 手写覆盖文件里的条目名，空 = 自动判定。 */
+	FString Override;
 };
 
 /**
@@ -60,8 +78,7 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 	/** 模型生成单元后依次调用：Setup → AddMesh（若干次）→ 模型定好缩放后 FinishSetup。 */
-	void Setup(AToyExplodedModel* InModel, const FString& InId, const FText& InTitle, const FText& InBody,
-		EToyPartGrab InGrab, TArray<FToyCylinderSegment> InSegments, const FBox& InGrabBox);
+	void Setup(AToyExplodedModel* InModel, const FString& InId, const FText& InTitle, const FText& InBody, const FToyGrabSpec& InGrab);
 	UStaticMeshComponent* AddMesh(UStaticMesh* Mesh, const FString& PartName);
 	void SetExplodeSteps(const TArray<FToyExplodeStep>& InSteps);
 	void FinishSetup();
@@ -71,7 +88,11 @@ public:
 
 	/** 在家 = 没被抓、也不在飞回去的路上，位置归模型管。 */
 	bool IsHome() const;
-	bool IsGrabbableUnit() const { return Grab != EToyPartGrab::None; }
+	bool IsGrabbableUnit() const { return Grab.Type != EToyPartGrab::None; }
+	EToyPartGrab GetGrabType() const { return Grab.Type; }
+	const FToyGrabSpec& GetGrabSpec() const { return Grab; }
+	/** 抓法的简短说明（调试截图上的文字）。 */
+	FString DescribeGrab() const;
 
 	/** 模型在爆炸 / 装配状态之间切换时打开 / 关闭单元的检测盒。 */
 	void SetGrabEnabled(bool bEnabled);
@@ -121,6 +142,10 @@ private:
 	FTransform FrameToHold(const FTransform& FrameWorld) const;
 	FTransform CylinderFrame(const FToyGripContext& Grip) const;
 	FTransform BoxFrame(const FToyGripContext& Grip) const;
+	/** 贴实物表面：成功返回 true 和手掌该贴的世界变换（X = 表面外法线，位置 = 命中点）。 */
+	bool SurfaceFrame(const FToyGripContext& Grip, FTransform& OutFrame) const;
+	bool TraceUnit(const FVector& Start, const FVector& End, FHitResult& OutHit) const;
+	FTransform PinchHold(const FToyGripContext& Grip) const;
 	float DistanceToHome() const;
 	void RefreshOverlay();
 
@@ -132,9 +157,7 @@ private:
 	FString Id;
 	FText Title;
 	FText Body;
-	EToyPartGrab Grab = EToyPartGrab::None;
-	TArray<FToyCylinderSegment> Segments;
-	FBox BoxShape = FBox(ForceInit);
+	FToyGrabSpec Grab;
 	FBox LocalBounds = FBox(ForceInit);
 	TArray<FToyExplodeStep> Steps;
 

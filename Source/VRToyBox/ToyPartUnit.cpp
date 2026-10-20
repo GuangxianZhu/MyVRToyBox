@@ -5,6 +5,8 @@
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
+#include "DrawDebugHelpers.h"
+#include "ToyCube.h"
 
 namespace
 {
@@ -56,16 +58,18 @@ AToyPartUnit::AToyPartUnit()
 	GrabBox->SetGenerateOverlapEvents(false);
 }
 
-void AToyPartUnit::Setup(AToyExplodedModel* InModel, const FString& InId, const FText& InTitle, const FText& InBody,
-	EToyPartGrab InGrab, TArray<FToyCylinderSegment> InSegments, const FBox& InGrabBox)
+void AToyPartUnit::Setup(AToyExplodedModel* InModel, const FString& InId, const FText& InTitle, const FText& InBody, const FToyGrabSpec& InGrab)
 {
 	Model = InModel;
 	Id = InId;
 	Title = InTitle;
 	Body = InBody;
 	Grab = InGrab;
-	Segments = MoveTemp(InSegments);
-	BoxShape = InGrabBox;
+	Grab.Axis = Grab.Axis.GetSafeNormal();
+	if (Grab.Axis.IsNearlyZero())
+	{
+		Grab.Axis = FVector::XAxisVector;
+	}
 }
 
 UStaticMeshComponent* AToyPartUnit::AddMesh(UStaticMesh* Mesh, const FString& PartName)
@@ -101,9 +105,9 @@ void AToyPartUnit::FinishSetup()
 	const FVector MinExtent(MinGrabHalfExtent / Scale);
 	GrabBox->SetRelativeLocation(LocalBounds.GetCenter());
 	GrabBox->SetBoxExtent(LocalBounds.GetExtent().ComponentMax(MinExtent));
-	if (!BoxShape.IsValid)
+	if (!Grab.Box.IsValid)
 	{
-		BoxShape = LocalBounds;
+		Grab.Box = LocalBounds;
 	}
 }
 
@@ -198,26 +202,34 @@ FTransform AToyPartUnit::CylinderFrame(const FToyGripContext& Grip) const
 {
 	const FTransform ObjectWorld = GetActorTransform();
 	const FVector GripLocation = Grip.GripWorld.GetLocation();
-	const FVector GripLocal = ObjectWorld.InverseTransformPosition(GripLocation);
+	// 以圆心为原点、沿轴量的本地坐标（模型坐标，未缩放）
+	const FVector AxisLocal = Grab.Axis;
+	const FVector GripLocal = ObjectWorld.InverseTransformPosition(GripLocation) - Grab.Center;
+	const float GripAlong = FVector::DotProduct(GripLocal, AxisLocal);
 
 	// 1) 绕轴的哪一侧贴手：优先让圆柱面外法线 = 手背方向（手掌正对零件，绕轴转零件看不出来，所以这一步"免费"）；
 	//    手背几乎顺着轴（手掌对着轴端）时，退回到"手在零件的哪一侧"
 	const FVector HandXLocal = ObjectWorld.InverseTransformVectorNoScale(Grip.GripWorld.GetUnitAxis(EAxis::X));
-	FVector Radial(0.f, HandXLocal.Y, HandXLocal.Z);
+	FVector Radial = HandXLocal - AxisLocal * FVector::DotProduct(HandXLocal, AxisLocal);
 	if (Radial.Size() < 0.3f)
 	{
-		Radial = FVector(0.f, GripLocal.Y, GripLocal.Z);
+		Radial = GripLocal - AxisLocal * GripAlong;
 	}
-	Radial = Radial.SizeSquared() > 1e-4f ? Radial.GetSafeNormal() : FVector::UpVector;
+	if (Radial.SizeSquared() < 1e-4f)
+	{
+		// 手正好在轴上：随便取一个垂直于轴的方向
+		Radial = FVector::CrossProduct(AxisLocal, FMath::Abs(AxisLocal.Z) < 0.9f ? FVector::UpVector : FVector::RightVector);
+	}
+	Radial = Radial.GetSafeNormal();
 
 	//    沿轴取手的投影（两头留 3cm 给手掌），在几段圆柱里挑离手最近的
 	FVector BestSurface = FVector::ZeroVector;
 	float BestDistance = TNumericLimits<float>::Max();
-	for (const FToyCylinderSegment& Segment : Segments)
+	for (const FToyCylinderSegment& Segment : Grab.Segments)
 	{
 		const float Margin = FMath::Min(3.f, (Segment.X1 - Segment.X0) * 0.5f);
-		const float X = FMath::Clamp(static_cast<float>(GripLocal.X), Segment.X0 + Margin, Segment.X1 - Margin);
-		const FVector Surface = ObjectWorld.TransformPosition(FVector(X, 0.f, 0.f) + Radial * Segment.Radius);
+		const float X = FMath::Clamp(GripAlong, Segment.X0 + Margin, Segment.X1 - Margin);
+		const FVector Surface = ObjectWorld.TransformPosition(Grab.Center + AxisLocal * X + Radial * Segment.Radius);
 		const float Distance = FVector::Dist(Surface, GripLocation);
 		if (Distance < BestDistance)
 		{
@@ -229,10 +241,21 @@ FTransform AToyPartUnit::CylinderFrame(const FToyGripContext& Grip) const
 	// 2) 手掌贴圆柱面：手的 X（掌心→手背）= 圆柱面外法线。
 	//    手指方向在 ±绕轴切线（握住一根轴）和 ±沿轴（扶着端盖外缘）四种里挑和现在手指最一致的，抓起时转得最少
 	const FVector Normal = ObjectWorld.TransformVectorNoScale(Radial).GetSafeNormal();
-	const FVector Axis = ObjectWorld.TransformVectorNoScale(FVector::XAxisVector).GetSafeNormal();
+	const FVector Axis = ObjectWorld.TransformVectorNoScale(AxisLocal).GetSafeNormal();
 	const FVector Tangent = FVector::CrossProduct(Axis, Normal).GetSafeNormal();
 	const FVector HandZ = Grip.GripWorld.GetUnitAxis(EAxis::Z);
-	const FVector FingerDir = PickClosest(HandZ, { Tangent, -Tangent, Axis, -Axis });
+	//    细长的杆（阀杆、齿轮轴、转子：长度超过半径的 2.5 倍）只能"握住"——手指绕着杆弯，不能顺着杆伸，
+	//    不然杆藏在手掌底下、看起来像托着而不是握着
+	float Length = 0.f;
+	float Radius = 0.f;
+	for (const FToyCylinderSegment& Segment : Grab.Segments)
+	{
+		Length += Segment.X1 - Segment.X0;
+		Radius = FMath::Max(Radius, Segment.Radius);
+	}
+	const FVector FingerDir = Length > 2.5f * Radius
+		? PickClosest(HandZ, { Tangent, -Tangent })
+		: PickClosest(HandZ, { Tangent, -Tangent, Axis, -Axis });
 	return FTransform(FRotationMatrix::MakeFromXZ(Normal, FingerDir).ToQuat(), BestSurface);
 }
 
@@ -243,8 +266,8 @@ FTransform AToyPartUnit::BoxFrame(const FToyGripContext& Grip) const
 	const FVector HandX = Grip.GripWorld.GetUnitAxis(EAxis::X);
 	const FVector HandZ = Grip.GripWorld.GetUnitAxis(EAxis::Z);
 	const FVector GripLocation = Grip.GripWorld.GetLocation();
-	const FVector Center = BoxShape.GetCenter();
-	const FVector Extent = BoxShape.GetExtent();
+	const FVector Center = Grab.Box.GetCenter();
+	const FVector Extent = Grab.Box.GetExtent();
 	const float Size = FMath::Max(1.f, static_cast<float>(ObjectWorld.TransformVector(Extent).GetAbsMax()) * 2.f);
 
 	FTransform Best;
@@ -274,26 +297,142 @@ FTransform AToyPartUnit::BoxFrame(const FToyGripContext& Grip) const
 	return Best;
 }
 
+bool AToyPartUnit::TraceUnit(const FVector& Start, const FVector& End, FHitResult& OutHit) const
+{
+	// 只打这个单元自己的网格，按三角形（复杂碰撞）打，不管周围别的零件
+	const FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyPartSurface), true);
+	bool bAny = false;
+	for (UStaticMeshComponent* Mesh : Meshes)
+	{
+		FHitResult Hit;
+		if (Mesh && Mesh->LineTraceComponent(Hit, Start, End, Params) && (!bAny || Hit.Distance < OutHit.Distance))
+		{
+			OutHit = Hit;
+			bAny = true;
+		}
+	}
+	return bAny;
+}
+
+bool AToyPartUnit::SurfaceFrame(const FToyGripContext& Grip, FTransform& OutFrame) const
+{
+	const FVector HandX = Grip.GripWorld.GetUnitAxis(EAxis::X);
+	const FVector HandZ = Grip.GripWorld.GetUnitAxis(EAxis::Z);
+	const FVector Pinch = Grip.GripWorld.TransformPosition(Grip.PinchInGrip);
+	const float Reach = FMath::Max(10.f, static_cast<float>(GetActorTransform().TransformVector(LocalBounds.GetExtent()).GetAbsMax()) * 2.f);
+
+	// 1) 从指尖稍微靠手背的位置，沿"掌心朝外"（-手背方向）往零件里打：手掌正对着的那块真实表面
+	FHitResult Hit;
+	bool bHit = TraceUnit(Pinch + HandX * 5.f, Pinch - HandX * Reach, Hit);
+	// 2) 掌心没对着零件（比如手侧着伸过去）：从指尖朝零件中心打
+	if (!bHit)
+	{
+		const FVector CenterWorld = GetActorTransform().TransformPosition(GetLocalCenter());
+		const FVector Dir = (CenterWorld - Pinch).GetSafeNormal();
+		if (!Dir.IsNearlyZero())
+		{
+			bHit = TraceUnit(Pinch - Dir * 5.f, CenterWorld + Dir * Reach, Hit);
+		}
+	}
+	// 3) 指尖正好在零件的孔里 / 两片之间（阀门端盖中间的孔）：往 26 个方向找最近的真实表面
+	if (!bHit)
+	{
+		for (int32 X = -1; X <= 1; ++X)
+		{
+			for (int32 Y = -1; Y <= 1; ++Y)
+			{
+				for (int32 Z = -1; Z <= 1; ++Z)
+				{
+					const FVector Dir = FVector(X, Y, Z).GetSafeNormal();
+					FHitResult Probe;
+					if (!Dir.IsNearlyZero() && TraceUnit(Pinch, Pinch + Dir * Reach, Probe) && (!bHit || Probe.Distance < Hit.Distance))
+					{
+						Hit = Probe;
+						bHit = true;
+					}
+				}
+			}
+		}
+	}
+	if (!bHit)
+	{
+		return false;
+	}
+
+	// 手掌贴在命中点：手的 X（掌心→手背）= 表面外法线（朝着手这一侧），手指方向取现在的手指投影到表面上
+	// 法线朝着射线来的方向（手这一侧）。不能用"指向捏合点"判断：捏合点常常已经陷进零件表面一点，会把顶面法线翻到下面去
+	FVector Normal = Hit.ImpactNormal.GetSafeNormal();
+	if (FVector::DotProduct(Normal, Hit.TraceEnd - Hit.TraceStart) > 0.f)
+	{
+		Normal = -Normal; // 打到背面（单面网格）时翻过来
+	}
+	FVector FingerDir = HandZ - Normal * FVector::DotProduct(HandZ, Normal);
+	if (FingerDir.SizeSquared() < 1e-3f)
+	{
+		FingerDir = FVector::CrossProduct(Normal, Grip.GripWorld.GetUnitAxis(EAxis::Y));
+	}
+	OutFrame = FTransform(FRotationMatrix::MakeFromXZ(Normal, FingerDir.GetSafeNormal()).ToQuat(), Hit.ImpactPoint);
+	if (ToyBox::ShowGrabPoints())
+	{
+		DrawDebugDirectionalArrow(GetWorld(), Hit.ImpactPoint, Hit.ImpactPoint + Normal * 6.f, 2.f, FColor::Cyan, false, 3.f);
+	}
+	return true;
+}
+
+FTransform AToyPartUnit::PinchHold(const FToyGripContext& Grip) const
+{
+	// 捏：朝向保持抓起瞬间的样子（小件怎么转都行），只把零件中心（或覆盖文件指定的捏点）挪到拇指和食指之间
+	const FTransform ObjectWorld(GetActorQuat(), GetActorLocation());
+	FTransform Hold = ObjectWorld.GetRelativeTransform(Grip.GripWorld);
+	const FVector PointLocal = Grab.Point.Get(GetLocalCenter());
+	const FVector PointWorld = GetActorTransform().TransformPosition(PointLocal);
+	const FVector PointInGrip = Grip.GripWorld.InverseTransformPosition(PointWorld);
+	Hold.AddToTranslation(Grip.PinchInGrip - PointInGrip);
+	return Hold;
+}
+
 FTransform AToyPartUnit::ComputeHoldTransform(const FToyGripContext& Grip) const
 {
-	switch (Grab)
+	switch (Grab.Type)
 	{
 	case EToyPartGrab::Cylinder:
 		return FrameToHold(CylinderFrame(Grip));
 	case EToyPartGrab::Box:
 		return FrameToHold(BoxFrame(Grip));
+	case EToyPartGrab::Surface:
+	{
+		FTransform Frame;
+		if (SurfaceFrame(Grip, Frame))
+		{
+			return FrameToHold(Frame);
+		}
+		// 哪个方向都没碰到（几乎不会）：抓哪里就保持哪里
+		UE_LOG(LogTemp, Warning, TEXT("ToyBox: %s 贴表面没打到网格，改成原样抓"), *Id);
+		return FTransform(GetActorQuat(), GetActorLocation()).GetRelativeTransform(Grip.GripWorld);
+	}
 	case EToyPartGrab::Pinch:
 	default:
+		return PinchHold(Grip);
+	}
+}
+
+FString AToyPartUnit::DescribeGrab() const
+{
+	// 调试截图上的说明文字：调试字体没有中文，用英文
+	FString Text;
+	switch (Grab.Type)
 	{
-		// 捏：朝向保持抓起瞬间的样子（小件怎么转都行），只把零件中心挪到拇指和食指之间
-		const FTransform ObjectWorld(GetActorQuat(), GetActorLocation());
-		FTransform Hold = ObjectWorld.GetRelativeTransform(Grip.GripWorld);
-		const FVector CenterWorld = GetActorTransform().TransformPosition(GetLocalCenter());
-		const FVector CenterInGrip = Grip.GripWorld.InverseTransformPosition(CenterWorld);
-		Hold.AddToTranslation(Grip.PinchInGrip - CenterInGrip);
-		return Hold;
+	case EToyPartGrab::Cylinder: Text = FString::Printf(TEXT("cylinder axis(%.0f,%.0f,%.0f)"), Grab.Axis.X, Grab.Axis.Y, Grab.Axis.Z); break;
+	case EToyPartGrab::Box:      Text = TEXT("box"); break;
+	case EToyPartGrab::Pinch:    Text = Grab.Point.IsSet() ? TEXT("pinch@point") : TEXT("pinch"); break;
+	case EToyPartGrab::Surface:  Text = TEXT("surface"); break;
+	default:                     Text = TEXT("none"); break;
 	}
+	if (!Grab.Override.IsEmpty())
+	{
+		Text += TEXT(" [override]");
 	}
+	return Text;
 }
 
 void AToyPartUnit::OnGrabbed(AToyHand* Hand)
@@ -369,7 +508,7 @@ void AToyPartUnit::RefreshOverlay()
 
 EToyGripStyle AToyPartUnit::GetGripStyle() const
 {
-	return Grab == EToyPartGrab::Pinch ? EToyGripStyle::Pinch : EToyGripStyle::Power;
+	return Grab.Type == EToyPartGrab::Pinch ? EToyGripStyle::Pinch : EToyGripStyle::Power;
 }
 
 bool AToyPartUnit::GetGrabInfo(FText& OutTitle, FText& OutBody) const

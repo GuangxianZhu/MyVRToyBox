@@ -56,6 +56,8 @@ public:
 
 	UMaterialInterface* GetHoverMaterial() const;
 
+	const TArray<TObjectPtr<AToyPartUnit>>& GetUnits() const { return Units; }
+
 	// IToyGrabbable：装配状态下抓整台电机
 	virtual bool CanGrab() const override;
 	virtual FTransform ComputeHoldTransform(const FToyGripContext& Grip) const override;

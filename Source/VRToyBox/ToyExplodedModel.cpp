@@ -23,6 +23,7 @@ namespace
 		if (Type == TEXT("cylinder")) return EToyPartGrab::Cylinder;
 		if (Type == TEXT("box"))      return EToyPartGrab::Box;
 		if (Type == TEXT("pinch"))    return EToyPartGrab::Pinch;
+		if (Type == TEXT("surface"))  return EToyPartGrab::Surface;
 		return EToyPartGrab::None;
 	}
 
@@ -101,9 +102,7 @@ bool AToyExplodedModel::LoadManifest(const FString& ManifestPath)
 		}
 		Unit->AttachToComponent(ModelRoot, FAttachmentTransformRules::SnapToTargetIncludingScale);
 
-		EToyPartGrab Grab = EToyPartGrab::None;
-		TArray<FToyCylinderSegment> Segments;
-		FBox GrabShape(ForceInit);
+		FToyGrabSpec Grab;
 		FText Title;
 		FText Body;
 		const TSharedPtr<FJsonObject>* GrabObject = nullptr;
@@ -115,27 +114,42 @@ bool AToyExplodedModel::LoadManifest(const FString& ManifestPath)
 			Body = FText::FromString(Material.IsEmpty() ? Desc : FString::Printf(TEXT("材料：%s\n%s"), *Material, *Desc));
 			if (Info->GetBoolField(TEXT("grabbable")) && Info->TryGetObjectField(TEXT("grab"), GrabObject))
 			{
-				Grab = ParseGrabType((*GrabObject)->GetStringField(TEXT("type")));
+				const TSharedPtr<FJsonObject>& G = *GrabObject;
+				Grab.Type = ParseGrabType(G->GetStringField(TEXT("type")));
+				Grab.Override = G->HasField(TEXT("override")) ? G->GetStringField(TEXT("override")) : FString();
 				const TArray<TSharedPtr<FJsonValue>>* SegmentValues = nullptr;
-				if ((*GrabObject)->TryGetArrayField(TEXT("segments"), SegmentValues))
+				if (G->TryGetArrayField(TEXT("segments"), SegmentValues))
 				{
 					for (const TSharedPtr<FJsonValue>& SegmentValue : *SegmentValues)
 					{
 						const TArray<TSharedPtr<FJsonValue>>& N = SegmentValue->AsArray();
 						if (N.Num() >= 3)
 						{
-							Segments.Add(FToyCylinderSegment{ static_cast<float>(N[0]->AsNumber()),
+							Grab.Segments.Add(FToyCylinderSegment{ static_cast<float>(N[0]->AsNumber()),
 								static_cast<float>(N[1]->AsNumber()), static_cast<float>(N[2]->AsNumber()) });
 						}
 					}
 				}
-				if ((*GrabObject)->HasField(TEXT("center")))
+				// 圆柱：axis + center（老数据没有 → 模型 X 轴过原点）；方块：center + extent；捏：point
+				if (G->HasField(TEXT("axis")))
 				{
-					GrabShape = FBox::BuildAABB(ReadVector(*GrabObject, TEXT("center")), ReadVector(*GrabObject, TEXT("extent")));
+					Grab.Axis = ReadVector(G, TEXT("axis"));
+				}
+				if (G->HasField(TEXT("center")))
+				{
+					Grab.Center = ReadVector(G, TEXT("center"));
+				}
+				if (Grab.Type == EToyPartGrab::Box && G->HasField(TEXT("extent")))
+				{
+					Grab.Box = FBox::BuildAABB(Grab.Center, ReadVector(G, TEXT("extent")));
+				}
+				if (G->HasField(TEXT("point")))
+				{
+					Grab.Point = ReadVector(G, TEXT("point"));
 				}
 			}
 		}
-		Unit->Setup(this, Id, Title, Body, Grab, MoveTemp(Segments), GrabShape);
+		Unit->Setup(this, Id, Title, Body, Grab);
 		Units.Add(Unit);
 		UnitById.Add(Id, Unit);
 		return Unit;
