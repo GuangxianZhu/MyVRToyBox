@@ -70,6 +70,28 @@ MODELS = {
         explode_scale=0.55,
         check={'P09_CYLINDERBODY': (0, 0, 1)},
     ),
+    'Drone': dict(
+        info=dict(
+            title='涵道无人机（3 寸涵道穿越机，原创设计）',
+            body='4S 650mAh · 1404 外转子电机 × 4 · 3 寸三叶桨 · 数字图传\n装配状态：抓任意位置拿起整机看。点 EXPLODE 拆开后，每个零件都能单独抓。',
+        ),
+        named={},
+        units={
+            'base': dict(name_cn='机架与立柱', material='3 mm 碳纤维板 + 尼龙立柱',
+                         desc='中央板、4 条机臂和电机座是一整块碳板；尼龙立柱撑起飞控塔。拆机时它不动，其他零件都从它上面拆下来。'),
+        },
+        # Blender 脚本没写材料，按零件号补上（信息牌第二行）
+        materials={
+            3: '橡胶', 4: 'PA 尼龙注塑', 5: '1404 外转子无刷 · 钕磁铁 + 漆包铜线', 6: 'PC 三叶桨（正 / 反桨）',
+            7: '四合一电调 · 4 层 PCB + 24 颗 MOS 管', 8: '飞控 · F7 MCU + 陀螺仪 + 气压计', 9: '数字图传 · 铝散热片 + 屏蔽罩',
+            10: 'TPU 3D 打印', 11: 'TPU 3D 打印', 12: '数字 FPV 相机（上仰 15°）', 13: '4S 650 mAh 锂聚合物电池 · XT30',
+            14: '尼龙魔术贴绑带', 15: '偶极子天线 × 2 · MMCX',
+        },
+        rotor=None,
+        # 实物约 19cm，放大 2.6 倍后原来的爆炸距离（绑带往上 16.5cm）会冲到 43cm 高，缩到 0.8
+        explode_scale=0.8,
+        check={'P13_Battery': (0, 0, 1)},
+    ),
 }
 CONFIG = MODELS.get(MODEL, dict(info=dict(title=MODEL, body=''), named={}, units={}, rotor=None, check={}))
 
@@ -129,12 +151,15 @@ SPLIT_MAX_INSTANCES = 8
 
 
 def ue_bounds(gltf, node):
-    """节点网格在 UE 坐标里的包围盒（厘米，模型未缩放）。glTF (x, y, z) 米 → UE (x, z, y) 厘米。"""
+    """节点网格在 UE 坐标里的包围盒（厘米，模型未缩放）。glTF (x, y, z) 米 → UE (x, z, y) 厘米。
+    节点自己的平移也算进去（无人机的零件节点放在各自的安装位置；UE 导入时会把节点变换烘进网格，两边一致）。
+    旋转 / 缩放没处理：现在的模型零件节点都没有。"""
     lo, hi = [1e9] * 3, [-1e9] * 3
+    t = node.get('translation', [0.0, 0.0, 0.0])
     for prim in gltf['meshes'][node['mesh']]['primitives']:
         acc = gltf['accessors'][prim['attributes']['POSITION']]
-        lo = [min(a, b) for a, b in zip(lo, acc['min'])]
-        hi = [max(a, b) for a, b in zip(hi, acc['max'])]
+        lo = [min(a, b + o) for a, b, o in zip(lo, acc['min'], t)]
+        hi = [max(a, b + o) for a, b, o in zip(hi, acc['max'], t)]
     order = (0, 2, 1)
     return [lo[i] * 100.0 for i in order], [hi[i] * 100.0 for i in order]
 
@@ -172,18 +197,23 @@ def grab_spec(unit_id, nodes, bounds, scale):
                 extent=[round((b - a) * 0.5, 2) for a, b in zip(mlo, mhi)])
 
 
+def part_no(node):
+    extras = node.get('extras', {})
+    return extras.get('part_no', extras.get('no'))
+
+
 def build_units(gltf, part_nodes):
     """按爆炸路线分组，返回 (零件名 → 单元 id, 单元列表, 缩放倍数)。"""
     bounds = {n['name']: ue_bounds(gltf, n) for n in part_nodes}
     lo, hi = merge(list(bounds.values()))
     scale = TARGET_LENGTH_CM / max(h - l for l, h in zip(lo, hi))
-    instances = Counter(n.get('extras', {}).get('part_no') for n in part_nodes)
+    instances = Counter(part_no(n) for n in part_nodes)
 
     groups = {}
     for node in part_nodes:
         extras = node.get('extras', {})
         ex = extras.get('ex', '[]')
-        if json.loads(ex) and 1 < instances[extras.get('part_no')] <= SPLIT_MAX_INSTANCES:
+        if json.loads(ex) and 1 < instances[part_no(node)] <= SPLIT_MAX_INSTANCES:
             key = node['name']
         else:
             key = ex if json.loads(ex) else '[]'
@@ -196,7 +226,8 @@ def build_units(gltf, part_nodes):
         for n in names:
             unit_of[n] = unit_id
         first = nodes[0].get('extras', {})
-        info = CONFIG['units'].get(unit_id) or dict(name_cn=first.get('name_cn', ''), material=first.get('material_spec', ''),
+        material = first.get('material_spec') or CONFIG.get('materials', {}).get(part_no(nodes[0]), '')
+        info = CONFIG['units'].get(unit_id) or dict(name_cn=first.get('name_cn', ''), material=material,
                                                     desc=first.get('desc', ''))
         units.append(dict(
             id=unit_id,
@@ -223,8 +254,8 @@ def main():
     meshes = static_meshes()
     unreal.log(f'ToyBox: {MODEL} 导入了 {len(meshes)} 个静态网格')
 
-    # 名字以 CAP 开头的是电机网页"剖开"模式用的剖切盖面，UE 里用不上
-    part_nodes = [n for n in gltf.get('nodes', []) if 'mesh' in n and not n.get('name', '').startswith('CAP')]
+    # 不是零件的节点：CAP 开头的是电机网页"剖开"模式用的剖切盖面，FX_ 开头的是无人机飞行时的桨叶模糊特效盘
+    part_nodes = [n for n in gltf.get('nodes', []) if 'mesh' in n and not n.get('name', '').startswith(('CAP', 'FX_'))]
     unit_of, units, scale, size = build_units(gltf, part_nodes)
 
     parts, missing, used = [], [], set()
@@ -248,7 +279,7 @@ def main():
         ))
 
     for key, asset in meshes.items():
-        if key not in used and key.startswith('cap'):
+        if key not in used and key.startswith(('cap', 'fx')):
             unreal.EditorAssetLibrary.delete_asset(asset.get_path_name())
 
     # 方向检查：几个已知零件的中心应该在模型原点的哪一侧
