@@ -19,6 +19,7 @@ enum class EToyScreenAction : uint8
 	ToggleMotor,
 	ToggleValve,
 	ToggleDrone,
+	ToggleLathe,
 	ToggleExplode,
 	ResetParts
 };

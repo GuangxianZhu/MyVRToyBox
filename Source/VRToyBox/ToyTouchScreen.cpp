@@ -45,15 +45,16 @@ AToyTouchScreen::AToyTouchScreen()
 	Status = MakeText(TEXT("Status"), FVector(1.5f, 0.f, -10.f), TEXT(""), 1.1f, FColor(150, 200, 255));
 
 	// 站在屏幕前看，+Y 在左手边。上排方块，下排电机
-	// 第一排方块；第二排电机、阀门；第三排无人机、爆炸 / 还原
+	// 第一排方块；第二排电机、阀门；第三排无人机、爆炸 / 还原；第四排车床、零件复位
 	MakeButton(TEXT("Spawn"), EToyScreenAction::SpawnCube, 7.5f, 5.6f, TEXT("SPAWN"), TEXT("CUBE"), FLinearColor(0.1f, 0.7f, 0.25f));
 	MakeButton(TEXT("Clear"), EToyScreenAction::ClearCubes, -7.5f, 5.6f, TEXT("CLEAR"), TEXT("CUBES"), FLinearColor(0.8f, 0.15f, 0.12f));
 	MakeButton(TEXT("Motor"), EToyScreenAction::ToggleMotor, 7.5f, 1.5f, TEXT("SHOW"), TEXT("MOTOR"), FLinearColor(0.15f, 0.35f, 0.85f));
 	MakeButton(TEXT("Valve"), EToyScreenAction::ToggleValve, -7.5f, 1.5f, TEXT("SHOW"), TEXT("VALVE"), FLinearColor(0.1f, 0.55f, 0.6f));
 	MakeButton(TEXT("Drone"), EToyScreenAction::ToggleDrone, 7.5f, -2.6f, TEXT("SHOW"), TEXT("DRONE"), FLinearColor(0.45f, 0.3f, 0.75f));
 	MakeButton(TEXT("Explode"), EToyScreenAction::ToggleExplode, -7.5f, -2.6f, TEXT("EXPLODE"), TEXT("VIEW"), FLinearColor(0.85f, 0.5f, 0.05f));
-	// 第四排：所有零件松手、飞回原位
-	MakeButton(TEXT("Reset"), EToyScreenAction::ResetParts, 0.f, -6.7f, TEXT("RESET"), TEXT("PARTS"), FLinearColor(0.45f, 0.45f, 0.5f));
+	// 第四排：迷你车床；所有零件松手、飞回原位
+	MakeButton(TEXT("Lathe"), EToyScreenAction::ToggleLathe, 7.5f, -6.7f, TEXT("SHOW"), TEXT("LATHE"), FLinearColor(0.7f, 0.25f, 0.45f));
+	MakeButton(TEXT("Reset"), EToyScreenAction::ResetParts, -7.5f, -6.7f, TEXT("RESET"), TEXT("PARTS"), FLinearColor(0.45f, 0.45f, 0.5f));
 }
 
 UTextRenderComponent* AToyTouchScreen::MakeText(FName Name, const FVector& Location, const FString& Text, float Size, const FColor& Color)
@@ -151,6 +152,10 @@ void AToyTouchScreen::RefreshStatus()
 	if (FToyScreenButton* DroneButton = FindButton(EToyScreenAction::ToggleDrone))
 	{
 		DroneButton->Line1->SetText(FText::FromString(StudioActor->IsModelShown(EToyModelKind::Drone) ? TEXT("HIDE") : TEXT("SHOW")));
+	}
+	if (FToyScreenButton* LatheButton = FindButton(EToyScreenAction::ToggleLathe))
+	{
+		LatheButton->Line1->SetText(FText::FromString(StudioActor->IsModelShown(EToyModelKind::Lathe) ? TEXT("HIDE") : TEXT("SHOW")));
 	}
 	if (FToyScreenButton* ExplodeButton = FindButton(EToyScreenAction::ToggleExplode))
 	{

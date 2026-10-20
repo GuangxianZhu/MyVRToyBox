@@ -14,7 +14,8 @@ enum class EToyModelKind : uint8
 {
 	Motor,
 	Valve,
-	Drone
+	Drone,
+	Lathe
 };
 
 /**
@@ -96,6 +97,13 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	FString DroneManifest = TEXT("Models/Drone/parts.json");
+
+	/** 迷你车床也放在同一个位置，转 90°：床身沿桌子长边，正面（电机、手轮把手）朝着玩家，主轴箱在右手边。 */
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<USceneComponent> LatheMount;
+
+	UPROPERTY(EditAnywhere, Category = "ToyBox")
+	FString LatheManifest = TEXT("Models/Lathe/parts.json");
 
 	/** 模型装配状态下最长边的长度（厘米）。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")

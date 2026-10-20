@@ -114,6 +114,12 @@ AToyStudio::AToyStudio()
 	DroneMount->SetupAttachment(Root);
 	DroneMount->SetRelativeLocationAndRotation(FVector(TableX + 15.f, -10.f, TableHeight), FRotator(0.f, 90.f, 0.f));
 
+	// 迷你车床：同一个位置。模型 X 是床身方向（+X 主轴箱），+Y 是正面（电机、手轮把手、刻度手轮）。
+	// Yaw 90 让床身沿桌子长边、正面朝向玩家（-X），主轴箱在右手边；皮带罩往右飞，不碰到左边
+	LatheMount = CreateDefaultSubobject<USceneComponent>(TEXT("LatheMount"));
+	LatheMount->SetupAttachment(Root);
+	LatheMount->SetRelativeLocationAndRotation(FVector(TableX + 15.f, -10.f, TableHeight), FRotator(0.f, 90.f, 0.f));
+
 	// 触屏：桌面右手边靠前，转过来正对玩家站立点
 	const FVector ScreenLocation(TableX - 20.f, 60.f, TableHeight);
 	ScreenMount = CreateDefaultSubobject<USceneComponent>(TEXT("ScreenMount"));
@@ -182,6 +188,7 @@ FString AToyStudio::KindName(EToyModelKind Kind)
 	{
 	case EToyModelKind::Motor: return TEXT("MOTOR");
 	case EToyModelKind::Valve: return TEXT("VALVE");
+	case EToyModelKind::Lathe: return TEXT("LATHE");
 	default:                   return TEXT("DRONE");
 	}
 }
@@ -195,6 +202,7 @@ void AToyStudio::HandleScreenAction(EToyScreenAction Action)
 	case EToyScreenAction::ToggleMotor:   ToggleModel(EToyModelKind::Motor); break;
 	case EToyScreenAction::ToggleValve:   ToggleModel(EToyModelKind::Valve); break;
 	case EToyScreenAction::ToggleDrone:   ToggleModel(EToyModelKind::Drone); break;
+	case EToyScreenAction::ToggleLathe:   ToggleModel(EToyModelKind::Lathe); break;
 	case EToyScreenAction::ToggleExplode: ToggleModelExploded(); break;
 	case EToyScreenAction::ResetParts:    ResetModel(); break;
 	}
@@ -214,8 +222,15 @@ bool AToyStudio::ToggleModel(EToyModelKind Kind)
 		return true;
 	}
 
-	USceneComponent* Mount = Kind == EToyModelKind::Motor ? MotorMount : (Kind == EToyModelKind::Valve ? ValveMount : DroneMount);
-	const FString& Manifest = Kind == EToyModelKind::Motor ? MotorManifest : (Kind == EToyModelKind::Valve ? ValveManifest : DroneManifest);
+	USceneComponent* Mount = DroneMount;
+	const FString* Manifest = &DroneManifest;
+	switch (Kind)
+	{
+	case EToyModelKind::Motor: Mount = MotorMount; Manifest = &MotorManifest; break;
+	case EToyModelKind::Valve: Mount = ValveMount; Manifest = &ValveManifest; break;
+	case EToyModelKind::Lathe: Mount = LatheMount; Manifest = &LatheManifest; break;
+	default: break;
+	}
 	FActorSpawnParameters Params;
 	Params.Owner = this;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -226,7 +241,7 @@ bool AToyStudio::ToggleModel(EToyModelKind Kind)
 		return false;
 	}
 	Spawned->TargetLengthCm = ModelLengthCm;
-	if (!Spawned->LoadManifest(FPaths::ProjectContentDir() / Manifest))
+	if (!Spawned->LoadManifest(FPaths::ProjectContentDir() / *Manifest))
 	{
 		Spawned->Destroy();
 		MissingModel = KindName(Kind);
