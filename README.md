@@ -81,7 +81,7 @@ codex_localAI/work/valve/src/*.js ──Tools/export_valve_glb.mjs（无头 Chro
 ```
 
 - **模型**：DN80 对夹式气动蝶阀 + 齿轮齿条单作用执行器，21 种零件 38 个实例，全部在 three.js 里按毫米手写建模（`10-parts.js`）。实物尺寸约 128 × 156 × 293 mm（高 29cm 含执行器），放大 1.71 倍到 50cm 高。同一个目录里还有一个更早的**气动球阀**（`codex_localAI/气动球阀爆炸图.html`，是蝶阀的参考原稿），只有打包好的单文件 html，没有拆开的源码，这次没导。
-- **不在 git 里**：阀门工程在这台电脑的 `C:\work\codex_localAI\work\valve`，不在任何仓库里。`导入阀门模型.bat` 默认去那里找，换电脑要先把它拷过去并设置环境变量 `VALVE_DIR`。导入结果提交在本仓库，平时不需要它。
+- **源码在哪**：原来只在这台电脑的 `C:\work\codex_localAI\work\valve`（不在 git 里），现在拷进了 ITBasics 的 `气动阀门爆炸图/` 目录（分支 `claude/pneumatic-valve`，合并到 main 之前只在那个分支上）。`导入阀门模型.bat` 按 `VALVE_DIR` → `..\ITBasics\气动阀门爆炸图\work\valve`（或 `ITBASICS_DIR`）→ `C:\work\codex_localAI\work\valve` 的顺序找；从 ITBasics 导之前先在它的 `work\` 里 `npm install`（双击那边的 `启动.bat` 会自动装）。导入结果提交在本仓库，平时不需要源码。
 - **导出**：`Tools/export_valve_glb.mjs` 不改阀门工程的源码，照它的 `build.mjs` 把 `src/*.js` 拼成页面，多打包一个 three.js 的 `GLTFExporter`，在无头 Chrome 里把每个零件实例（装配位置、单位米）导成一个节点，零件编号、中文名、材料、作用、爆炸路线写进节点 extras —— 和 Blender 脚本出的 motor.glb 同一个约定，所以导入脚本通用。
   - 材质按颜色 + 金属度 + 粗糙度合并成 19 种标准 PBR 材质；金属度封顶 0.8、粗糙度至少 0.25：工作室里没有反射探针，原来"镜面"一样的蝶板会反射出一片黑。
 - **爆炸距离**：网页版是按 29cm 的阀门、整屏显示定的，放大 1.7 倍摆在桌上会飞出视野，所以 parts.json 里 `explode_scale = 0.55`（`Tools/import_model.py` 的 `MODELS['Valve']`）。爆炸的缓动公式网页版是 `(t - 0.62s) / 0.38`，这里统一用电机的 `(t - 0.6s) / 0.4`，看不出差别。

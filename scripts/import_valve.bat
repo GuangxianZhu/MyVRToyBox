@@ -9,7 +9,9 @@ set "PROJECT=%CD%\VRToyBox.uproject"
 rem ---- 先检查 VRToyBox 自己 main 上有没有更新 ----
 call "%~dp0update.bat"
 
-rem ---- 阀门工程：环境变量 VALVE_DIR，否则用这台电脑上的默认位置（它不在 git 里，换电脑要先拷过去） ----
+rem ---- 阀门工程：环境变量 VALVE_DIR > ITBasics\气动阀门爆炸图（同级目录或 ITBASICS_DIR）> 原来的 C:\work\codex_localAI ----
+if not defined ITBASICS_DIR set "ITBASICS_DIR=%CD%\..\ITBasics"
+if not defined VALVE_DIR if exist "%ITBASICS_DIR%\气动阀门爆炸图\work\valve\src\10-parts.js" set "VALVE_DIR=%ITBASICS_DIR%\气动阀门爆炸图\work\valve"
 if not defined VALVE_DIR set "VALVE_DIR=C:\work\codex_localAI\work\valve"
 if not exist "%VALVE_DIR%\src\10-parts.js" (
   echo [导入] 找不到阀门工程：%VALVE_DIR%
