@@ -2,7 +2,8 @@
  "source": "motor.glb",
  "model": {
   "title": "三相鼠笼式异步电动机 YE4-132M-4",
-  "body": "7.5 kW · 380 V △ · 4 极 · 1460 r/min\n装配状态：抓任意位置拿起整机看。点 EXPLODE 拆开后，每个零件都能单独抓。"
+  "body": "7.5 kW · 380 V △ · 4 极 · 1460 r/min\n装配状态：抓任意位置拿起整机看。点 EXPLODE 拆开后，每个零件都能单独抓。",
+  "explode_scale": 1.0
  },
  "units": [
   {

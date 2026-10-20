@@ -31,7 +31,8 @@ set "MOTOR_OUT=%MOTOR_DIR%\output"
 echo [导入] 用 Blender 生成 motor.glb ...
 "%BLENDER%" --background --factory-startup --python "%MOTOR_DIR%\build_motor.py" -- "%MOTOR_OUT%"
 if not exist "%MOTOR_OUT%\motor.glb" goto :fail
-set "MOTOR_GLB=%MOTOR_OUT%\motor.glb"
+set "MODEL_GLB=%MOTOR_OUT%\motor.glb"
+set "MODEL_NAME=Motor"
 
 rem ---- UE 5.8 ----
 if defined UE_ROOT goto :check_engine
@@ -49,7 +50,7 @@ if errorlevel 1 goto :fail
 
 echo [导入] 导入到 UE ...
 rem -script= 遇到带空格的路径（Unreal Projects）会被拆成两段，所以只传一行不含空格的 Python，脚本路径走环境变量
-set "MOTOR_IMPORT_SCRIPT=%CD%\Tools\import_motor.py"
+set "MOTOR_IMPORT_SCRIPT=%CD%\Tools\import_model.py"
 "%UE_ROOT%\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%PROJECT%" -run=pythonscript -script=__import__('runpy').run_path(__import__('os').environ['MOTOR_IMPORT_SCRIPT']) -unattended -nosplash -nullrhi
 if not exist "%CD%\Content\Models\Motor\parts.json" goto :fail
 rem 虚影 / 高亮用的半透明材质，已经有了就跳过
