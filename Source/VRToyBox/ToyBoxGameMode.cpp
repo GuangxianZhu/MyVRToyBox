@@ -4,7 +4,6 @@
 #include "ToyStudio.h"
 #include "EngineUtils.h"
 #include "Engine/World.h"
-#include "GameFramework/WorldSettings.h"
 
 AToyBoxGameMode::AToyBoxGameMode()
 {
@@ -19,13 +18,12 @@ void AToyBoxGameMode::StartPlay()
 
 AActor* AToyBoxGameMode::FindPlayerStart_Implementation(AController* Player, const FString& IncomingName)
 {
-	// 关卡里自己放了 PlayerStart 就用它；找不到时引擎会退回 WorldSettings（即原点），这时改用工作室原点
-	AActor* Start = Super::FindPlayerStart_Implementation(Player, IncomingName);
-	if (Start && !Start->IsA<AWorldSettings>())
-	{
-		return Start;
-	}
-	return GetOrSpawnStudio();
+	// 玩家总是站在工作室原点，不用关卡里的 PlayerStart：
+	// 引擎自带的 Entry 地图里本来就有一个 PlayerStart，用它的话人会出生在工作室外面，眼前一片黑
+	AToyStudio* Studio = GetOrSpawnStudio();
+	UE_LOG(LogTemp, Log, TEXT("ToyBox: 玩家出生在工作室 %s 的原点 %s"), *GetNameSafe(Studio),
+		Studio ? *Studio->GetActorLocation().ToString() : TEXT("-"));
+	return Studio;
 }
 
 AToyStudio* AToyBoxGameMode::GetOrSpawnStudio()

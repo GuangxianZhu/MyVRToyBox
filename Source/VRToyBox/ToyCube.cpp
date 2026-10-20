@@ -23,7 +23,8 @@ AToyCube::AToyCube()
 	Mesh->Color = BaseColor;
 	Mesh->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
 	Mesh->SetSimulatePhysics(true);
-	Mesh->SetMassOverrideInKg(NAME_None, 0.4f, true);
+	// 直接写 BodyInstance：SetMassOverrideInKg 会立刻重算质量、去读物理材质，在构造 CDO 时引擎会报错
+	Mesh->BodyInstance.SetMassOverride(0.4f, true);
 	// 扔得快的时候防止穿过桌面
 	Mesh->BodyInstance.bUseCCD = true;
 	SetRootComponent(Mesh);
