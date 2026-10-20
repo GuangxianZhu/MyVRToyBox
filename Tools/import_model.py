@@ -431,6 +431,10 @@ def main():
     manifest_only = '1' in (os.environ.get('MODEL_MANIFEST_ONLY'), os.environ.get('MOTOR_MANIFEST_ONLY'))
     if not manifest_only:
         import_glb(glb)
+        # glTF 导入默认给每个网格开 Nanite；前向渲染 + SM5 不支持，关掉（原因见 disable_nanite.py）
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from disable_nanite import disable_nanite
+        disable_nanite(DEST)
     meshes = static_meshes()
     unreal.log(f'ToyBox: {MODEL} 导入了 {len(meshes)} 个静态网格')
 

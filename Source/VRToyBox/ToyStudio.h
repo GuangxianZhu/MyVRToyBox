@@ -49,6 +49,12 @@ public:
 
 	/** 手里拿着的零件 / 整机全部松开，飞回原位。 */
 	void ResetModel();
+
+	/** 把桌上的模型整体挪一下（厘米，工作室坐标：-X 拉近、+Y 往右），限制在桌面范围里。 */
+	void MoveModel(const FVector& DeltaCm);
+
+	/** 模型离站立点多远（厘米），状态栏显示。 */
+	float GetModelDistanceCm() const;
 	bool IsModelShown(EToyModelKind Kind) const;
 	bool IsModelExploded() const;
 
@@ -75,6 +81,18 @@ public:
 	/** 触屏：作为子 Actor 在构造时就建出来（编辑器视口里看得见），BeginPlay 时接上按钮回调。 */
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<UChildActorComponent> ScreenChild;
+
+	/** 四个模型支架的共同父节点，触屏的挪动按钮挪它。 */
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<USceneComponent> ModelAnchor;
+
+	/** 模型的默认位置（工作室坐标，厘米）：离站立点 70cm，偏左 10cm，桌面高度。 */
+	UPROPERTY(EditAnywhere, Category = "ToyBox")
+	FVector ModelHome = FVector(70.f, -10.f, 75.f);
+
+	/** 挪动按钮每按一次走多远（厘米）。 */
+	UPROPERTY(EditAnywhere, Category = "ToyBox")
+	float MoveStepCm = 10.f;
 
 	/** 电机放在这里：桌面中间，电机轴沿桌子长边，爆炸时零件往左右两边飞。 */
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")

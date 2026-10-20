@@ -7,6 +7,8 @@
 #include "Components/ChildActorComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
+#include "HAL/IConsoleManager.h"
 #include "Misc/Paths.h"
 
 namespace
@@ -31,6 +33,40 @@ namespace
 	const FLinearColor TableColor(0.62f, 0.43f, 0.25f);
 	const FLinearColor LegColor(0.1f, 0.1f, 0.1f);
 	const FLinearColor ShelfColor(0.3f, 0.2f, 0.12f);
+
+	// 调试命令 toy.Screen <按钮名>：和戳触屏上那个按钮一样（Spawn / Clear / Motor / Valve / Drone / Lathe / Explode / Reset /
+	// MoveNear / MoveFar / MoveLeft / MoveRight），可以在 -ExecCmds 里连着写，不用鼠标点
+	void ScreenCommand(const TArray<FString>& Args, UWorld* World)
+	{
+		static const TMap<FString, EToyScreenAction> Names = {
+			{ TEXT("spawn"), EToyScreenAction::SpawnCube }, { TEXT("clear"), EToyScreenAction::ClearCubes },
+			{ TEXT("motor"), EToyScreenAction::ToggleMotor }, { TEXT("valve"), EToyScreenAction::ToggleValve },
+			{ TEXT("drone"), EToyScreenAction::ToggleDrone }, { TEXT("lathe"), EToyScreenAction::ToggleLathe },
+			{ TEXT("explode"), EToyScreenAction::ToggleExplode }, { TEXT("reset"), EToyScreenAction::ResetParts },
+			{ TEXT("movenear"), EToyScreenAction::MoveNear }, { TEXT("movefar"), EToyScreenAction::MoveFar },
+			{ TEXT("moveleft"), EToyScreenAction::MoveLeft }, { TEXT("moveright"), EToyScreenAction::MoveRight },
+		};
+		AToyStudio* Studio = nullptr;
+		for (TActorIterator<AToyStudio> It(World); It && !Studio; ++It)
+		{
+			Studio = *It;
+		}
+		for (const FString& Arg : Args)
+		{
+			const EToyScreenAction* Action = Names.Find(Arg.ToLower());
+			if (!Studio || !Action)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("ToyBox: toy.Screen 不认识 %s（或者没有工作室）"), *Arg);
+				continue;
+			}
+			Studio->HandleScreenAction(*Action);
+			UE_LOG(LogTemp, Log, TEXT("ToyBox: toy.Screen %s → %s"), *Arg, *Studio->GetStatusText());
+		}
+	}
+
+	FAutoConsoleCommandWithWorldAndArgs ScreenCommandRef(TEXT("toy.Screen"),
+		TEXT("和戳触屏按钮一样：toy.Screen Lathe MoveNear MoveNear Explode（可以连着写几个）"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&ScreenCommand));
 }
 
 AToyStudio::AToyStudio()
@@ -97,28 +133,34 @@ AToyStudio::AToyStudio()
 	SpawnPoint->SetupAttachment(Root);
 	SpawnPoint->SetRelativeLocation(FVector(TableX - 20.f, -60.f, TableHeight + 15.f));
 
-	// 电机：桌面中间偏里。Yaw -90 让电机轴（模型 X）沿桌子长边，轴伸端朝左手边，
+	// 四个模型的支架都挂在 ModelAnchor 下面：触屏的 NEAR / FAR / LEFT / RIGHT 挪的就是它，换模型也保持挪过的位置。
+	// 默认放在离站立点 70cm（桌子中间偏近），以前放在 90cm，伸手够不着
+	ModelAnchor = CreateDefaultSubobject<USceneComponent>(TEXT("ModelAnchor"));
+	ModelAnchor->SetupAttachment(Root);
+	ModelAnchor->SetRelativeLocation(ModelHome);
+
+	// 电机：Yaw -90 让电机轴（模型 X）沿桌子长边，轴伸端朝左手边，
 	// 爆炸时轴伸端那侧（转子、前端盖）飞得最远，往左边飞就不会撞到右边的触屏
 	MotorMount = CreateDefaultSubobject<USceneComponent>(TEXT("MotorMount"));
-	MotorMount->SetupAttachment(Root);
-	MotorMount->SetRelativeLocationAndRotation(FVector(TableX + 15.f, -10.f, TableHeight), FRotator(0.f, -90.f, 0.f));
+	MotorMount->SetupAttachment(ModelAnchor);
+	MotorMount->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
 
 	// 球阀：同一个位置，Yaw 90。球阀模型的 X（管道方向 = 执行器缸体长轴）转到桌子长边上，端盖、活塞往左右两边飞，
 	// 不会朝玩家脸上飞；电磁阀（模型 +Y）转到朝着玩家的一面
 	ValveMount = CreateDefaultSubobject<USceneComponent>(TEXT("ValveMount"));
-	ValveMount->SetupAttachment(Root);
-	ValveMount->SetRelativeLocationAndRotation(FVector(TableX + 15.f, -10.f, TableHeight), FRotator(0.f, 90.f, 0.f));
+	ValveMount->SetupAttachment(ModelAnchor);
+	ValveMount->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
 
 	// 无人机：同一个位置。模型 +Y 是机头（相机那边），Yaw 90 让机头朝向玩家（-X）
 	DroneMount = CreateDefaultSubobject<USceneComponent>(TEXT("DroneMount"));
-	DroneMount->SetupAttachment(Root);
-	DroneMount->SetRelativeLocationAndRotation(FVector(TableX + 15.f, -10.f, TableHeight), FRotator(0.f, 90.f, 0.f));
+	DroneMount->SetupAttachment(ModelAnchor);
+	DroneMount->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
 
 	// 迷你车床：同一个位置。模型 X 是床身方向（+X 主轴箱），+Y 是正面（电机、手轮把手、刻度手轮）。
 	// Yaw 90 让床身沿桌子长边、正面朝向玩家（-X），主轴箱在右手边；皮带罩往右飞，不碰到左边
 	LatheMount = CreateDefaultSubobject<USceneComponent>(TEXT("LatheMount"));
-	LatheMount->SetupAttachment(Root);
-	LatheMount->SetRelativeLocationAndRotation(FVector(TableX + 15.f, -10.f, TableHeight), FRotator(0.f, 90.f, 0.f));
+	LatheMount->SetupAttachment(ModelAnchor);
+	LatheMount->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
 
 	// 触屏：桌面右手边靠前，转过来正对玩家站立点
 	const FVector ScreenLocation(TableX - 20.f, 60.f, TableHeight);
@@ -205,7 +247,31 @@ void AToyStudio::HandleScreenAction(EToyScreenAction Action)
 	case EToyScreenAction::ToggleLathe:   ToggleModel(EToyModelKind::Lathe); break;
 	case EToyScreenAction::ToggleExplode: ToggleModelExploded(); break;
 	case EToyScreenAction::ResetParts:    ResetModel(); break;
+	case EToyScreenAction::MoveNear:      MoveModel(FVector(-MoveStepCm, 0.f, 0.f)); break;
+	case EToyScreenAction::MoveFar:       MoveModel(FVector(MoveStepCm, 0.f, 0.f)); break;
+	case EToyScreenAction::MoveLeft:      MoveModel(FVector(0.f, -MoveStepCm, 0.f)); break;
+	case EToyScreenAction::MoveRight:     MoveModel(FVector(0.f, MoveStepCm, 0.f)); break;
 	}
+	// 戳按钮时触屏自己也会刷新；调试命令 toy.Screen 不经过触屏，这里统一刷新一次按钮上的字和状态栏
+	if (Screen)
+	{
+		Screen->RefreshStatus();
+	}
+}
+
+void AToyStudio::MoveModel(const FVector& DeltaCm)
+{
+	// 挪的是所有模型共用的 ModelAnchor（玩家面朝 +X，所以 -X = 拉近、+Y = 往右）。
+	// 限制在桌面范围里：离站立点 55~95cm（桌子前沿在 40cm，留出模型自己的半个深度），
+	// 左右 -40~+20cm（右边是触屏，再往右会撞上）
+	const FVector Next = ModelAnchor->GetRelativeLocation() + DeltaCm;
+	const FVector Clamped(FMath::Clamp(Next.X, TableX - 20.f, TableX + 20.f), FMath::Clamp(Next.Y, -40.f, 20.f), ModelHome.Z);
+	ModelAnchor->SetRelativeLocation(Clamped);
+}
+
+float AToyStudio::GetModelDistanceCm() const
+{
+	return static_cast<float>(ModelAnchor->GetRelativeLocation().X);
 }
 
 bool AToyStudio::ToggleModel(EToyModelKind Kind)
@@ -290,7 +356,8 @@ FString AToyStudio::GetStatusText() const
 	}
 	const FString Name = !Model ? TEXT("MODEL") : KindName(ModelKind);
 	const FString State = !Model ? TEXT("OFF") : (Model->IsExploded() ? TEXT("EXPLODED") : TEXT("ASSEMBLED"));
-	return FString::Printf(TEXT("CUBES %d / %d     %s %s"), GetCubeCount(), MaxCubes, *Name, *State);
+	return FString::Printf(TEXT("CUBES %d / %d    %s %s    %.0f CM AWAY"), GetCubeCount(), MaxCubes, *Name, *State,
+		GetModelDistanceCm());
 }
 
 int32 AToyStudio::GetCubeCount() const
