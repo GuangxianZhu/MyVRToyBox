@@ -1,0 +1,1092 @@
+{
+ "source": "motor.glb",
+ "parts": [
+  {
+   "name": "P01_Frame",
+   "name_cn": "机座",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P01_Frame.P01_Frame",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P02_Nameplate",
+   "name_cn": "铭牌",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P02_Nameplate.P02_Nameplate",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P03_EyeBolt",
+   "name_cn": "吊环螺钉",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P03_EyeBolt.P03_EyeBolt",
+   "spin": 0,
+   "ex": [
+    [
+     0.0,
+     0.0,
+     11.0,
+     0.08
+    ]
+   ]
+  },
+  {
+   "name": "P04_StatorCore",
+   "name_cn": "定子铁芯",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P04_StatorCore.P04_StatorCore",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P05_Coil_U1_1",
+   "name_cn": "定子绕组",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P05_Coil_U1_1.P05_Coil_U1_1",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P05_Coil_U1_2",
+   "name_cn": "定子绕组",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P05_Coil_U1_2.P05_Coil_U1_2",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P05_Coil_U1_3",
+   "name_cn": "定子绕组",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P05_Coil_U1_3.P05_Coil_U1_3",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P05_Coil_U2_1",
+   "name_cn": "定子绕组",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P05_Coil_U2_1.P05_Coil_U2_1",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P05_Coil_U2_2",
+   "name_cn": "定子绕组",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P05_Coil_U2_2.P05_Coil_U2_2",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P05_Coil_U2_3",
+   "name_cn": "定子绕组",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P05_Coil_U2_3.P05_Coil_U2_3",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P05_Coil_V1_1",
+   "name_cn": "定子绕组",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P05_Coil_V1_1.P05_Coil_V1_1",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P05_Coil_V1_2",
+   "name_cn": "定子绕组",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P05_Coil_V1_2.P05_Coil_V1_2",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P05_Coil_V1_3",
+   "name_cn": "定子绕组",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P05_Coil_V1_3.P05_Coil_V1_3",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P05_Coil_V2_1",
+   "name_cn": "定子绕组",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P05_Coil_V2_1.P05_Coil_V2_1",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P05_Coil_V2_2",
+   "name_cn": "定子绕组",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P05_Coil_V2_2.P05_Coil_V2_2",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P05_Coil_V2_3",
+   "name_cn": "定子绕组",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P05_Coil_V2_3.P05_Coil_V2_3",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P05_Coil_W1_1",
+   "name_cn": "定子绕组",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P05_Coil_W1_1.P05_Coil_W1_1",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P05_Coil_W1_2",
+   "name_cn": "定子绕组",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P05_Coil_W1_2.P05_Coil_W1_2",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P05_Coil_W1_3",
+   "name_cn": "定子绕组",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P05_Coil_W1_3.P05_Coil_W1_3",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P05_Coil_W2_1",
+   "name_cn": "定子绕组",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P05_Coil_W2_1.P05_Coil_W2_1",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P05_Coil_W2_2",
+   "name_cn": "定子绕组",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P05_Coil_W2_2.P05_Coil_W2_2",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P05_Coil_W2_3",
+   "name_cn": "定子绕组",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P05_Coil_W2_3.P05_Coil_W2_3",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P06_SlotWedges",
+   "name_cn": "槽楔",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P06_SlotWedges.P06_SlotWedges",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P07_Leads",
+   "name_cn": "引出线",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P07_Leads.P07_Leads",
+   "spin": 0,
+   "ex": []
+  },
+  {
+   "name": "P08_Shaft",
+   "name_cn": "转轴",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P08_Shaft.P08_Shaft",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P09_Key",
+   "name_cn": "平键",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P09_Key.P09_Key",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ],
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.62
+    ]
+   ]
+  },
+  {
+   "name": "P10_RotorCore",
+   "name_cn": "转子铁芯",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P10_RotorCore.P10_RotorCore",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_01",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_01.P11_Bar_01",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_02",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_02.P11_Bar_02",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_03",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_03.P11_Bar_03",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_04",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_04.P11_Bar_04",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_05",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_05.P11_Bar_05",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_06",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_06.P11_Bar_06",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_07",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_07.P11_Bar_07",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_08",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_08.P11_Bar_08",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_09",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_09.P11_Bar_09",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_10",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_10.P11_Bar_10",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_11",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_11.P11_Bar_11",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_12",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_12.P11_Bar_12",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_13",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_13.P11_Bar_13",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_14",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_14.P11_Bar_14",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_15",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_15.P11_Bar_15",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_16",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_16.P11_Bar_16",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_17",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_17.P11_Bar_17",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_18",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_18.P11_Bar_18",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_19",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_19.P11_Bar_19",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_20",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_20.P11_Bar_20",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_21",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_21.P11_Bar_21",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_22",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_22.P11_Bar_22",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_23",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_23.P11_Bar_23",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_24",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_24.P11_Bar_24",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_25",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_25.P11_Bar_25",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_26",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_26.P11_Bar_26",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_27",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_27.P11_Bar_27",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_Bar_28",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_Bar_28.P11_Bar_28",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P11_EndRings",
+   "name_cn": "鼠笼（导条 + 端环）",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P11_EndRings.P11_EndRings",
+   "spin": 1,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P12_BearingDE",
+   "name_cn": "驱动端轴承",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P12_BearingDE.P12_BearingDE",
+   "spin": 0,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P13_BearingNDE",
+   "name_cn": "风扇端轴承",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P13_BearingNDE.P13_BearingNDE",
+   "spin": 0,
+   "ex": [
+    [
+     30.0,
+     0.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P14_WaveWasher",
+   "name_cn": "波形垫圈",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P14_WaveWasher.P14_WaveWasher",
+   "spin": 0,
+   "ex": [
+    [
+     -4.0,
+     0.0,
+     0.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "P15_VRing",
+   "name_cn": "V 形密封圈",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P15_VRing.P15_VRing",
+   "spin": 1,
+   "ex": [
+    [
+     50.0,
+     0.0,
+     0.0,
+     0.26
+    ]
+   ]
+  },
+  {
+   "name": "P16_EndShieldDE",
+   "name_cn": "驱动端端盖",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P16_EndShieldDE.P16_EndShieldDE",
+   "spin": 0,
+   "ex": [
+    [
+     46.0,
+     0.0,
+     0.0,
+     0.3
+    ]
+   ]
+  },
+  {
+   "name": "P17_EndShieldNDE",
+   "name_cn": "风扇端端盖",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P17_EndShieldNDE.P17_EndShieldNDE",
+   "spin": 0,
+   "ex": [
+    [
+     -7.5,
+     0.0,
+     0.0,
+     0.3
+    ]
+   ]
+  },
+  {
+   "name": "P18_ShieldBolt_DE_45",
+   "name_cn": "端盖螺栓",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P18_ShieldBolt_DE_45.P18_ShieldBolt_DE_45",
+   "spin": 0,
+   "ex": [
+    [
+     46.0,
+     0.0,
+     0.0,
+     0.3
+    ],
+    [
+     6.0,
+     0.0,
+     0.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "P18_ShieldBolt_DE_135",
+   "name_cn": "端盖螺栓",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P18_ShieldBolt_DE_135.P18_ShieldBolt_DE_135",
+   "spin": 0,
+   "ex": [
+    [
+     46.0,
+     0.0,
+     0.0,
+     0.3
+    ],
+    [
+     6.0,
+     0.0,
+     0.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "P18_ShieldBolt_DE_225",
+   "name_cn": "端盖螺栓",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P18_ShieldBolt_DE_225.P18_ShieldBolt_DE_225",
+   "spin": 0,
+   "ex": [
+    [
+     46.0,
+     0.0,
+     0.0,
+     0.3
+    ],
+    [
+     6.0,
+     0.0,
+     0.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "P18_ShieldBolt_DE_315",
+   "name_cn": "端盖螺栓",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P18_ShieldBolt_DE_315.P18_ShieldBolt_DE_315",
+   "spin": 0,
+   "ex": [
+    [
+     46.0,
+     0.0,
+     0.0,
+     0.3
+    ],
+    [
+     6.0,
+     0.0,
+     0.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "P18_ShieldBolt_NDE_45",
+   "name_cn": "端盖螺栓",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P18_ShieldBolt_NDE_45.P18_ShieldBolt_NDE_45",
+   "spin": 0,
+   "ex": [
+    [
+     -7.5,
+     0.0,
+     0.0,
+     0.3
+    ],
+    [
+     -5.5,
+     0.0,
+     0.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "P18_ShieldBolt_NDE_135",
+   "name_cn": "端盖螺栓",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P18_ShieldBolt_NDE_135.P18_ShieldBolt_NDE_135",
+   "spin": 0,
+   "ex": [
+    [
+     -7.5,
+     0.0,
+     0.0,
+     0.3
+    ],
+    [
+     -5.5,
+     0.0,
+     0.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "P18_ShieldBolt_NDE_225",
+   "name_cn": "端盖螺栓",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P18_ShieldBolt_NDE_225.P18_ShieldBolt_NDE_225",
+   "spin": 0,
+   "ex": [
+    [
+     -7.5,
+     0.0,
+     0.0,
+     0.3
+    ],
+    [
+     -5.5,
+     0.0,
+     0.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "P18_ShieldBolt_NDE_315",
+   "name_cn": "端盖螺栓",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P18_ShieldBolt_NDE_315.P18_ShieldBolt_NDE_315",
+   "spin": 0,
+   "ex": [
+    [
+     -7.5,
+     0.0,
+     0.0,
+     0.3
+    ],
+    [
+     -5.5,
+     0.0,
+     0.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "P19_Fan",
+   "name_cn": "风扇",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P19_Fan.P19_Fan",
+   "spin": 1,
+   "ex": [
+    [
+     -11.5,
+     0.0,
+     0.0,
+     0.22
+    ]
+   ]
+  },
+  {
+   "name": "P20_Circlip",
+   "name_cn": "卡簧",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P20_Circlip.P20_Circlip",
+   "spin": 1,
+   "ex": [
+    [
+     -15.0,
+     0.0,
+     0.0,
+     0.18
+    ]
+   ]
+  },
+  {
+   "name": "P21_FanCover",
+   "name_cn": "风罩",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P21_FanCover.P21_FanCover",
+   "spin": 0,
+   "ex": [
+    [
+     -26.0,
+     0.0,
+     0.0,
+     0.12
+    ]
+   ]
+  },
+  {
+   "name": "P22_CoverScrew_1",
+   "name_cn": "风罩螺钉",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P22_CoverScrew_1.P22_CoverScrew_1",
+   "spin": 0,
+   "ex": [
+    [
+     -26.0,
+     0.0,
+     0.0,
+     0.12
+    ],
+    [
+     0.0,
+     -1.7145056465587942e-16,
+     2.8000000000000003,
+     0.2
+    ]
+   ]
+  },
+  {
+   "name": "P22_CoverScrew_2",
+   "name_cn": "风罩螺钉",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P22_CoverScrew_2.P22_CoverScrew_2",
+   "spin": 0,
+   "ex": [
+    [
+     -26.0,
+     0.0,
+     0.0,
+     0.12
+    ],
+    [
+     0.0,
+     2.424871063232422,
+     -1.4000000000000001,
+     0.2
+    ]
+   ]
+  },
+  {
+   "name": "P22_CoverScrew_3",
+   "name_cn": "风罩螺钉",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P22_CoverScrew_3.P22_CoverScrew_3",
+   "spin": 0,
+   "ex": [
+    [
+     -26.0,
+     0.0,
+     0.0,
+     0.12
+    ],
+    [
+     0.0,
+     -2.424871063232422,
+     -1.4000000000000001,
+     0.2
+    ]
+   ]
+  },
+  {
+   "name": "P23_TerminalBox",
+   "name_cn": "接线盒座",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P23_TerminalBox.P23_TerminalBox",
+   "spin": 0,
+   "ex": [
+    [
+     0.0,
+     0.0,
+     7.0,
+     0.55
+    ]
+   ]
+  },
+  {
+   "name": "P24_TerminalBlock",
+   "name_cn": "接线板",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P24_TerminalBlock.P24_TerminalBlock",
+   "spin": 0,
+   "ex": [
+    [
+     0.0,
+     0.0,
+     7.0,
+     0.55
+    ]
+   ]
+  },
+  {
+   "name": "P25_SupplyCables",
+   "name_cn": "电源线 + 格兰头",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P25_SupplyCables.P25_SupplyCables",
+   "spin": 0,
+   "ex": [
+    [
+     0.0,
+     0.0,
+     7.0,
+     0.55
+    ]
+   ]
+  },
+  {
+   "name": "P26_BoxLid",
+   "name_cn": "接线盒盖",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P26_BoxLid.P26_BoxLid",
+   "spin": 0,
+   "ex": [
+    [
+     0.0,
+     0.0,
+     16.0,
+     0.05
+    ]
+   ]
+  },
+  {
+   "name": "P27_LidScrew_1",
+   "name_cn": "盒盖螺钉",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P27_LidScrew_1.P27_LidScrew_1",
+   "spin": 0,
+   "ex": [
+    [
+     0.0,
+     0.0,
+     20.0,
+     0.0
+    ]
+   ]
+  },
+  {
+   "name": "P27_LidScrew_2",
+   "name_cn": "盒盖螺钉",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P27_LidScrew_2.P27_LidScrew_2",
+   "spin": 0,
+   "ex": [
+    [
+     0.0,
+     0.0,
+     20.0,
+     0.0
+    ]
+   ]
+  },
+  {
+   "name": "P27_LidScrew_3",
+   "name_cn": "盒盖螺钉",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P27_LidScrew_3.P27_LidScrew_3",
+   "spin": 0,
+   "ex": [
+    [
+     0.0,
+     0.0,
+     20.0,
+     0.0
+    ]
+   ]
+  },
+  {
+   "name": "P27_LidScrew_4",
+   "name_cn": "盒盖螺钉",
+   "mesh": "/Game/Models/Motor/motor/StaticMeshes/P27_LidScrew_4.P27_LidScrew_4",
+   "spin": 0,
+   "ex": [
+    [
+     0.0,
+     0.0,
+     20.0,
+     0.0
+    ]
+   ]
+  }
+ ]
+}
