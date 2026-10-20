@@ -21,7 +21,8 @@ class UWidgetComponent;
  * - GripPoint：手掌表面的抓点。X 轴从掌心指向手背，Z 轴指向手指。
  *   方块的抓点用同样约定（X = 面的外法线），两者重合 = 手掌贴住方块的一个面。
  * - PokeTip：食指指尖，用来戳触屏。
- * - PinchPoint：拇指和食指指尖之间，小零件"捏"在这里。
+ * - ThumbTip：拇指指尖。抓取判定点 = 拇指指尖和食指指尖（PokeTip）的中点（"捏合点"），跟着手指弯曲实时变化；
+ *   小零件也"捏"在这个点上。
  * - InfoLabel：拿着零件时浮在零件上方、始终面向玩家的信息牌（Slate 文字，能显示中文）。
  *
  * 能抓的东西都实现 IToyGrabbable（方块、电机零件、整台电机），手只认这个接口。
@@ -42,8 +43,11 @@ public:
 	/** 每帧由 Pawn 喂进来，0~1。握把决定抓/放和三根手指的弯曲，扳机决定食指弯曲。 */
 	void SetInputs(float InGrip, float InTrigger);
 
-	/** 桌面调试模式：把手摆到让 GripPoint 落在 GripWorldLocation 上。 */
-	void SetDesktopPose(const FVector& GripWorldLocation, const FRotator& Facing);
+	/** 桌面调试模式：把手摆到让捏合点落在 PinchWorldLocation 上（鼠标点中的位置）。 */
+	void SetDesktopPose(const FVector& PinchWorldLocation, const FRotator& Facing);
+
+	/** 捏合点：拇指指尖和食指指尖的中点（世界坐标）。抓取和悬停高亮都只在这个点附近判定。 */
+	FVector GetPinchLocation() const;
 
 	void SetPokeEnabled(bool bEnabled);
 	void ReleaseHeld(bool bThrow);
@@ -67,14 +71,14 @@ public:
 	TObjectPtr<USceneComponent> PokeTip;
 
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
-	TObjectPtr<USceneComponent> PinchPoint;
+	TObjectPtr<USceneComponent> ThumbTip;
 
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<UWidgetComponent> InfoLabel;
 
-	/** 抓取检测半径（从 GripPoint 算起）。 */
+	/** 抓取判定半径：捏合点到物体碰撞表面的距离不超过这么多（厘米）才算碰到。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
-	float GrabRadius = 9.f;
+	float GrabRadius = 2.f;
 
 	/** 抓起时方块从原位置滑到手里的时间。0 = 瞬间吸附。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")

@@ -113,9 +113,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float SnapReturnTime = 0.12f;
 
-	/** 检测盒最小半边长（世界厘米）：1cm 的螺钉也给一个 4cm 的盒子，好抓也好用鼠标点。 */
+	/** 检测盒最小半边长（世界厘米）：只防止 0.1cm 厚的垫圈盒子太薄，不再故意放大小件（判定已经改成指尖捏合点）。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
-	float MinGrabHalfExtent = 2.f;
+	float MinGrabHalfExtent = 0.3f;
 
 private:
 	FTransform FrameToHold(const FTransform& FrameWorld) const;

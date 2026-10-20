@@ -8,6 +8,7 @@
 #include "Camera/PlayerCameraManager.h"
 #include "Components/ArrowComponent.h"
 #include "Components/WidgetComponent.h"
+#include "DrawDebugHelpers.h"
 #include "Engine/CollisionProfile.h"
 #include "Engine/OverlapResult.h"
 #include "Engine/World.h"
@@ -102,6 +103,7 @@ AToyHand::AToyHand()
 	Part(TEXT("Thumb_Proximal"), ThumbBase, EToyShape::Cylinder, FVector(2.f, 2.f, 3.8f), FVector(1.9f, 0.f, 0.f), AlongX, HandColor);
 	ThumbMid = Joint(TEXT("Thumb_Mid"), ThumbBase, FVector(3.8f, 0.f, 0.f), FRotator::ZeroRotator);
 	Part(TEXT("Thumb_Distal"), ThumbMid, EToyShape::Cylinder, FVector(1.9f, 1.9f, 3.f), FVector(1.5f, 0.f, 0.f), AlongX, HandColor);
+	ThumbTip = Joint(TEXT("ThumbTip"), ThumbMid, FVector(3.f, 0.f, 0.f), FRotator::ZeroRotator);
 
 	// GripPoint 不放在 VisualRoot 下面：镜像（负缩放）会让它的旋转变得不可靠，所以单独挂在 Root 上，由 InitHand 按左右手摆好
 	GripPoint = CreateDefaultSubobject<UArrowComponent>(TEXT("GripPoint"));
@@ -109,10 +111,6 @@ AToyHand::AToyHand()
 	GripPoint->ArrowColor = FColor(0, 220, 255);
 	GripPoint->ArrowSize = 0.1f;
 	GripPoint->SetHiddenInGame(true);
-
-	// 同理 PinchPoint 也挂在 Root 上，位置由 InitHand 镜像
-	PinchPoint = CreateDefaultSubobject<USceneComponent>(TEXT("PinchPoint"));
-	PinchPoint->SetupAttachment(Root);
 
 	// 信息牌用世界坐标摆放（跟着拿着的东西走、转向玩家），所以位置、旋转、缩放都不继承手
 	InfoLabel = CreateDefaultSubobject<UWidgetComponent>(TEXT("InfoLabel"));
@@ -146,9 +144,6 @@ void AToyHand::InitHand(AToyBoxPawn* InPawn, EControllerHand InSide)
 	const FRotator GripRotation = FRotationMatrix::MakeFromXZ(FVector(0.f, Mirror, 0.f), FVector::ForwardVector).Rotator();
 	GripPoint->SetRelativeLocationAndRotation(PalmSurface, GripRotation);
 
-	// 捏的位置：食指第二节和拇指尖之间，在掌心前方一点
-	PinchPoint->SetRelativeLocation(FVector(8.5f, Mirror * -0.5f, 3.2f));
-
 	// 信息牌：标题一行，下面材料和作用自动换行。字体用引擎默认字体，它带中文后备字形
 	SAssignNew(InfoTitle, STextBlock)
 		.Font(FCoreStyle::GetDefaultFontStyle("Bold", 26))
@@ -180,10 +175,17 @@ void AToyHand::SetInputs(float InGrip, float InTrigger)
 	Trigger = FMath::Clamp(InTrigger, 0.f, 1.f);
 }
 
-void AToyHand::SetDesktopPose(const FVector& GripWorldLocation, const FRotator& Facing)
+void AToyHand::SetDesktopPose(const FVector& PinchWorldLocation, const FRotator& Facing)
 {
+	// 捏合点随手指弯曲在变，用它当前相对手的位置来摆
 	const FQuat Rotation = Facing.Quaternion();
-	SetActorLocationAndRotation(GripWorldLocation - Rotation.RotateVector(GripPoint->GetRelativeLocation()), Rotation);
+	const FVector PinchLocal = GetActorTransform().InverseTransformPosition(GetPinchLocation());
+	SetActorLocationAndRotation(PinchWorldLocation - Rotation.RotateVector(PinchLocal), Rotation);
+}
+
+FVector AToyHand::GetPinchLocation() const
+{
+	return (ThumbTip->GetComponentLocation() + PokeTip->GetComponentLocation()) * 0.5f;
 }
 
 void AToyHand::SetPokeEnabled(bool bEnabled)
@@ -242,6 +244,10 @@ void AToyHand::Tick(float DeltaSeconds)
 	}
 
 	GripPoint->SetHiddenInGame(!ToyBox::ShowGrabPoints());
+	if (ToyBox::ShowGrabPoints())
+	{
+		DrawDebugSphere(GetWorld(), GetPinchLocation(), GrabRadius, 12, FColor(255, 120, 0));
+	}
 }
 
 AActor* AToyHand::FindGrabCandidate() const
@@ -251,11 +257,11 @@ AActor* AToyHand::FindGrabCandidate() const
 	FCollisionObjectQueryParams Objects;
 	Objects.AddObjectTypesToQuery(ECC_PhysicsBody);   // 方块
 	Objects.AddObjectTypesToQuery(ECC_WorldDynamic);  // 电机零件 / 整机的检测盒
-	const FVector GripLocation = GripPoint->GetComponentLocation();
-	GetWorld()->OverlapMultiByObjectType(Overlaps, GripLocation, FQuat::Identity, Objects, FCollisionShape::MakeSphere(GrabRadius), Params);
+	// 只在拇指和食指之间判定：捏合点 GrabRadius 以内碰到碰撞表面才算，手掌、手背碰到不算
+	const FVector PinchLocation = GetPinchLocation();
+	GetWorld()->OverlapMultiByObjectType(Overlaps, PinchLocation, FQuat::Identity, Objects, FCollisionShape::MakeSphere(GrabRadius), Params);
 
-	// 按"手到碰撞体表面的距离"挑最近的；都贴着（比如手伸进了两个零件的检测盒）时挑小的那个，
-	// 这样螺钉、平键这种小件不会被旁边端盖、转子的大盒子抢走
+	// 按"捏合点到碰撞体表面的距离"挑最近的；完全一样近（捏合点同时在两个检测盒里面）时挑小的那个
 	AActor* Best = nullptr;
 	float BestDistance = TNumericLimits<float>::Max();
 	float BestSize = TNumericLimits<float>::Max();
@@ -273,14 +279,14 @@ AActor* AToyHand::FindGrabCandidate() const
 			return Actor;
 		}
 		FVector Closest;
-		float Distance = Component->GetClosestPointOnCollision(GripLocation, Closest);
+		float Distance = Component->GetClosestPointOnCollision(PinchLocation, Closest);
 		if (Distance < 0.f)
 		{
-			Distance = FVector::Dist(Component->Bounds.Origin, GripLocation);
+			Distance = FVector::Dist(Component->Bounds.Origin, PinchLocation);
 		}
 		const float Size = Component->Bounds.SphereRadius;
-		const bool bCloser = Distance < BestDistance - 0.5f;
-		const bool bTieButSmaller = FMath::Abs(Distance - BestDistance) <= 0.5f && Size < BestSize;
+		const bool bCloser = Distance < BestDistance - 0.05f;
+		const bool bTieButSmaller = FMath::Abs(Distance - BestDistance) <= 0.05f && Size < BestSize;
 		if (bCloser || bTieButSmaller)
 		{
 			BestDistance = Distance;
@@ -309,7 +315,7 @@ void AToyHand::Grab(AActor* Target)
 	FToyGripContext Context;
 	Context.GripWorld = GripPoint->GetComponentTransform();
 	Context.GripWorld.SetScale3D(FVector::OneVector);
-	Context.PinchInGrip = Context.GripWorld.InverseTransformPosition(PinchPoint->GetComponentLocation());
+	Context.PinchInGrip = Context.GripWorld.InverseTransformPosition(GetPinchLocation());
 	const FTransform Hold = Grabbable->ComputeHoldTransform(Context);
 
 	Grabbable->OnGrabbed(this);

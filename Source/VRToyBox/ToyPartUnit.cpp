@@ -96,7 +96,7 @@ void AToyPartUnit::FinishSetup()
 	{
 		return;
 	}
-	// 盒子在单元的本地坐标（模型坐标）里，世界大小 = 本地 × 模型缩放；小件放大到最小半边长
+	// 盒子在单元的本地坐标（模型坐标）里，世界大小 = 本地 × 模型缩放；太薄的零件给一个最小厚度
 	const float Scale = FMath::Max(KINDA_SMALL_NUMBER, static_cast<float>(GetActorScale3D().GetMax()));
 	const FVector MinExtent(MinGrabHalfExtent / Scale);
 	GrabBox->SetRelativeLocation(LocalBounds.GetCenter());
