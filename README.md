@@ -5,8 +5,9 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 - 一间 6m × 6m 的小工作室，你站在一张桌子前面；
 - 桌上一个支架触屏，用食指戳 **SPAWN CUBE**，桌上就掉下一个随机颜色的 10cm 方块；**CLEAR ALL** 清空；
 - 方块可以用手抓起来、换手、扔出去；抓的时候手掌会"贴"到方块的一个面上（抓点对齐），手指弯成握住的样子。
+- 触屏下排两个按钮控制桌上的**三相电机**（ITBasics 里的 YE4-132M-4 爆炸图模型，缩放到约 0.5 米长）：**SHOW/HIDE MOTOR** 摆出 / 收起，**EXPLODE/ASSEMBLE** 在爆炸图和原始装配之间切换，零件按真实拆装顺序先后飞出。
 
-仓库里**没有任何 .uasset / .umap**，所有东西（房间、桌子、触屏、手、方块）都是 C++ 用引擎自带的基础形状拼出来的，所以每一处改动都能在 PR 里看 diff。
+房间、桌子、触屏、手、方块都是 C++ 用引擎自带的基础形状拼出来的，每一处改动都能在 PR 里看 diff。唯一的二进制资产是电机模型（`Content/Models/Motor`），它由脚本生成，见下面「电机模型从哪来」。
 
 ## 怎么跑（Windows）
 
@@ -17,6 +18,7 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 | `一键启动.bat` | 检查 main 更新 → 编译 C++ → 打开编辑器 |
 | `一键启动_VR直玩.bat` | 检查更新 → 编译 → 不开编辑器，直接进头显 |
 | `检查更新.bat` | 只检查并拉取 main 的更新 |
+| `导入电机模型.bat` | 电机模型改了才需要：重新生成并导入（见下文） |
 
 - 引擎不在 `C:\Program Files\Epic Games\UE_5.8` 的话，先设置环境变量 `UE_ROOT` 指向引擎根目录（脚本也会读 Epic 启动器写的注册表）。
 - 更新脚本只在「当前在 main、没有未提交改动、本地没有 main 上没有的提交」时才 `git pull --ff-only`，其他情况只提示不动手，避免把你的改动搞乱。
@@ -34,6 +36,19 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 | 远近 | 走过去 | 滚轮 |
 
 控制台输入 `toy.ShowGrabPoints 1` 可以在游戏里看到手和方块的抓点箭头（之后生成的方块生效）。
+
+## 电机模型从哪来
+
+```
+ITBasics/三相电机爆炸图/build_motor.py ──Blender──▶ motor.glb ──Tools/import_motor.py──▶ Content/Models/Motor/*.uasset
+                                                    （零件 + extras 里的爆炸路线）            + parts.json（爆炸图清单）
+```
+
+- `导入电机模型.bat` 依次：找到或克隆 ITBasics（同级目录 `..\ITBasics`，或环境变量 `ITBASICS_DIR`）→ 用 Blender 跑 `build_motor.py` → 编译 → 用编辑器命令行跑 `Tools/import_motor.py`。
+- 导入结果提交在仓库里，所以平时直接用，不需要装 Blender。
+- **为什么要 parts.json**：glb 里每个零件的爆炸路线写在节点的 extras 里，UE 导入时不会保留这些自定义数据，所以导入脚本自己读 glb，把它换算成 UE 坐标（厘米）另存一份。
+- **爆炸动画**：和 ITBasics 的 Blender 动画、网页版是同一个公式。每个零件有几段位移，每段有一个"出场时刻" s，在总进度 T 的 `[0.6s, 0.6s+0.4]` 区间里缓动走完，所以接线盒盖先飞、转子后抽出；收回时 T 倒着走，顺序自然反过来。
+- **大小**：运行时按装配状态的最长边缩放到 50cm（`AToyStudio::MotorLengthCm`）。注意 YE4-132M 实物本身就接近半米长，所以这其实接近 1:1，不是放大；想要更大改这个数就行。
 
 ## 原理
 
@@ -108,6 +123,8 @@ OpenXR 只会给"项目里用到的按键"向运行时申请绑定，所以 `Con
 | `ToyStudio` | 房间、桌子、灯；生成/清空方块 |
 | `ToyTouchScreen` | 支架触屏和按钮 |
 | `ToyCube` | 可抓方块和 6 个抓点，抓点对齐的数学 |
+| `ToyExplodedModel` | 读 parts.json，原始 / 爆炸切换动画 |
+| `Tools/import_motor.py` | glb → UE 资产 + parts.json |
 | `ToyHand` | 程序化手、手指弯曲、抓/放/扔、戳按钮 |
 | `ToyBoxPawn` | 头显、控制器、输入、转身、桌面调试模式 |
 | `ToyShapeComponent` | "基础形状 + 颜色"，整个场景的积木 |

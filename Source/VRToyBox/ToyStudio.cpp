@@ -1,10 +1,12 @@
 #include "ToyStudio.h"
 
 #include "ToyCube.h"
+#include "ToyExplodedModel.h"
 #include "ToyShapeComponent.h"
 #include "ToyTouchScreen.h"
 #include "Components/PointLightComponent.h"
 #include "Engine/World.h"
+#include "Misc/Paths.h"
 
 namespace
 {
@@ -89,13 +91,19 @@ AToyStudio::AToyStudio()
 		FVector(40.f, 40.f, 4.f), FVector(TableX, 0.f, RoomHeight - 2.f), FLinearColor(1.f, 0.95f, 0.85f), FRotator::ZeroRotator);
 	Bulb->SetCastShadow(false);
 
-	// 方块出生点：桌面中间偏右手边，离桌面 15cm 落下
+	// 方块出生点：桌面右手边靠前的角落，离桌面 15cm 落下（桌面中间留给电机）
 	SpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("SpawnPoint"));
 	SpawnPoint->SetupAttachment(Root);
-	SpawnPoint->SetRelativeLocation(FVector(TableX, -20.f, TableHeight + 15.f));
+	SpawnPoint->SetRelativeLocation(FVector(TableX - 20.f, -60.f, TableHeight + 15.f));
 
-	// 触屏：桌面左侧靠前，转过来正对玩家站立点
-	const FVector ScreenLocation(TableX - 10.f, 45.f, TableHeight);
+	// 电机：桌面中间偏里。Yaw -90 让电机轴（模型 X）沿桌子长边，轴伸端朝右手边，
+	// 爆炸时轴伸端那侧（转子、前端盖）飞得最远，往右边飞就不会撞到左边的触屏
+	MotorMount = CreateDefaultSubobject<USceneComponent>(TEXT("MotorMount"));
+	MotorMount->SetupAttachment(Root);
+	MotorMount->SetRelativeLocationAndRotation(FVector(TableX + 15.f, -10.f, TableHeight), FRotator(0.f, -90.f, 0.f));
+
+	// 触屏：桌面左手边靠前，转过来正对玩家站立点
+	const FVector ScreenLocation(TableX - 20.f, 60.f, TableHeight);
 	ScreenMount = CreateDefaultSubobject<USceneComponent>(TEXT("ScreenMount"));
 	ScreenMount->SetupAttachment(Root);
 	ScreenMount->SetRelativeLocationAndRotation(ScreenLocation, FVector(-ScreenLocation.X, -ScreenLocation.Y, 0.f).Rotation());
@@ -150,6 +158,78 @@ void AToyStudio::ClearCubes()
 		}
 	}
 	Cubes.Reset();
+}
+
+void AToyStudio::HandleScreenAction(EToyScreenAction Action)
+{
+	switch (Action)
+	{
+	case EToyScreenAction::SpawnCube:     SpawnCube(); break;
+	case EToyScreenAction::ClearCubes:    ClearCubes(); break;
+	case EToyScreenAction::ToggleMotor:   ToggleMotor(); break;
+	case EToyScreenAction::ToggleExplode: ToggleMotorExploded(); break;
+	}
+}
+
+bool AToyStudio::ToggleMotor()
+{
+	if (Motor)
+	{
+		Motor->Destroy();
+		Motor = nullptr;
+		return true;
+	}
+
+	FActorSpawnParameters Params;
+	Params.Owner = this;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	AToyExplodedModel* Model = GetWorld()->SpawnActor<AToyExplodedModel>(AToyExplodedModel::StaticClass(),
+		MotorMount->GetComponentTransform(), Params);
+	if (!Model)
+	{
+		return false;
+	}
+	Model->TargetLengthCm = MotorLengthCm;
+	if (!Model->LoadManifest(FPaths::ProjectContentDir() / MotorManifest))
+	{
+		Model->Destroy();
+		bMotorMissing = true;
+		return false;
+	}
+	Model->AttachToComponent(MotorMount, FAttachmentTransformRules::KeepWorldTransform);
+	Motor = Model;
+	bMotorMissing = false;
+	return true;
+}
+
+void AToyStudio::ToggleMotorExploded()
+{
+	// 电机还没摆出来时，按"爆炸"就先摆出来再炸开，省得多按一次
+	if (!Motor && !ToggleMotor())
+	{
+		return;
+	}
+	Motor->SetExploded(!Motor->IsExploded());
+}
+
+bool AToyStudio::IsMotorShown() const
+{
+	return Motor != nullptr;
+}
+
+bool AToyStudio::IsMotorExploded() const
+{
+	return Motor && Motor->IsExploded();
+}
+
+FString AToyStudio::GetStatusText() const
+{
+	if (bMotorMissing)
+	{
+		return TEXT("MOTOR NOT IMPORTED - RUN import_motor.bat");
+	}
+	const FString MotorState = !Motor ? TEXT("OFF") : (Motor->IsExploded() ? TEXT("EXPLODED") : TEXT("ASSEMBLED"));
+	return FString::Printf(TEXT("CUBES %d / %d     MOTOR %s"), GetCubeCount(), MaxCubes, *MotorState);
 }
 
 int32 AToyStudio::GetCubeCount() const

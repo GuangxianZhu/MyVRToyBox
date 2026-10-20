@@ -11,11 +11,43 @@ class UPrimitiveComponent;
 class UTextRenderComponent;
 class UToyShapeComponent;
 
+UENUM()
+enum class EToyScreenAction : uint8
+{
+	SpawnCube,
+	ClearCubes,
+	ToggleMotor,
+	ToggleExplode
+};
+
+/** 屏幕上的一个按钮：看得见的按钮面、两行文字、按钮面前方看不见的触发盒。 */
+USTRUCT()
+struct FToyScreenButton
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TObjectPtr<UBoxComponent> Zone;
+
+	UPROPERTY()
+	TObjectPtr<UToyShapeComponent> Face;
+
+	UPROPERTY()
+	TObjectPtr<UTextRenderComponent> Line1;
+
+	UPROPERTY()
+	TObjectPtr<UTextRenderComponent> Line2;
+
+	EToyScreenAction Action = EToyScreenAction::SpawnCube;
+	FLinearColor Color = FLinearColor::White;
+	FVector RestLocation = FVector::ZeroVector;
+};
+
 /**
- * 桌上的支架触屏：底座 + 立杆 + 倾斜 30° 的屏幕，屏幕上两个按钮。
+ * 桌上的支架触屏：底座 + 立杆 + 倾斜 30° 的屏幕，屏幕上 2×2 四个按钮。
  *
- * 每个按钮由三部分组成：看得见的按钮面（Face）、文字、以及按钮面前方一个看不见的触发盒（Zone）。
- * 食指指尖（AToyHand::PokeTip）进入触发盒的那一帧算一次点击；桌面模式下鼠标射线打到触发盒也算。
+ * 食指指尖（AToyHand::PokeTip）进入某个按钮触发盒的那一帧算一次点击；桌面模式下鼠标射线打到触发盒也算。
+ * 按钮只负责把动作交给 AToyStudio，状态文字和按钮上的字由 RefreshStatus 从工作室读回来。
  */
 UCLASS()
 class VRTOYBOX_API AToyTouchScreen : public AActor
@@ -40,19 +72,10 @@ public:
 	TObjectPtr<USceneComponent> Pivot;
 
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
-	TObjectPtr<UBoxComponent> SpawnZone;
-
-	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
-	TObjectPtr<UBoxComponent> ClearZone;
-
-	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
-	TObjectPtr<UToyShapeComponent> SpawnFace;
-
-	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
-	TObjectPtr<UToyShapeComponent> ClearFace;
-
-	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<UTextRenderComponent> Status;
+
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TArray<FToyScreenButton> Buttons;
 
 	/** 两次点击之间的最短间隔，防止手指抖一下触发两次。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
@@ -60,9 +83,10 @@ public:
 
 private:
 	UTextRenderComponent* MakeText(FName Name, const FVector& Location, const FString& Text, float Size, const FColor& Color);
-	UBoxComponent* MakeButton(const FString& Id, float Y, const FString& Line1, const FString& Line2,
-		const FLinearColor& Color, TObjectPtr<UToyShapeComponent>& OutFace);
-	void Flash(UToyShapeComponent* Face, const FLinearColor& Color);
+	void MakeButton(const FString& Id, EToyScreenAction Action, float Y, float Z, const FString& Line1, const FString& Line2,
+		const FLinearColor& Color);
+	FToyScreenButton* FindButton(EToyScreenAction Action);
+	void Flash(int32 ButtonIndex);
 
 	TWeakObjectPtr<AToyStudio> Studio;
 	double LastPressTime = -10.0;
