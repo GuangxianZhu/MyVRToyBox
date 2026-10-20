@@ -253,10 +253,11 @@ void AToyBoxPawn::TickDesktop()
 		return;
 	}
 
-	FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyDesktopTrace), false, this);
+	// 复杂碰撞（按三角形）：电机零件只有网格本身挡 Visibility，挨得很近的零件也能点准
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyDesktopTrace), true, this);
 	Params.AddIgnoredActor(LeftHand);
 	Params.AddIgnoredActor(RightHand);
-	if (AToyCube* Held = RightHand->GetHeldCube())
+	if (AActor* Held = RightHand->GetHeldActor())
 	{
 		Params.AddIgnoredActor(Held);
 	}
@@ -285,8 +286,11 @@ void AToyBoxPawn::TickDesktop()
 		GripTarget = Hit.ImpactPoint;
 		DesktopHoldDistance = FMath::Clamp(Hit.Distance, 25.f, 200.f);
 	}
+	// 鼠标点中的零件优先：它的检测盒可能和旁边零件的盒子重叠
+	RightHand->SetPreferredTarget(bHit ? Hit.GetActor() : nullptr);
 	// 手指沿视线方向、掌心朝下，像从上面抓东西
-	RightHand->SetDesktopPose(GripTarget, Direction.Rotation() + FRotator(0.f, 0.f, 90.f));
+	// 只取视线的水平朝向（不跟着低头），Roll -90 让掌心真的朝下（+90 是掌心朝上，抓零件时零件会翻到手掌上面去）
+	RightHand->SetDesktopPose(GripTarget, FRotator(0.f, Direction.Rotation().Yaw, -90.f));
 	RightHand->SetInputs(bLeftDown && !bDesktopClickIsPoke ? 1.f : 0.f, 0.f);
 }
 

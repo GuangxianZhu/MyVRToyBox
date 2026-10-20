@@ -6,9 +6,11 @@
 #include "ToyHand.generated.h"
 
 class AToyBoxPawn;
-class AToyCube;
+class IToyGrabbable;
+class STextBlock;
 class UArrowComponent;
 class UPrimitiveComponent;
+class UWidgetComponent;
 
 /**
  * 用基础形状拼出来的一只手，挂在动作控制器（握把姿态）上。
@@ -19,6 +21,10 @@ class UPrimitiveComponent;
  * - GripPoint：手掌表面的抓点。X 轴从掌心指向手背，Z 轴指向手指。
  *   方块的抓点用同样约定（X = 面的外法线），两者重合 = 手掌贴住方块的一个面。
  * - PokeTip：食指指尖，用来戳触屏。
+ * - PinchPoint：拇指和食指指尖之间，小零件"捏"在这里。
+ * - InfoLabel：拿着零件时浮在零件上方、始终面向玩家的信息牌（Slate 文字，能显示中文）。
+ *
+ * 能抓的东西都实现 IToyGrabbable（方块、电机零件、整台电机），手只认这个接口。
  */
 UCLASS()
 class VRTOYBOX_API AToyHand : public AActor
@@ -42,7 +48,10 @@ public:
 	void SetPokeEnabled(bool bEnabled);
 	void ReleaseHeld(bool bThrow);
 	bool IsHolding() const;
-	AToyCube* GetHeldCube() const;
+	AActor* GetHeldActor() const;
+
+	/** 桌面模式：鼠标射线点中的 Actor。它在手的抓取范围里时优先抓它（零件挨得近时，以鼠标点中的为准）。 */
+	void SetPreferredTarget(AActor* Target) { PreferredTarget = Target; }
 
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<USceneComponent> Root;
@@ -57,6 +66,12 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<USceneComponent> PokeTip;
 
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<USceneComponent> PinchPoint;
+
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<UWidgetComponent> InfoLabel;
+
 	/** 抓取检测半径（从 GripPoint 算起）。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float GrabRadius = 9.f;
@@ -65,7 +80,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float SnapTime = 0.08f;
 
-	/** 拿着方块时手指至少弯这么多度，看起来像握住了 10cm 的方块。 */
+	/** 全手握着东西时手指至少弯这么多度，看起来像握住了 10cm 的方块。捏和托用更小的角度（见 TickCurls）。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float HoldCurl = 55.f;
 
@@ -76,9 +91,11 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
-	AToyCube* FindGrabCandidate() const;
-	void Grab(AToyCube* Cube);
+	AActor* FindGrabCandidate() const;
+	void Grab(AActor* Target);
 	void UpdateHover();
+	void ShowInfo(AActor* Target);
+	void TickInfo();
 	void TickHeld(float DeltaSeconds);
 	void TickCurls(float DeltaSeconds);
 	void TickPoke();
@@ -106,8 +123,11 @@ private:
 	bool bGripDown = false;
 	bool bPokeEnabled = true;
 
-	TWeakObjectPtr<AToyCube> HeldCube;
-	TWeakObjectPtr<AToyCube> HoveredCube;
+	TWeakObjectPtr<AActor> HeldActor;
+	TWeakObjectPtr<AActor> HoveredActor;
+	TWeakObjectPtr<AActor> PreferredTarget;
+	TSharedPtr<STextBlock> InfoTitle;
+	TSharedPtr<STextBlock> InfoBody;
 	FTransform SnapFrom;
 	FTransform SnapTo;
 	float SnapAlpha = 1.f;

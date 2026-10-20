@@ -59,8 +59,9 @@ void AToyCube::BeginPlay()
 	}
 }
 
-FTransform AToyCube::ComputeHoldTransform(const FTransform& GripWorld) const
+FTransform AToyCube::ComputeHoldTransform(const FToyGripContext& Grip) const
 {
+	const FTransform& GripWorld = Grip.GripWorld;
 	const FVector HandX = GripWorld.GetUnitAxis(EAxis::X);
 	const FVector HandZ = GripWorld.GetUnitAxis(EAxis::Z);
 	const FVector GripLocation = GripWorld.GetLocation();
@@ -114,7 +115,7 @@ void AToyCube::OnGrabbed(AToyHand* Hand)
 	Mesh->SetSimulatePhysics(false);
 }
 
-void AToyCube::OnReleased(const FVector& Velocity)
+void AToyCube::OnReleased(AToyHand* Hand, const FVector& Velocity)
 {
 	Holder.Reset();
 	Mesh->SetSimulatePhysics(true);

@@ -8,10 +8,11 @@ public class VRToyBox : ModuleRules
 
 		// HeadMountedDisplay：MotionControllerComponent 在这里
 		// Json：读爆炸图零件清单
+		// UMG / Slate：手边的零件信息牌（WidgetComponent + Slate 文字，能显示中文）
 		// XRBase：HMD 函数库（UHeadMountedDisplayFunctionLibrary）在新版引擎里搬进了 XRBase 插件
 		PublicDependencyModuleNames.AddRange(new string[]
 		{
-			"Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "XRBase", "Json"
+			"Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "XRBase", "Json", "UMG", "Slate", "SlateCore"
 		});
 	}
 }

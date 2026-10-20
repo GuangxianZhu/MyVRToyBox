@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "ToyGrabbable.h"
 #include "ToyCube.generated.h"
 
 class AToyHand;
@@ -23,7 +24,7 @@ namespace ToyBox
  * 抓起时选出最匹配的抓点，再把方块摆到"两个抓点完全重合"的位置——这就是手掌贴面的对齐。
  */
 UCLASS()
-class VRTOYBOX_API AToyCube : public AActor
+class VRTOYBOX_API AToyCube : public AActor, public IToyGrabbable
 {
 	GENERATED_BODY()
 
@@ -36,17 +37,17 @@ public:
 	 * 给定手抓点的世界变换，返回"方块相对于手抓点"应该在的变换（缩放为 1）。
 	 * 选点规则：面朝向最接近手掌的那个面，再绕法线把 4 种 90° 摆法里最贴合手指方向的挑出来。
 	 */
-	FTransform ComputeHoldTransform(const FTransform& GripWorld) const;
+	virtual FTransform ComputeHoldTransform(const FToyGripContext& Grip) const override;
 
-	void OnGrabbed(AToyHand* Hand);
-	void OnReleased(const FVector& Velocity);
-	AToyHand* GetHolder() const;
+	virtual void OnGrabbed(AToyHand* Hand) override;
+	virtual void OnReleased(AToyHand* Hand, const FVector& Velocity) override;
+	virtual AToyHand* GetHolder() const override;
 
 	void SetBaseColor(const FLinearColor& InColor);
 
 	/** 手靠近时变亮。两只手可能同时悬停，所以用计数。 */
-	void AddHover();
-	void RemoveHover();
+	virtual void AddHover() override;
+	virtual void RemoveHover() override;
 
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<UToyShapeComponent> Mesh;
