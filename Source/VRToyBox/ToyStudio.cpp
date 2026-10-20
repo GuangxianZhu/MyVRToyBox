@@ -91,18 +91,18 @@ AToyStudio::AToyStudio()
 		FVector(40.f, 40.f, 4.f), FVector(TableX, 0.f, RoomHeight - 2.f), FLinearColor(1.f, 0.95f, 0.85f), FRotator::ZeroRotator);
 	Bulb->SetCastShadow(false);
 
-	// 方块出生点：桌面右手边靠前的角落，离桌面 15cm 落下（桌面中间留给电机）
+	// 方块出生点：桌面左手边靠前的角落（UE 里 +Y 是右边），离桌面 15cm 落下（桌面中间留给电机）
 	SpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("SpawnPoint"));
 	SpawnPoint->SetupAttachment(Root);
 	SpawnPoint->SetRelativeLocation(FVector(TableX - 20.f, -60.f, TableHeight + 15.f));
 
-	// 电机：桌面中间偏里。Yaw -90 让电机轴（模型 X）沿桌子长边，轴伸端朝右手边，
-	// 爆炸时轴伸端那侧（转子、前端盖）飞得最远，往右边飞就不会撞到左边的触屏
+	// 电机：桌面中间偏里。Yaw -90 让电机轴（模型 X）沿桌子长边，轴伸端朝左手边，
+	// 爆炸时轴伸端那侧（转子、前端盖）飞得最远，往左边飞就不会撞到右边的触屏
 	MotorMount = CreateDefaultSubobject<USceneComponent>(TEXT("MotorMount"));
 	MotorMount->SetupAttachment(Root);
 	MotorMount->SetRelativeLocationAndRotation(FVector(TableX + 15.f, -10.f, TableHeight), FRotator(0.f, -90.f, 0.f));
 
-	// 触屏：桌面左手边靠前，转过来正对玩家站立点
+	// 触屏：桌面右手边靠前，转过来正对玩家站立点
 	const FVector ScreenLocation(TableX - 20.f, 60.f, TableHeight);
 	ScreenMount = CreateDefaultSubobject<USceneComponent>(TEXT("ScreenMount"));
 	ScreenMount->SetupAttachment(Root);
