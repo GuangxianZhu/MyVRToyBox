@@ -77,11 +77,14 @@ bool AToyExplodedModel::LoadManifest(const FString& ManifestPath)
 		return false;
 	}
 
+	// explode_scale：爆炸距离整体缩放（阀门的网页版爆炸距离按全屏定的，放大摆到桌上会飞出视野）
+	double ExplodeScale = 1.0;
 	const TSharedPtr<FJsonObject>* ModelInfo = nullptr;
 	if (Manifest->TryGetObjectField(TEXT("model"), ModelInfo))
 	{
 		ModelTitle = FText::FromString((*ModelInfo)->GetStringField(TEXT("title")));
 		ModelBody = FText::FromString((*ModelInfo)->GetStringField(TEXT("body")));
+		(*ModelInfo)->TryGetNumberField(TEXT("explode_scale"), ExplodeScale);
 	}
 
 	// 1) 抓取单元。单元 Actor 以单位变换挂在 ModelRoot 上，继承它的缩放
@@ -200,7 +203,8 @@ bool AToyExplodedModel::LoadManifest(const FString& ManifestPath)
 					const TArray<TSharedPtr<FJsonValue>>& N = StepValue->AsArray();
 					if (N.Num() >= 4)
 					{
-						Steps.Add(FToyExplodeStep{ FVector(N[0]->AsNumber(), N[1]->AsNumber(), N[2]->AsNumber()), static_cast<float>(N[3]->AsNumber()) });
+						Steps.Add(FToyExplodeStep{ FVector(N[0]->AsNumber(), N[1]->AsNumber(), N[2]->AsNumber()) * ExplodeScale,
+							static_cast<float>(N[3]->AsNumber()) });
 					}
 				}
 			}

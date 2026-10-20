@@ -5,10 +5,10 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 - 一间 6m × 6m 的小工作室，你站在一张桌子前面；
 - 桌上一个支架触屏，用食指戳 **SPAWN CUBE**，桌上就掉下一个随机颜色的 10cm 方块；**CLEAR ALL** 清空；
 - 方块可以用手抓起来、换手、扔出去；抓的时候手掌会"贴"到方块的一个面上（抓点对齐），手指弯成握住的样子。
-- 触屏下排两个按钮控制桌上的**三相电机**（ITBasics 里的 YE4-132M-4 爆炸图模型，缩放到约 0.5 米长）：**SHOW/HIDE MOTOR** 摆出 / 收起，**EXPLODE/ASSEMBLE** 在爆炸图和原始装配之间切换，零件按真实拆装顺序先后飞出。
+- 触屏上能摆出两个爆炸图模型（一次一个，换模型时先收起原来的）：**三相电机**（ITBasics 里的 YE4-132M-4）和**气动蝶阀**（codex_localAI 里 three.js 写的 DN80 蝶阀 + 气动执行器），都缩放到最长边约 0.5 米。**SHOW/HIDE MOTOR**、**SHOW/HIDE VALVE** 摆出 / 收起，**EXPLODE/ASSEMBLE** 让桌上的模型在爆炸图和原始装配之间切换，零件按真实拆装顺序先后飞出。
 - **零件抓取查看**：装配状态下抓电机任意位置 = 拿起整台电机；爆炸后每个零件（转子总成、端盖、风扇、螺钉……共 27 个抓取单元）都能单独抓起来看，手边浮出中文信息牌（名字、材料、作用）。松手零件自己飞回原位，拿着靠近原位 5cm 会出现半透明虚影、松手吸回去；触屏 **RESET PARTS** 一键全部复位。
 
-房间、桌子、触屏、方块都是 C++ 用引擎自带的基础形状拼出来的，每一处改动都能在 PR 里看 diff。二进制资产只有：电机模型（`Content/Models/Motor`）和虚影 / 高亮用的半透明材质（`Content/Materials/M_ToyGhost`），由脚本生成，见下面「电机模型从哪来」；手模型（`Content/XRMannequins`），是从 UE 自带的 VR 模板拷来的，见「手的模型」。
+房间、桌子、触屏、方块都是 C++ 用引擎自带的基础形状拼出来的，每一处改动都能在 PR 里看 diff。二进制资产只有：电机和阀门模型（`Content/Models/Motor`、`Content/Models/Valve`）和虚影 / 高亮用的半透明材质（`Content/Materials/M_ToyGhost`），由脚本生成，见下面「电机模型从哪来」「阀门模型从哪来」；手模型（`Content/XRMannequins`），是从 UE 自带的 VR 模板拷来的，见「手的模型」。
 
 ## 怎么跑（Windows）
 
@@ -20,6 +20,7 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 | `一键启动_VR直玩.bat` | 检查更新 → 编译 → 不开编辑器，直接进头显 |
 | `检查更新.bat` | 只检查并拉取 main 的更新 |
 | `导入电机模型.bat` | 电机模型改了才需要：重新生成并导入（见下文） |
+| `导入阀门模型.bat` | 阀门模型改了才需要：从 three.js 工程导出 glb 并导入（见下文） |
 
 - 引擎不在 `C:\Program Files\Epic Games\UE_5.8` 的话，先设置环境变量 `UE_ROOT` 指向引擎根目录（脚本也会读 Epic 启动器写的注册表）。
 - 更新脚本只在「当前在 main、没有未提交改动、本地没有 main 上没有的提交」时才 `git pull --ff-only`，其他情况只提示不动手，避免把你的改动搞乱。
@@ -56,16 +57,35 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 ## 电机模型从哪来
 
 ```
-ITBasics/三相电机爆炸图/build_motor.py ──Blender──▶ motor.glb ──Tools/import_motor.py──▶ Content/Models/Motor/*.uasset
+ITBasics/三相电机爆炸图/build_motor.py ──Blender──▶ motor.glb ──Tools/import_model.py──▶ Content/Models/Motor/*.uasset
                                                     （零件 + extras 里的爆炸路线）            + parts.json（爆炸图清单）
 ```
 
-- `导入电机模型.bat` 依次：找到或克隆 ITBasics（同级目录 `..\ITBasics`，或环境变量 `ITBASICS_DIR`）→ 用 Blender 跑 `build_motor.py` → 编译 → 用编辑器命令行跑 `Tools/import_motor.py`。
+- `导入电机模型.bat` 依次：找到或克隆 ITBasics（同级目录 `..\ITBasics`，或环境变量 `ITBASICS_DIR`）→ 用 Blender 跑 `build_motor.py` → 编译 → 用编辑器命令行跑 `Tools/import_model.py`（`MODEL_NAME=Motor`）。
 - 导入结果提交在仓库里，所以平时直接用，不需要装 Blender。
 - **为什么要 parts.json**：glb 里每个零件的爆炸路线写在节点的 extras 里，UE 导入时不会保留这些自定义数据，所以导入脚本自己读 glb，把它换算成 UE 坐标（厘米）另存一份。
 - **爆炸动画**：和 ITBasics 的 Blender 动画、网页版是同一个公式。每个零件有几段位移，每段有一个"出场时刻" s，在总进度 T 的 `[0.6s, 0.6s+0.4]` 区间里缓动走完，所以接线盒盖先飞、转子后抽出；收回时 T 倒着走，顺序自然反过来。
-- **抓取单元**：导入脚本还会按爆炸路线把 84 个网格分成 28 个抓取单元，写进 parts.json 的 `units`（见下面「零件抓取」）。只改了抓点规则时用 `MOTOR_MANIFEST_ONLY=1` 只重写 parts.json，不重新导入资产。
-- **大小**：运行时按装配状态的最长边缩放到 50cm（`AToyStudio::MotorLengthCm`）。注意 YE4-132M 实物本身就接近半米长，所以这其实接近 1:1，不是放大；想要更大改这个数就行。
+- **抓取单元**：导入脚本还会按爆炸路线把 84 个网格分成 28 个抓取单元，写进 parts.json 的 `units`（见下面「零件抓取」）。只改了抓点规则时用 `MODEL_MANIFEST_ONLY=1` 只重写 parts.json，不重新导入资产。
+- **大小**：运行时按装配状态的最长边缩放到 50cm（`AToyStudio::ModelLengthCm`）。注意 YE4-132M 实物本身就接近半米长，所以这其实接近 1:1，不是放大；想要更大改这个数就行。
+
+## 阀门模型从哪来
+
+| 装配 | 爆炸 | 抓端盖 |
+| --- | --- | --- |
+| ![](docs/screenshots/valve_assembled.jpg) | ![](docs/screenshots/valve_exploded.jpg) | ![](docs/screenshots/valve_hold_endcap.jpg) |
+
+```
+codex_localAI/work/valve/src/*.js ──Tools/export_valve_glb.mjs（无头 Chrome + three.js GLTFExporter）──▶ valve.glb
+    ──Tools/import_model.py（MODEL_NAME=Valve）──▶ Content/Models/Valve/*.uasset + parts.json
+```
+
+- **模型**：DN80 对夹式气动蝶阀 + 齿轮齿条单作用执行器，21 种零件 38 个实例，全部在 three.js 里按毫米手写建模（`10-parts.js`）。实物尺寸约 128 × 156 × 293 mm（高 29cm 含执行器），放大 1.71 倍到 50cm 高。同一个目录里还有一个更早的**气动球阀**（`codex_localAI/气动球阀爆炸图.html`，是蝶阀的参考原稿），只有打包好的单文件 html，没有拆开的源码，这次没导。
+- **不在 git 里**：阀门工程在这台电脑的 `C:\work\codex_localAI\work\valve`，不在任何仓库里。`导入阀门模型.bat` 默认去那里找，换电脑要先把它拷过去并设置环境变量 `VALVE_DIR`。导入结果提交在本仓库，平时不需要它。
+- **导出**：`Tools/export_valve_glb.mjs` 不改阀门工程的源码，照它的 `build.mjs` 把 `src/*.js` 拼成页面，多打包一个 three.js 的 `GLTFExporter`，在无头 Chrome 里把每个零件实例（装配位置、单位米）导成一个节点，零件编号、中文名、材料、作用、爆炸路线写进节点 extras —— 和 Blender 脚本出的 motor.glb 同一个约定，所以导入脚本通用。
+  - 材质按颜色 + 金属度 + 粗糙度合并成 19 种标准 PBR 材质；金属度封顶 0.8、粗糙度至少 0.25：工作室里没有反射探针，原来"镜面"一样的蝶板会反射出一片黑。
+- **爆炸距离**：网页版是按 29cm 的阀门、整屏显示定的，放大 1.7 倍摆在桌上会飞出视野，所以 parts.json 里 `explode_scale = 0.55`（`Tools/import_model.py` 的 `MODELS['Valve']`）。爆炸的缓动公式网页版是 `(t - 0.62s) / 0.38`，这里统一用电机的 `(t - 0.6s) / 0.4`，看不出差别。
+- **抓取单元**：通用规则 —— 爆炸路线相同的零件合成一组；同一种零件有 2~8 个的（端盖、活塞、弹簧、螺钉……）一个一个分开；路线为空的（阀体）是基座不能抓。阀门 38 个实例 → 38 个单元（37 个能抓）：最长边缩放后 ≤ 7cm 的 26 个用"捏"，衬圈等回转体 2 个握外圆，其余 9 个贴包围盒的面。这套通用规则对电机得出的 28 个单元和原来手写的一模一样。
+- **桌上的位置**：和电机共用一个位置（一次只摆一个），不转向：执行器缸体长轴沿桌子长边，爆炸时端盖、活塞、弹簧往左右飞；阀体的管道方向朝着玩家。
 
 ## 原理
 
@@ -155,6 +175,7 @@ OpenXR 只会给"项目里用到的按键"向运行时申请绑定，所以 `Con
 - ✅ **画面亮度**：没有 `r.DefaultFeature.AutoExposure.ExtendDefaultLuminanceRange=True` 时整个画面严重过曝，已写进 DefaultEngine.ini。
 - ✅ **出生点**：Entry 地图自带一个 PlayerStart，会让人出生在工作室外面（黑屏），所以 GameMode 总是让玩家出生在工作室原点。
 - ⚠️ **手柄没反应**：如果 UE 5.8 的 OpenXR 不再读旧式轴映射（`DefaultInput.ini`），握把和扳机会全是 0。症状是 VR 里手跟着动、但抓不起来。解决方向是改成 Enhanced Input 的 IMC 资产（要在编辑器里建，没法纯文本）。
+- ✅ **阀门（桌面模式）**：SHOW VALVE 摆出（直立，执行器朝上）、EXPLODE / ASSEMBLE、抓端盖 / 弹簧 / 蝶板 / 端盖螺钉并飞回；SHOW MOTOR 会把阀门换成电机。⚠️ 阀门最上面的几个零件（位置指示器、电磁阀）爆炸后在桌面模式的镜头上沿附近，VR 里抬头能看到；VR 手感没测。
 - ✅ **MannyXR 手（桌面模式）**：左右手都加载成功，张开 / 握拳 / 拇指扣下都对（`toy.HandPreview` 截图）；右手抓方块、转子，捏螺栓照常，判定和贴合没变。
 - ⚠️ **手的朝向**：手模型按"握把姿态 X 轴向前、Y 轴向右、掌心朝 -Y"摆的，不同手柄的握把姿态略有差别，手可能看起来偏一点、或者手柄和手掌对不上。调 `ToyHand.cpp` 顶部的 `PalmY`，或者在 `SetupHandMesh` 末尾给 `HandMesh` 加一点旋转。
 - ⚠️ **手指和物体会互相穿插**：手指只是在两个固定姿势之间插值，不会贴着物体表面停下（那要做手指 IK / 物理手）；握 10cm 方块时手指会插进方块一点。
@@ -177,13 +198,14 @@ OpenXR 只会给"项目里用到的按键"向运行时申请绑定，所以 `Con
 | 文件 | 内容 |
 | --- | --- |
 | `ToyBoxGameMode` | 没有工作室就生成一个，玩家站在它的原点 |
-| `ToyStudio` | 房间、桌子、灯；生成/清空方块 |
+| `ToyStudio` | 房间、桌子、灯；生成/清空方块；摆出 / 换 / 收起电机或阀门 |
 | `ToyTouchScreen` | 支架触屏和按钮 |
 | `ToyCube` | 可抓方块和 6 个抓点，抓点对齐的数学 |
 | `ToyExplodedModel` | 读 parts.json、生成抓取单元，原始 / 爆炸切换动画，整机抓取，虚影 / 高亮 / 复位 |
 | `ToyPartUnit` | 一个抓取单元：圆柱面 / 包围盒 / 捏 三种抓点，松手飞回原位，磁吸 |
 | `ToyGrabbable` | 可抓物体的接口（方块、零件、整机都实现它） |
-| `Tools/import_motor.py` | glb → UE 资产 + parts.json（含抓取单元和抓点） |
+| `Tools/import_model.py` | glb → UE 资产 + parts.json（含抓取单元和抓点），电机、阀门共用，`MODELS` 里是各模型的配置 |
+| `Tools/export_valve_glb.mjs` | 把 three.js 写的阀门导出成 glb |
 | `Tools/create_toy_materials.py` | 建虚影 / 高亮用的半透明材质 `M_ToyGhost` |
 | `ToyHand` | MannyXR 手模型和手指弯曲（握 / 捏 / 托）、抓/放/扔、戳按钮、信息牌 |
 | `ToyBoxPawn` | 头显、控制器、输入、转身、桌面调试模式 |

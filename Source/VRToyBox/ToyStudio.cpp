@@ -102,6 +102,11 @@ AToyStudio::AToyStudio()
 	MotorMount->SetupAttachment(Root);
 	MotorMount->SetRelativeLocationAndRotation(FVector(TableX + 15.f, -10.f, TableHeight), FRotator(0.f, -90.f, 0.f));
 
+	// 阀门：同一个位置，不转。阀门模型的 Y（执行器缸体长轴）就沿桌子长边
+	ValveMount = CreateDefaultSubobject<USceneComponent>(TEXT("ValveMount"));
+	ValveMount->SetupAttachment(Root);
+	ValveMount->SetRelativeLocation(FVector(TableX + 15.f, -10.f, TableHeight));
+
 	// 触屏：桌面右手边靠前，转过来正对玩家站立点
 	const FVector ScreenLocation(TableX - 20.f, 60.f, TableHeight);
 	ScreenMount = CreateDefaultSubobject<USceneComponent>(TEXT("ScreenMount"));
@@ -166,79 +171,89 @@ void AToyStudio::HandleScreenAction(EToyScreenAction Action)
 	{
 	case EToyScreenAction::SpawnCube:     SpawnCube(); break;
 	case EToyScreenAction::ClearCubes:    ClearCubes(); break;
-	case EToyScreenAction::ToggleMotor:   ToggleMotor(); break;
-	case EToyScreenAction::ToggleExplode: ToggleMotorExploded(); break;
-	case EToyScreenAction::ResetParts:    ResetMotor(); break;
+	case EToyScreenAction::ToggleMotor:   ToggleModel(EToyModelKind::Motor); break;
+	case EToyScreenAction::ToggleValve:   ToggleModel(EToyModelKind::Valve); break;
+	case EToyScreenAction::ToggleExplode: ToggleModelExploded(); break;
+	case EToyScreenAction::ResetParts:    ResetModel(); break;
 	}
 }
 
-bool AToyStudio::ToggleMotor()
+bool AToyStudio::ToggleModel(EToyModelKind Kind)
 {
-	if (Motor)
+	// 再按一次同一个按钮 = 收起；按另一个模型的按钮 = 换模型
+	const bool bSame = Model && ModelKind == Kind;
+	if (Model)
 	{
-		Motor->Destroy();
-		Motor = nullptr;
+		Model->Destroy();
+		Model = nullptr;
+	}
+	if (bSame)
+	{
 		return true;
 	}
 
+	const bool bMotor = Kind == EToyModelKind::Motor;
+	USceneComponent* Mount = bMotor ? MotorMount : ValveMount;
 	FActorSpawnParameters Params;
 	Params.Owner = this;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	AToyExplodedModel* Model = GetWorld()->SpawnActor<AToyExplodedModel>(AToyExplodedModel::StaticClass(),
-		MotorMount->GetComponentTransform(), Params);
-	if (!Model)
+	AToyExplodedModel* Spawned = GetWorld()->SpawnActor<AToyExplodedModel>(AToyExplodedModel::StaticClass(),
+		Mount->GetComponentTransform(), Params);
+	if (!Spawned)
 	{
 		return false;
 	}
-	Model->TargetLengthCm = MotorLengthCm;
-	if (!Model->LoadManifest(FPaths::ProjectContentDir() / MotorManifest))
+	Spawned->TargetLengthCm = ModelLengthCm;
+	if (!Spawned->LoadManifest(FPaths::ProjectContentDir() / (bMotor ? MotorManifest : ValveManifest)))
 	{
-		Model->Destroy();
-		bMotorMissing = true;
+		Spawned->Destroy();
+		MissingModel = bMotor ? TEXT("MOTOR") : TEXT("VALVE");
 		return false;
 	}
-	Model->AttachToComponent(MotorMount, FAttachmentTransformRules::KeepWorldTransform);
-	Motor = Model;
-	bMotorMissing = false;
+	Spawned->AttachToComponent(Mount, FAttachmentTransformRules::KeepWorldTransform);
+	Model = Spawned;
+	ModelKind = Kind;
+	MissingModel.Reset();
 	return true;
 }
 
-void AToyStudio::ToggleMotorExploded()
+void AToyStudio::ToggleModelExploded()
 {
-	// 电机还没摆出来时，按"爆炸"就先摆出来再炸开，省得多按一次
-	if (!Motor && !ToggleMotor())
+	// 桌上还没有模型时，按"爆炸"就先摆出电机再炸开，省得多按一次
+	if (!Model && !ToggleModel(EToyModelKind::Motor))
 	{
 		return;
 	}
-	Motor->SetExploded(!Motor->IsExploded());
+	Model->SetExploded(!Model->IsExploded());
 }
 
-void AToyStudio::ResetMotor()
+void AToyStudio::ResetModel()
 {
-	if (Motor)
+	if (Model)
 	{
-		Motor->ResetAll();
+		Model->ResetAll();
 	}
 }
 
-bool AToyStudio::IsMotorShown() const
+bool AToyStudio::IsModelShown(EToyModelKind Kind) const
 {
-	return Motor != nullptr;
+	return Model != nullptr && ModelKind == Kind;
 }
 
-bool AToyStudio::IsMotorExploded() const
+bool AToyStudio::IsModelExploded() const
 {
-	return Motor && Motor->IsExploded();
+	return Model && Model->IsExploded();
 }
 
 FString AToyStudio::GetStatusText() const
 {
-	if (bMotorMissing)
+	if (!MissingModel.IsEmpty())
 	{
-		return TEXT("MOTOR NOT IMPORTED - RUN import_motor.bat");
+		return FString::Printf(TEXT("%s NOT IMPORTED - RUN scripts/import_%s.bat"), *MissingModel, *MissingModel.ToLower());
 	}
-	const FString MotorState = !Motor ? TEXT("OFF") : (Motor->IsExploded() ? TEXT("EXPLODED") : TEXT("ASSEMBLED"));
-	return FString::Printf(TEXT("CUBES %d / %d     MOTOR %s"), GetCubeCount(), MaxCubes, *MotorState);
+	const FString Name = !Model ? TEXT("MODEL") : (ModelKind == EToyModelKind::Motor ? TEXT("MOTOR") : TEXT("VALVE"));
+	const FString State = !Model ? TEXT("OFF") : (Model->IsExploded() ? TEXT("EXPLODED") : TEXT("ASSEMBLED"));
+	return FString::Printf(TEXT("CUBES %d / %d     %s %s"), GetCubeCount(), MaxCubes, *Name, *State);
 }
 
 int32 AToyStudio::GetCubeCount() const

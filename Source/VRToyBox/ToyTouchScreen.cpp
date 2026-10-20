@@ -47,8 +47,9 @@ AToyTouchScreen::AToyTouchScreen()
 	MakeButton(TEXT("Clear"), EToyScreenAction::ClearCubes, -7.5f, 3.9f, TEXT("CLEAR"), TEXT("CUBES"), FLinearColor(0.8f, 0.15f, 0.12f));
 	MakeButton(TEXT("Motor"), EToyScreenAction::ToggleMotor, 7.5f, -1.1f, TEXT("SHOW"), TEXT("MOTOR"), FLinearColor(0.15f, 0.35f, 0.85f));
 	MakeButton(TEXT("Explode"), EToyScreenAction::ToggleExplode, -7.5f, -1.1f, TEXT("EXPLODE"), TEXT("VIEW"), FLinearColor(0.85f, 0.5f, 0.05f));
-	// 第三排：所有零件松手、飞回原位
-	MakeButton(TEXT("Reset"), EToyScreenAction::ResetParts, 0.f, -6.1f, TEXT("RESET"), TEXT("PARTS"), FLinearColor(0.45f, 0.45f, 0.5f));
+	// 第三排：阀门；所有零件松手、飞回原位
+	MakeButton(TEXT("Valve"), EToyScreenAction::ToggleValve, 7.5f, -6.1f, TEXT("SHOW"), TEXT("VALVE"), FLinearColor(0.1f, 0.55f, 0.6f));
+	MakeButton(TEXT("Reset"), EToyScreenAction::ResetParts, -7.5f, -6.1f, TEXT("RESET"), TEXT("PARTS"), FLinearColor(0.45f, 0.45f, 0.5f));
 }
 
 UTextRenderComponent* AToyTouchScreen::MakeText(FName Name, const FVector& Location, const FString& Text, float Size, const FColor& Color)
@@ -137,11 +138,15 @@ void AToyTouchScreen::RefreshStatus()
 	// 按钮上的字跟着状态变：显示/隐藏电机、爆炸/还原
 	if (FToyScreenButton* MotorButton = FindButton(EToyScreenAction::ToggleMotor))
 	{
-		MotorButton->Line1->SetText(FText::FromString(StudioActor->IsMotorShown() ? TEXT("HIDE") : TEXT("SHOW")));
+		MotorButton->Line1->SetText(FText::FromString(StudioActor->IsModelShown(EToyModelKind::Motor) ? TEXT("HIDE") : TEXT("SHOW")));
+	}
+	if (FToyScreenButton* ValveButton = FindButton(EToyScreenAction::ToggleValve))
+	{
+		ValveButton->Line1->SetText(FText::FromString(StudioActor->IsModelShown(EToyModelKind::Valve) ? TEXT("HIDE") : TEXT("SHOW")));
 	}
 	if (FToyScreenButton* ExplodeButton = FindButton(EToyScreenAction::ToggleExplode))
 	{
-		ExplodeButton->Line1->SetText(FText::FromString(StudioActor->IsMotorExploded() ? TEXT("ASSEMBLE") : TEXT("EXPLODE")));
+		ExplodeButton->Line1->SetText(FText::FromString(StudioActor->IsModelExploded() ? TEXT("ASSEMBLE") : TEXT("EXPLODE")));
 	}
 }
 
