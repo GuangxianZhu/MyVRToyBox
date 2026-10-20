@@ -34,6 +34,9 @@ public:
 	/** 在桌上显示 / 收起三相电机模型。资产还没导入时返回 false。 */
 	bool ToggleMotor();
 	void ToggleMotorExploded();
+
+	/** 手里拿着的零件 / 整机全部松开，飞回原位。 */
+	void ResetMotor();
 	bool IsMotorShown() const;
 	bool IsMotorExploded() const;
 

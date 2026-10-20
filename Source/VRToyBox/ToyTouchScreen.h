@@ -17,7 +17,8 @@ enum class EToyScreenAction : uint8
 	SpawnCube,
 	ClearCubes,
 	ToggleMotor,
-	ToggleExplode
+	ToggleExplode,
+	ResetParts
 };
 
 /** 屏幕上的一个按钮：看得见的按钮面、两行文字、按钮面前方看不见的触发盒。 */
@@ -44,7 +45,7 @@ struct FToyScreenButton
 };
 
 /**
- * 桌上的支架触屏：底座 + 立杆 + 倾斜 30° 的屏幕，屏幕上 2×2 四个按钮。
+ * 桌上的支架触屏：底座 + 立杆 + 倾斜 30° 的屏幕，屏幕上 2×2 四个按钮 + 底下一个 RESET。
  *
  * 食指指尖（AToyHand::PokeTip）进入某个按钮触发盒的那一帧算一次点击；桌面模式下鼠标射线打到触发盒也算。
  * 按钮只负责把动作交给 AToyStudio，状态文字和按钮上的字由 RefreshStatus 从工作室读回来。

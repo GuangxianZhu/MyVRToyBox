@@ -168,6 +168,7 @@ void AToyStudio::HandleScreenAction(EToyScreenAction Action)
 	case EToyScreenAction::ClearCubes:    ClearCubes(); break;
 	case EToyScreenAction::ToggleMotor:   ToggleMotor(); break;
 	case EToyScreenAction::ToggleExplode: ToggleMotorExploded(); break;
+	case EToyScreenAction::ResetParts:    ResetMotor(); break;
 	}
 }
 
@@ -210,6 +211,14 @@ void AToyStudio::ToggleMotorExploded()
 		return;
 	}
 	Motor->SetExploded(!Motor->IsExploded());
+}
+
+void AToyStudio::ResetMotor()
+{
+	if (Motor)
+	{
+		Motor->ResetAll();
+	}
 }
 
 bool AToyStudio::IsMotorShown() const

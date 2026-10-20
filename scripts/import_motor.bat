@@ -52,6 +52,9 @@ rem -script= 遇到带空格的路径（Unreal Projects）会被拆成两段，�
 set "MOTOR_IMPORT_SCRIPT=%CD%\Tools\import_motor.py"
 "%UE_ROOT%\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%PROJECT%" -run=pythonscript -script=__import__('runpy').run_path(__import__('os').environ['MOTOR_IMPORT_SCRIPT']) -unattended -nosplash -nullrhi
 if not exist "%CD%\Content\Models\Motor\parts.json" goto :fail
+rem 虚影 / 高亮用的半透明材质，已经有了就跳过
+set "MOTOR_IMPORT_SCRIPT=%CD%\Tools\create_toy_materials.py"
+"%UE_ROOT%\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%PROJECT%" -run=pythonscript -script=__import__('runpy').run_path(__import__('os').environ['MOTOR_IMPORT_SCRIPT']) -unattended -nosplash -nullrhi
 echo [导入] 完成。Content\Models\Motor 里是导入的资产，parts.json 是爆炸图清单
 pause
 exit /b 0

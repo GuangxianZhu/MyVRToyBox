@@ -15,7 +15,7 @@ namespace
 	// 按钮面的中心在屏幕坐标 X = FaceX 处，按下时往里缩 0.5cm
 	constexpr float FaceX = 1.8f;
 	constexpr float ButtonWidth = 13.f;
-	constexpr float ButtonHeight = 5.6f;
+	constexpr float ButtonHeight = 4.6f;
 }
 
 AToyTouchScreen::AToyTouchScreen()
@@ -39,14 +39,16 @@ AToyTouchScreen::AToyTouchScreen()
 		FVector(1.2f, 0.f, 0.f), DisplayColor, FRotator::ZeroRotator);
 
 	// TextRender 自带字体没有中文字形，所以屏幕上用英文
-	MakeText(TEXT("Title"), FVector(1.5f, 0.f, 8.2f), TEXT("TOY BOX"), 2.4f, FColor::White);
-	Status = MakeText(TEXT("Status"), FVector(1.5f, 0.f, -9.f), TEXT(""), 1.3f, FColor(150, 200, 255));
+	MakeText(TEXT("Title"), FVector(1.5f, 0.f, 8.6f), TEXT("TOY BOX"), 2.2f, FColor::White);
+	Status = MakeText(TEXT("Status"), FVector(1.5f, 0.f, -9.9f), TEXT(""), 1.2f, FColor(150, 200, 255));
 
 	// 站在屏幕前看，+Y 在左手边。上排方块，下排电机
-	MakeButton(TEXT("Spawn"), EToyScreenAction::SpawnCube, 7.5f, 2.3f, TEXT("SPAWN"), TEXT("CUBE"), FLinearColor(0.1f, 0.7f, 0.25f));
-	MakeButton(TEXT("Clear"), EToyScreenAction::ClearCubes, -7.5f, 2.3f, TEXT("CLEAR"), TEXT("CUBES"), FLinearColor(0.8f, 0.15f, 0.12f));
-	MakeButton(TEXT("Motor"), EToyScreenAction::ToggleMotor, 7.5f, -4.f, TEXT("SHOW"), TEXT("MOTOR"), FLinearColor(0.15f, 0.35f, 0.85f));
-	MakeButton(TEXT("Explode"), EToyScreenAction::ToggleExplode, -7.5f, -4.f, TEXT("EXPLODE"), TEXT("VIEW"), FLinearColor(0.85f, 0.5f, 0.05f));
+	MakeButton(TEXT("Spawn"), EToyScreenAction::SpawnCube, 7.5f, 3.9f, TEXT("SPAWN"), TEXT("CUBE"), FLinearColor(0.1f, 0.7f, 0.25f));
+	MakeButton(TEXT("Clear"), EToyScreenAction::ClearCubes, -7.5f, 3.9f, TEXT("CLEAR"), TEXT("CUBES"), FLinearColor(0.8f, 0.15f, 0.12f));
+	MakeButton(TEXT("Motor"), EToyScreenAction::ToggleMotor, 7.5f, -1.1f, TEXT("SHOW"), TEXT("MOTOR"), FLinearColor(0.15f, 0.35f, 0.85f));
+	MakeButton(TEXT("Explode"), EToyScreenAction::ToggleExplode, -7.5f, -1.1f, TEXT("EXPLODE"), TEXT("VIEW"), FLinearColor(0.85f, 0.5f, 0.05f));
+	// 第三排：所有零件松手、飞回原位
+	MakeButton(TEXT("Reset"), EToyScreenAction::ResetParts, 0.f, -6.1f, TEXT("RESET"), TEXT("PARTS"), FLinearColor(0.45f, 0.45f, 0.5f));
 }
 
 UTextRenderComponent* AToyTouchScreen::MakeText(FName Name, const FVector& Location, const FString& Text, float Size, const FColor& Color)
