@@ -48,7 +48,9 @@ call "%UE_ROOT%\Engine\Build\BatchFiles\Build.bat" VRToyBoxEditor Win64 Developm
 if errorlevel 1 goto :fail
 
 echo [导入] 导入到 UE ...
-"%UE_ROOT%\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%PROJECT%" -run=pythonscript -script="%CD%\Tools\import_motor.py" -unattended -nosplash -nullrhi
+rem -script= 遇到带空格的路径（Unreal Projects）会被拆成两段，所以只传一行不含空格的 Python，脚本路径走环境变量
+set "MOTOR_IMPORT_SCRIPT=%CD%\Tools\import_motor.py"
+"%UE_ROOT%\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%PROJECT%" -run=pythonscript -script=__import__('runpy').run_path(__import__('os').environ['MOTOR_IMPORT_SCRIPT']) -unattended -nosplash -nullrhi
 if not exist "%CD%\Content\Models\Motor\parts.json" goto :fail
 echo [导入] 完成。Content\Models\Motor 里是导入的资产，parts.json 是爆炸图清单
 pause
