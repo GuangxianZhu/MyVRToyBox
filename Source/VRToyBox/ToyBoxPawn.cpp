@@ -69,6 +69,19 @@ AToyBoxPawn::AToyBoxPawn()
 	RightController->SetupAttachment(VROrigin);
 	RightController->SetTrackingMotionSource(FName(TEXT("RightGrip")));
 
+	// 瞄准 / 掌心姿态：瞄准姿态给传送抛物线用；掌心姿态只做诊断（没协商到 OpenXR 1.1 / XR_EXT_palm_pose 时会悄悄退回握把姿态）
+	auto MakeSource = [this](const TCHAR* Name)
+	{
+		UMotionControllerComponent* Source = CreateDefaultSubobject<UMotionControllerComponent>(Name);
+		Source->SetupAttachment(VROrigin);
+		Source->SetTrackingMotionSource(FName(Name));
+		return Source;
+	};
+	LeftAim = MakeSource(TEXT("LeftAim"));
+	RightAim = MakeSource(TEXT("RightAim"));
+	LeftPalm = MakeSource(TEXT("LeftPalm"));
+	RightPalm = MakeSource(TEXT("RightPalm"));
+
 	// 这些键也写在 Config/DefaultInput.ini 里，OpenXR 才会去绑定它们
 	GripLeftKeys = { FKey(TEXT("OculusTouch_Left_Grip_Axis")), FKey(TEXT("ValveIndex_Left_Grip_Axis")),
 		FKey(TEXT("MixedReality_Left_Grip_Click")), FKey(TEXT("Vive_Left_Grip_Click")) };
@@ -86,6 +99,11 @@ AToyBoxPawn::AToyBoxPawn()
 		TEXT("MixedReality_Left_Thumbstick_Y"), TEXT("Vive_Left_Trackpad_Y") });
 	TeleportKeys = Keys({ TEXT("OculusTouch_Right_Thumbstick_Y"), TEXT("ValveIndex_Right_Thumbstick_Y"),
 		TEXT("MixedReality_Right_Thumbstick_Y"), TEXT("Vive_Right_Trackpad_Y") });
+	// 手部校准：长按左摇杆进出，A 切换页，B 恢复默认（这几个键别处都没用）
+	CalibToggleKeys = Keys({ TEXT("OculusTouch_Left_Thumbstick_Click"), TEXT("ValveIndex_Left_Thumbstick_Click"),
+		TEXT("MixedReality_Left_Thumbstick_Click") });
+	CalibPageKeys = Keys({ TEXT("OculusTouch_Right_A_Click"), TEXT("ValveIndex_Right_A_Click") });
+	CalibResetKeys = Keys({ TEXT("OculusTouch_Right_B_Click"), TEXT("ValveIndex_Right_B_Click") });
 
 	// 传送瞄准的显示：一串小球当抛物线，一个扁圆柱当落点圈。都只显示，不碰撞、不投影
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ArcMesh(ArcMeshPath);
@@ -114,8 +132,10 @@ AToyBoxPawn::AToyBoxPawn()
 void AToyBoxPawn::BeginPlay()
 {
 	Super::BeginPlay();
+	ToyHandCalib::Load();
 	LeftHand = SpawnHand(EControllerHand::Left, LeftController);
 	RightHand = SpawnHand(EControllerHand::Right, RightController);
+	LogHandSelfCheck();
 	if (UMaterialInterface* Base = LoadObject<UMaterialInterface>(nullptr, GlowMaterialPath))
 	{
 		TeleportMaterial = UMaterialInstanceDynamic::Create(Base, this);
@@ -214,6 +234,8 @@ void AToyBoxPawn::ApplyMode(bool bNewVR)
 		Camera->SetRelativeLocationAndRotation(FVector::ZeroVector, FRotator::ZeroRotator);
 		LeftHand->AttachToComponent(LeftController, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 		RightHand->AttachToComponent(RightController, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		bCalibApplied = false;
+		ApplyHandCalib();
 		LeftHand->SetActorHiddenInGame(false);
 		LeftHand->SetActorTickEnabled(true);
 		LeftHand->SetPokeEnabled(true);
@@ -261,6 +283,36 @@ void AToyBoxPawn::TickVR()
 	LeftHand->SetInputs(ReadAxis(GripLeftKeys), ReadAxis(TriggerLeftKeys));
 	RightHand->SetInputs(ReadAxis(GripRightKeys), ReadAxis(TriggerRightKeys));
 
+	// 手部校准参数变了（校准模式、控制台 toy.HandPitch 等）就重新套
+	if (!bCalibApplied || !(ToyHandCalib::Get() == AppliedCalib))
+	{
+		ApplyHandCalib();
+	}
+	LogPoseDiagnostics();
+
+	// 长按左摇杆 1 秒：进 / 出校准模式（按住不放只切一次）
+	const float DeltaSeconds = GetWorld()->GetDeltaSeconds();
+	if (ReadAxis(CalibToggleKeys) > 0.5f)
+	{
+		CalibHoldTime += DeltaSeconds;
+		if (bCalibToggleArmed && CalibHoldTime >= 1.f)
+		{
+			bCalibToggleArmed = false;
+			ToggleHandCalibMode();
+		}
+	}
+	else
+	{
+		CalibHoldTime = 0.f;
+		bCalibToggleArmed = true;
+	}
+	if (bCalibMode)
+	{
+		// 校准模式里摇杆都拿去调参数：暂停移动、转身、传送
+		TickHandCalibMode(DeltaSeconds);
+		return;
+	}
+
 	// 左摇杆：平滑移动
 	SmoothMove(FVector2D(ReadAxis(MoveXKeys), ReadAxis(MoveYKeys)), GetWorld()->GetDeltaSeconds());
 
@@ -270,7 +322,8 @@ void AToyBoxPawn::TickVR()
 	if (Aim > 0.6f && FMath::Abs(Turn) < 0.6f)
 	{
 		bTeleportAiming = true;
-		const FTransform Hand = RightController->GetComponentTransform();
+		// 从右手的瞄准姿态（手柄实际指的方向）发出；握把姿态的 +X 沿着握把，比实际指向高约 60°
+		const FTransform Hand = (RightAim->IsTracked() ? RightAim : RightController)->GetComponentTransform();
 		bTeleportValid = UpdateTeleportAim(Hand.GetLocation(), Hand.GetUnitAxis(EAxis::X));
 		return;
 	}
@@ -310,6 +363,163 @@ void AToyBoxPawn::SnapTurn(float Degrees)
 	SetActorLocationAndRotation(NewLocation, GetActorRotation() + Delta);
 }
 
+void AToyBoxPawn::AddIgnoredForMove(FCollisionQueryParams& Params) const
+{
+	// 手和手里拿着的东西不挡路（拿着方块走路时，方块不该把自己卡住）
+	for (const AToyHand* Hand : { LeftHand.Get(), RightHand.Get() })
+	{
+		if (Hand)
+		{
+			Params.AddIgnoredActor(Hand);
+			if (const AActor* Held = Hand->GetHeldActor())
+			{
+				Params.AddIgnoredActor(Held);
+			}
+		}
+	}
+}
+
+void AToyBoxPawn::ApplyHandCalib()
+{
+	AppliedCalib = ToyHandCalib::Get();
+	bCalibApplied = true;
+	if (!bVR)
+	{
+		return;   // 桌面模式手不挂在控制器上，姿态由 TickDesktop 摆，不受校准影响
+	}
+	LeftHand->SetActorRelativeTransform(ToyHandCalib::HandTransform(EControllerHand::Left, AppliedCalib));
+	RightHand->SetActorRelativeTransform(ToyHandCalib::HandTransform(EControllerHand::Right, AppliedCalib));
+}
+
+void AToyBoxPawn::LogHandSelfCheck() const
+{
+	// 桌面就能做的自检：手腕 → 中指根的方向（手坐标系）套上 VR 校准变换，就是 VR 里它在握把系里的方向。
+	// Pitch -64 时应该约 (0.44, 0, -0.90)：手指往前下方伸，像握着手柄时的样子
+	for (const AToyHand* Hand : { RightHand.Get(), LeftHand.Get() })
+	{
+		if (!Hand)
+		{
+			continue;
+		}
+		const EControllerHand Side = Hand == LeftHand.Get() ? EControllerHand::Left : EControllerHand::Right;
+		const FVector Local = Hand->GetFingerDirectionLocal();
+		const FVector InGrip = ToyHandCalib::HandTransform(Side).TransformVectorNoScale(Local);
+		UE_LOG(LogTemp, Log, TEXT("ToyBox HandCalib 自检：%s手 手腕→中指根 手坐标 (%.2f, %.2f, %.2f) → 握把系 (%.2f, %.2f, %.2f)（%s）"),
+			Side == EControllerHand::Left ? TEXT("左") : TEXT("右"), Local.X, Local.Y, Local.Z, InGrip.X, InGrip.Y, InGrip.Z,
+			*ToyHandCalib::Describe());
+	}
+}
+
+void AToyBoxPawn::LogPoseDiagnostics()
+{
+	// 追踪生效后打一次：瞄准 / 掌心姿态相对握把姿态。期望 Aim ≈ Pitch -60、(7.35, 0, -6.73)；
+	// Palm ≈ Pitch -70、(-0.75, ±1, 1.3)。Palm 和 Grip 完全一样 = 运行时没给掌心姿态，退回了握把姿态
+	if (bPoseDiagnosticsLogged || !RightController->IsTracked() || !RightAim->IsTracked())
+	{
+		return;
+	}
+	bPoseDiagnosticsLogged = true;
+	const UMotionControllerComponent* Sets[2][3] = { { RightController, RightAim, RightPalm }, { LeftController, LeftAim, LeftPalm } };
+	for (const auto& Set : Sets)
+	{
+		const FTransform Grip = Set[0]->GetComponentTransform();
+		for (int32 Index = 1; Index < 3; ++Index)
+		{
+			const FTransform Relative = Set[Index]->GetComponentTransform().GetRelativeTransform(Grip);
+			UE_LOG(LogTemp, Log, TEXT("ToyBox 姿态诊断：%s 相对 %s：Rot %s  Loc %s  %s"),
+				*Set[Index]->MotionSource.ToString(), *Set[0]->MotionSource.ToString(), *Relative.Rotator().ToCompactString(),
+				*Relative.GetLocation().ToCompactString(), Set[Index]->IsTracked() ? TEXT("") : TEXT("（没在追踪）"));
+		}
+	}
+}
+
+void AToyBoxPawn::ToggleHandCalibMode()
+{
+	bCalibMode = !bCalibMode;
+	if (bCalibMode)
+	{
+		bTeleportAiming = false;
+		HideTeleportAim();
+		bCalibPositionPage = false;
+		const ToyHandCalib::FParams Params = ToyHandCalib::Get();
+		CalibRotStep = FIntVector(FMath::FloorToInt(Params.Pitch), FMath::FloorToInt(Params.Yaw), FMath::FloorToInt(Params.Roll));
+		CalibPosStep = FIntVector(FMath::FloorToInt(Params.Offset.X * 2.f), FMath::FloorToInt(Params.Offset.Y * 2.f), FMath::FloorToInt(Params.Offset.Z * 2.f));
+		PlayHaptic(EControllerHand::Left, 0.8f, 0.15f);
+		UE_LOG(LogTemp, Log, TEXT("ToyBox: 进入手部校准模式"));
+	}
+	else
+	{
+		ToyHandCalib::Save();
+		RightHand->HideCustomInfo();
+		PlayHaptic(EControllerHand::Left, 0.8f, 0.15f);
+		UE_LOG(LogTemp, Log, TEXT("ToyBox: 退出手部校准模式，已保存"));
+	}
+}
+
+void AToyBoxPawn::TickHandCalibMode(float DeltaSeconds)
+{
+	// 死区 0.2，死区外重新映射到 0~1
+	auto Stick = [](float Value)
+	{
+		const float Size = FMath::Abs(Value);
+		return Size < 0.2f ? 0.f : FMath::Sign(Value) * (Size - 0.2f) / 0.8f;
+	};
+	const float RX = Stick(ReadAxis(TurnKeys));
+	const float RY = Stick(ReadAxis(TeleportKeys));
+	const float LX = Stick(ReadAxis(MoveXKeys));
+	const float LY = Stick(ReadAxis(MoveYKeys));
+
+	ToyHandCalib::FParams Params = ToyHandCalib::Get();
+	const bool bPageDown = ReadAxis(CalibPageKeys) > 0.5f;
+	if (bPageDown && !bCalibPageWasDown)
+	{
+		bCalibPositionPage = !bCalibPositionPage;
+		PlayHaptic(EControllerHand::Right, 0.6f, 0.08f);
+	}
+	bCalibPageWasDown = bPageDown;
+	const bool bResetDown = ReadAxis(CalibResetKeys) > 0.5f;
+	if (bResetDown && !bCalibResetWasDown)
+	{
+		Params = ToyHandCalib::FParams();
+		PlayHaptic(EControllerHand::Right, 1.f, 0.2f);
+	}
+	bCalibResetWasDown = bResetDown;
+
+	if (!bCalibPositionPage)
+	{
+		// 旋转页：右摇杆上下 = Pitch，左右 = Yaw，左摇杆左右 = Roll，30°/秒
+		Params.Pitch += RY * 30.f * DeltaSeconds;
+		Params.Yaw += RX * 30.f * DeltaSeconds;
+		Params.Roll += LX * 30.f * DeltaSeconds;
+	}
+	else
+	{
+		// 位置页：右摇杆上下 = OffsetX，左右 = OffsetY，左摇杆上下 = OffsetZ，2cm/秒
+		Params.Offset.X += RY * 2.f * DeltaSeconds;
+		Params.Offset.Y += RX * 2.f * DeltaSeconds;
+		Params.Offset.Z += LY * 2.f * DeltaSeconds;
+	}
+	ToyHandCalib::Set(Params);
+
+	// 每过 1° 或 0.5cm 震一下，不看数字也知道在变
+	const FIntVector Rot(FMath::FloorToInt(Params.Pitch), FMath::FloorToInt(Params.Yaw), FMath::FloorToInt(Params.Roll));
+	const FIntVector Pos(FMath::FloorToInt(Params.Offset.X * 2.f), FMath::FloorToInt(Params.Offset.Y * 2.f), FMath::FloorToInt(Params.Offset.Z * 2.f));
+	if (Rot != CalibRotStep || Pos != CalibPosStep)
+	{
+		CalibRotStep = Rot;
+		CalibPosStep = Pos;
+		PlayHaptic(EControllerHand::Right, 0.25f, 0.02f);
+	}
+
+	const FText Title = FText::FromString(bCalibPositionPage ? TEXT("手部校准 · 位置") : TEXT("手部校准 · 角度"));
+	const FText Body = FText::FromString(FString::Printf(
+		TEXT("P %.1f  Y %.1f  R %.1f  |  X %.1f  Y %.1f  Z %.1f\n%s\nA 切换角度 / 位置，B 恢复默认，长按左摇杆退出并保存"),
+		Params.Pitch, Params.Yaw, Params.Roll, Params.Offset.X, Params.Offset.Y, Params.Offset.Z,
+		bCalibPositionPage ? TEXT("右摇杆上下 = X（前后），左右 = Y（左右），左摇杆上下 = Z（上下），单位 cm")
+			: TEXT("右摇杆上下 = Pitch，左右 = Yaw，左摇杆左右 = Roll，单位度")));
+	RightHand->ShowCustomInfo(Title, Body);
+}
+
 FVector AToyBoxPawn::GetFeetLocation() const
 {
 	// 头的正下方、VROrigin（地面）的高度
@@ -332,10 +542,7 @@ void AToyBoxPawn::SmoothMove(FVector2D Input, float DeltaSeconds)
 
 	// 胶囊体立在头的正下方，从现在的位置扫到目标位置；碰到墙 / 桌子就停在碰撞点前，再沿墙面滑一下
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyMove), false, this);
-	for (AActor* Ignored : { static_cast<AActor*>(LeftHand), static_cast<AActor*>(RightHand) })
-	{
-		Params.AddIgnoredActor(Ignored);
-	}
+	AddIgnoredForMove(Params);
 	const FCollisionShape Capsule = FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight);
 	FVector Move = Delta;
 	for (int32 Pass = 0; Pass < 2 && !Move.IsNearlyZero(); ++Pass)
@@ -349,6 +556,11 @@ void AToyBoxPawn::SmoothMove(FVector2D Input, float DeltaSeconds)
 		}
 		if (Hit.bStartPenetrating)
 		{
+			// 一开始就卡在东西里（比如真人走进了桌子）：只允许往外走，不让越陷越深
+			if (FVector::DotProduct(Move, Hit.Normal) > 0.f)
+			{
+				AddActorWorldOffset(Move);
+			}
 			return;
 		}
 		AddActorWorldOffset(Move * Hit.Time);
@@ -374,8 +586,7 @@ bool AToyBoxPawn::IsTeleportTargetValid(const FHitResult& Hit) const
 		return false;
 	}
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyTeleport), false, this);
-	Params.AddIgnoredActor(LeftHand);
-	Params.AddIgnoredActor(RightHand);
+	AddIgnoredForMove(Params);
 	const FVector Center = Hit.ImpactPoint + FVector(0.f, 0.f, CapsuleLift + CapsuleHalfHeight);
 	return !GetWorld()->OverlapAnyTestByChannel(Center, FQuat::Identity, ECC_Pawn,
 		FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight), Params);
@@ -413,13 +624,30 @@ bool AToyBoxPawn::UpdateTeleportAim(const FVector& Start, const FVector& Directi
 		TeleportMaterial->SetVectorParameterValue(TEXT("Color"), Color * Glow);
 	}
 	TeleportArc->SetHiddenInGame(false);
-	TeleportRing->SetHiddenInGame(!bHit);
-	if (bHit)
+	if (bValid)
 	{
+		TeleportRing->SetHiddenInGame(false);
 		TeleportRing->SetWorldLocation(Result.HitResult.ImpactPoint + FVector(0.f, 0.f, 0.6f));
 		TeleportTarget = Result.HitResult.ImpactPoint;
+		return true;
 	}
-	return bValid;
+	// 落点无效（打到桌面、零件、墙上）：红圈贴到正下方的地上；下面找不到地就不显示圈
+	bool bRingOnFloor = false;
+	if (bHit)
+	{
+		FHitResult Floor;
+		FCollisionQueryParams FloorParams(SCENE_QUERY_STAT(ToyTeleportFloor), false, this);
+		AddIgnoredForMove(FloorParams);
+		const FVector From = Result.HitResult.ImpactPoint + FVector(0.f, 0.f, 1.f);
+		if (GetWorld()->LineTraceSingleByChannel(Floor, From, From - FVector(0.f, 0.f, 500.f), ECC_Visibility, FloorParams)
+			&& Cast<AToyStudio>(Floor.GetActor()) && Floor.ImpactNormal.Z > 0.8f)
+		{
+			TeleportRing->SetWorldLocation(Floor.ImpactPoint + FVector(0.f, 0.f, 0.6f));
+			bRingOnFloor = true;
+		}
+	}
+	TeleportRing->SetHiddenInGame(!bRingOnFloor);
+	return false;
 }
 
 void AToyBoxPawn::HideTeleportAim()

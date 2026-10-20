@@ -56,8 +56,16 @@ public:
 	/** 桌面调试模式：把手摆到让捏合点落在 PinchWorldLocation 上（鼠标点中的位置）。 */
 	void SetDesktopPose(const FVector& PinchWorldLocation, const FRotator& Facing);
 
-	/** 捏合点：拇指指尖和食指指尖的中点（世界坐标）。抓取和悬停高亮都只在这个点附近判定。 */
+	/** 捏合点（世界坐标）：扳机按满时拇指指尖和食指指尖的中点，锚定在手上的一个固定点，
+	 *  不随手指弯曲移动（扣扳机的过程中判定点和范围小球不会跟着手指跑）。抓取和悬停高亮都只在这个点附近判定。 */
 	FVector GetPinchLocation() const;
+
+	/** 手腕 → 中指根的方向（手 Actor 坐标系，单位向量）。桌面自检用：VR 校准后这个方向在握把系里应该约 (0.44, 0, -0.90)。 */
+	FVector GetFingerDirectionLocal() const;
+
+	/** 在手上方显示 / 收起一块自定义信息牌（校准模式用），拿着东西时的零件信息牌优先级更低。 */
+	void ShowCustomInfo(const FText& Title, const FText& Body);
+	void HideCustomInfo();
 
 	void SetPokeEnabled(bool bEnabled);
 	void ReleaseHeld(bool bThrow);
@@ -162,6 +170,12 @@ private:
 	int32 IndexMidBone = INDEX_NONE;
 	int32 ThumbTipBone = INDEX_NONE;
 	int32 ThumbMidBone = INDEX_NONE;
+	int32 WristBoneIndex = INDEX_NONE;
+	int32 MiddleBoneIndex = INDEX_NONE;
+	/** 捏合点在手 Actor 坐标系里的固定位置（SetupHandMesh 里按"扳机按满"的手势算一次）。 */
+	FVector PinchAnchor = FVector::ZeroVector;
+	bool bHasPinchAnchor = false;
+	bool bCustomInfo = false;
 	float ThumbCurl = 0.f;
 
 	TWeakObjectPtr<AToyBoxPawn> OwnerPawn;

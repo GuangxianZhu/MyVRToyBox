@@ -3,6 +3,7 @@
 #include "ToyBoxPawn.h"
 #include "ToyCube.h"
 #include "ToyGrabbable.h"
+#include "ToyHandCalib.h"
 #include "ToyTouchScreen.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Animation/AnimSequence.h"
@@ -26,8 +27,8 @@
 
 namespace
 {
-	// 手掌中心放在握把姿态手背一侧 3cm 处，掌心表面在 1.75cm 处（握住手柄时手掌包在手柄外侧）
-	constexpr float PalmY = 3.f;
+	// 手掌中心放在握把姿态手背一侧 3cm 处（和 VR 校准的旋转支点共用，见 ToyHandCalib），掌心表面在 1.75cm 处
+	constexpr float PalmY = ToyHandCalib::PalmY;
 	constexpr float PalmThickness = 2.5f;
 
 	// UE VR 模板的 MannyXR 手（Content/XRMannequins，从引擎 Templates/TemplateResources/Standard/XRMannequins 拷来）
@@ -385,7 +386,53 @@ void AToyHand::SetupHandMesh()
 	const FVector PalmCenter = (Wrist + Knuckle) * 0.5f;
 	const FVector Target(0.f, Mirror * PalmY, 0.f);
 	HandMesh->SetRelativeLocationAndRotation(Target - MeshInHand.RotateVector(PalmCenter), MeshInHand);
+	WristBoneIndex = WristBone;
+	MiddleBoneIndex = MiddleBone;
+
+	// 捏合点锚定：摆一次"扳机按满"的手势，量出拇指尖和食指尖的中点（手 Actor 坐标系），以后就用这个固定点
+	IndexCurl = PinchIndexCurl;
+	ThumbCurl = PinchThumbCurl;
 	ApplyFingerPose();
+	const FVector PinchWorld = (GetFingerTip(ThumbTipBone, ThumbMidBone) + GetFingerTip(IndexTipBone, IndexMidBone)) * 0.5f;
+	PinchAnchor = GetActorTransform().InverseTransformPosition(PinchWorld);
+	bHasPinchAnchor = true;
+	IndexCurl = 0.f;
+	ThumbCurl = 0.f;
+	ApplyFingerPose();
+	UE_LOG(LogTemp, Log, TEXT("ToyBox: %s手捏合点锚定在手坐标 %s"), bLeft ? TEXT("左") : TEXT("右"), *PinchAnchor.ToCompactString());
+}
+
+FVector AToyHand::GetFingerDirectionLocal() const
+{
+	if (!HandMesh->GetSkinnedAsset() || WristBoneIndex == INDEX_NONE || MiddleBoneIndex == INDEX_NONE)
+	{
+		return FVector::ForwardVector;
+	}
+	const FVector Wrist = HandMesh->GetBoneLocation(HandMesh->GetBoneName(WristBoneIndex));
+	const FVector Knuckle = HandMesh->GetBoneLocation(HandMesh->GetBoneName(MiddleBoneIndex));
+	return GetActorTransform().InverseTransformVectorNoScale(Knuckle - Wrist).GetSafeNormal();
+}
+
+void AToyHand::ShowCustomInfo(const FText& Title, const FText& Body)
+{
+	if (!InfoTitle.IsValid())
+	{
+		return;
+	}
+	bCustomInfo = true;
+	InfoTitle->SetText(Title);
+	InfoBody->SetText(Body);
+	InfoLabel->SetHiddenInGame(false);
+}
+
+void AToyHand::HideCustomInfo()
+{
+	if (!bCustomInfo)
+	{
+		return;
+	}
+	bCustomInfo = false;
+	ShowInfo(HeldActor.Get());
 }
 
 FVector AToyHand::GetFingerTip(int32 TipBone, int32 PrevBone) const
@@ -435,6 +482,10 @@ void AToyHand::SetDesktopPose(const FVector& PinchWorldLocation, const FRotator&
 
 FVector AToyHand::GetPinchLocation() const
 {
+	if (bHasPinchAnchor)
+	{
+		return GetActorTransform().TransformPosition(PinchAnchor);
+	}
 	return (GetFingerTip(ThumbTipBone, ThumbMidBone) + PokeTip->GetComponentLocation()) * 0.5f;
 }
 
@@ -479,7 +530,7 @@ void AToyHand::Tick(float DeltaSeconds)
 	}
 
 	// 拿着的东西被别处销毁了（比如收起了电机）：把信息牌也收掉
-	if (!HeldActor.IsValid() && !InfoLabel->bHiddenInGame)
+	if (!HeldActor.IsValid() && !InfoLabel->bHiddenInGame && !bCustomInfo)
 	{
 		ShowInfo(nullptr);
 	}
@@ -625,6 +676,10 @@ void AToyHand::UpdateHover()
 
 void AToyHand::ShowInfo(AActor* Target)
 {
+	if (bCustomInfo)
+	{
+		return;   // 校准模式的牌子占着
+	}
 	FText Title;
 	FText Body;
 	const IToyGrabbable* Grabbable = AsGrabbable(Target);
@@ -640,15 +695,19 @@ void AToyHand::ShowInfo(AActor* Target)
 void AToyHand::TickInfo()
 {
 	AActor* Target = HeldActor.Get();
-	if (!Target || InfoLabel->bHiddenInGame)
+	if ((!Target && !bCustomInfo) || InfoLabel->bHiddenInGame)
 	{
 		return;
 	}
-	// 摆在拿着的东西正上方 6cm（牌子的底边对齐这里），整个牌子转过来正对玩家的眼睛
-	FVector Origin;
-	FVector Extent;
-	Target->GetActorBounds(true, Origin, Extent);
-	const FVector Anchor(Origin.X, Origin.Y, Origin.Z + Extent.Z + 6.f);
+	// 摆在拿着的东西正上方 6cm（牌子的底边对齐这里），整个牌子转过来正对玩家的眼睛；校准模式的牌子在手上方 12cm
+	FVector Anchor = GetActorLocation() + FVector(0.f, 0.f, 12.f);
+	if (!bCustomInfo)
+	{
+		FVector Origin;
+		FVector Extent;
+		Target->GetActorBounds(true, Origin, Extent);
+		Anchor = FVector(Origin.X, Origin.Y, Origin.Z + Extent.Z + 6.f);
+	}
 
 	FVector Eye = Anchor - FVector(100.f, 0.f, 0.f);
 	if (const APlayerController* PC = GetWorld()->GetFirstPlayerController())

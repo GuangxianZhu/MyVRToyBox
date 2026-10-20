@@ -4,6 +4,7 @@
 #include "GameFramework/Pawn.h"
 #include "InputCoreTypes.h"
 #include "TimerManager.h"
+#include "ToyHandCalib.h"
 #include "ToyBoxPawn.generated.h"
 
 class AToyHand;
@@ -22,6 +23,9 @@ class UStaticMeshComponent;
  * - 桌面（没戴头显，方便在编辑器里快速看效果）：
  *   鼠标左键点按钮 / 按住左键捏起，松开放下；按住右键拖动转头；滚轮调远近；
  *   WASD = 平滑移动，按住 T = 从镜头沿鼠标方向瞄准传送，松开 T 传送。
+ *
+ * VR 手部校准（见 ToyHandCalib）：手 Actor 挂到握把姿态上时加一个校准变换；长按左摇杆 1 秒进 / 出校准模式，
+ * 模式里摇杆调角度 / 位置，A 切换旋转页 / 位置页，B 恢复默认，退出时存盘。
  */
 UCLASS()
 class VRTOYBOX_API AToyBoxPawn : public APawn
@@ -51,6 +55,19 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<UMotionControllerComponent> RightController;
+
+	/** 瞄准姿态（传送抛物线从右手的这个姿态发出）和掌心姿态（只做诊断：进 VR 时打一次相对握把的变换）。 */
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<UMotionControllerComponent> LeftAim;
+
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<UMotionControllerComponent> RightAim;
+
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<UMotionControllerComponent> LeftPalm;
+
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<UMotionControllerComponent> RightPalm;
 
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float SnapTurnDegrees = 45.f;
@@ -108,6 +125,16 @@ private:
 	void Teleport(const FVector& Target);
 	bool IsTeleportTargetValid(const FHitResult& Hit) const;
 	FVector GetFeetLocation() const;
+
+	/** 把现在的手部校准套到两只手（VR 下挂在握把上的相对变换）。 */
+	void ApplyHandCalib();
+	/** 桌面模式开局：打印手指方向在握把系里是什么样（校准后应该约 (0.44, 0, -0.90)）。 */
+	void LogHandSelfCheck() const;
+	/** VR 追踪生效后打印一次瞄准 / 掌心姿态相对握把的变换。 */
+	void LogPoseDiagnostics();
+	void ToggleHandCalibMode();
+	void TickHandCalibMode(float DeltaSeconds);
+	void AddIgnoredForMove(FCollisionQueryParams& Params) const;
 	float ReadAxis(const TArray<FKey>& Keys) const;
 	AToyHand* SpawnHand(EControllerHand HandSide, UMotionControllerComponent* MotionController);
 
@@ -126,6 +153,22 @@ private:
 	TArray<FKey> MoveXKeys;
 	TArray<FKey> MoveYKeys;
 	TArray<FKey> TeleportKeys;
+	TArray<FKey> CalibToggleKeys;
+	TArray<FKey> CalibPageKeys;
+	TArray<FKey> CalibResetKeys;
+
+	ToyHandCalib::FParams AppliedCalib;
+	bool bCalibApplied = false;
+	bool bPoseDiagnosticsLogged = false;
+	bool bCalibMode = false;
+	bool bCalibPositionPage = false;
+	bool bCalibToggleArmed = true;
+	bool bCalibPageWasDown = false;
+	bool bCalibResetWasDown = false;
+	float CalibHoldTime = 0.f;
+	/** 上次震动时各参数所在的"格子"（1° / 0.5cm 一格），换格就震一下。 */
+	FIntVector CalibRotStep = FIntVector::ZeroValue;
+	FIntVector CalibPosStep = FIntVector::ZeroValue;
 
 	bool bTeleportAiming = false;
 	bool bTeleportValid = false;
