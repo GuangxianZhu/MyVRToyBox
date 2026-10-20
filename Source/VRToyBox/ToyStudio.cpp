@@ -107,6 +107,11 @@ AToyStudio::AToyStudio()
 	ValveMount->SetupAttachment(Root);
 	ValveMount->SetRelativeLocation(FVector(TableX + 15.f, -10.f, TableHeight));
 
+	// 无人机：同一个位置。模型 +Y 是机头（相机那边），Yaw 90 让机头朝向玩家（-X）
+	DroneMount = CreateDefaultSubobject<USceneComponent>(TEXT("DroneMount"));
+	DroneMount->SetupAttachment(Root);
+	DroneMount->SetRelativeLocationAndRotation(FVector(TableX + 15.f, -10.f, TableHeight), FRotator(0.f, 90.f, 0.f));
+
 	// 触屏：桌面右手边靠前，转过来正对玩家站立点
 	const FVector ScreenLocation(TableX - 20.f, 60.f, TableHeight);
 	ScreenMount = CreateDefaultSubobject<USceneComponent>(TEXT("ScreenMount"));
@@ -165,6 +170,16 @@ void AToyStudio::ClearCubes()
 	Cubes.Reset();
 }
 
+FString AToyStudio::KindName(EToyModelKind Kind)
+{
+	switch (Kind)
+	{
+	case EToyModelKind::Motor: return TEXT("MOTOR");
+	case EToyModelKind::Valve: return TEXT("VALVE");
+	default:                   return TEXT("DRONE");
+	}
+}
+
 void AToyStudio::HandleScreenAction(EToyScreenAction Action)
 {
 	switch (Action)
@@ -173,6 +188,7 @@ void AToyStudio::HandleScreenAction(EToyScreenAction Action)
 	case EToyScreenAction::ClearCubes:    ClearCubes(); break;
 	case EToyScreenAction::ToggleMotor:   ToggleModel(EToyModelKind::Motor); break;
 	case EToyScreenAction::ToggleValve:   ToggleModel(EToyModelKind::Valve); break;
+	case EToyScreenAction::ToggleDrone:   ToggleModel(EToyModelKind::Drone); break;
 	case EToyScreenAction::ToggleExplode: ToggleModelExploded(); break;
 	case EToyScreenAction::ResetParts:    ResetModel(); break;
 	}
@@ -192,8 +208,8 @@ bool AToyStudio::ToggleModel(EToyModelKind Kind)
 		return true;
 	}
 
-	const bool bMotor = Kind == EToyModelKind::Motor;
-	USceneComponent* Mount = bMotor ? MotorMount : ValveMount;
+	USceneComponent* Mount = Kind == EToyModelKind::Motor ? MotorMount : (Kind == EToyModelKind::Valve ? ValveMount : DroneMount);
+	const FString& Manifest = Kind == EToyModelKind::Motor ? MotorManifest : (Kind == EToyModelKind::Valve ? ValveManifest : DroneManifest);
 	FActorSpawnParameters Params;
 	Params.Owner = this;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -204,10 +220,10 @@ bool AToyStudio::ToggleModel(EToyModelKind Kind)
 		return false;
 	}
 	Spawned->TargetLengthCm = ModelLengthCm;
-	if (!Spawned->LoadManifest(FPaths::ProjectContentDir() / (bMotor ? MotorManifest : ValveManifest)))
+	if (!Spawned->LoadManifest(FPaths::ProjectContentDir() / Manifest))
 	{
 		Spawned->Destroy();
-		MissingModel = bMotor ? TEXT("MOTOR") : TEXT("VALVE");
+		MissingModel = KindName(Kind);
 		return false;
 	}
 	Spawned->AttachToComponent(Mount, FAttachmentTransformRules::KeepWorldTransform);
@@ -251,7 +267,7 @@ FString AToyStudio::GetStatusText() const
 	{
 		return FString::Printf(TEXT("%s NOT IMPORTED - RUN scripts/import_%s.bat"), *MissingModel, *MissingModel.ToLower());
 	}
-	const FString Name = !Model ? TEXT("MODEL") : (ModelKind == EToyModelKind::Motor ? TEXT("MOTOR") : TEXT("VALVE"));
+	const FString Name = !Model ? TEXT("MODEL") : KindName(ModelKind);
 	const FString State = !Model ? TEXT("OFF") : (Model->IsExploded() ? TEXT("EXPLODED") : TEXT("ASSEMBLED"));
 	return FString::Printf(TEXT("CUBES %d / %d     %s %s"), GetCubeCount(), MaxCubes, *Name, *State);
 }

@@ -15,7 +15,9 @@ namespace
 	// 按钮面的中心在屏幕坐标 X = FaceX 处，按下时往里缩 0.5cm
 	constexpr float FaceX = 1.8f;
 	constexpr float ButtonWidth = 13.f;
-	constexpr float ButtonHeight = 4.6f;
+	constexpr float ButtonHeight = 3.7f;
+	constexpr float LineOffset = 0.85f;   // 按钮上两行字离按钮中心的高度
+	constexpr float LineSize = 1.5f;
 }
 
 AToyTouchScreen::AToyTouchScreen()
@@ -39,17 +41,19 @@ AToyTouchScreen::AToyTouchScreen()
 		FVector(1.2f, 0.f, 0.f), DisplayColor, FRotator::ZeroRotator);
 
 	// TextRender 自带字体没有中文字形，所以屏幕上用英文
-	MakeText(TEXT("Title"), FVector(1.5f, 0.f, 8.6f), TEXT("TOY BOX"), 2.2f, FColor::White);
-	Status = MakeText(TEXT("Status"), FVector(1.5f, 0.f, -9.9f), TEXT(""), 1.2f, FColor(150, 200, 255));
+	MakeText(TEXT("Title"), FVector(1.5f, 0.f, 9.f), TEXT("TOY BOX"), 2.f, FColor::White);
+	Status = MakeText(TEXT("Status"), FVector(1.5f, 0.f, -10.f), TEXT(""), 1.1f, FColor(150, 200, 255));
 
 	// 站在屏幕前看，+Y 在左手边。上排方块，下排电机
-	MakeButton(TEXT("Spawn"), EToyScreenAction::SpawnCube, 7.5f, 3.9f, TEXT("SPAWN"), TEXT("CUBE"), FLinearColor(0.1f, 0.7f, 0.25f));
-	MakeButton(TEXT("Clear"), EToyScreenAction::ClearCubes, -7.5f, 3.9f, TEXT("CLEAR"), TEXT("CUBES"), FLinearColor(0.8f, 0.15f, 0.12f));
-	MakeButton(TEXT("Motor"), EToyScreenAction::ToggleMotor, 7.5f, -1.1f, TEXT("SHOW"), TEXT("MOTOR"), FLinearColor(0.15f, 0.35f, 0.85f));
-	MakeButton(TEXT("Explode"), EToyScreenAction::ToggleExplode, -7.5f, -1.1f, TEXT("EXPLODE"), TEXT("VIEW"), FLinearColor(0.85f, 0.5f, 0.05f));
-	// 第三排：阀门；所有零件松手、飞回原位
-	MakeButton(TEXT("Valve"), EToyScreenAction::ToggleValve, 7.5f, -6.1f, TEXT("SHOW"), TEXT("VALVE"), FLinearColor(0.1f, 0.55f, 0.6f));
-	MakeButton(TEXT("Reset"), EToyScreenAction::ResetParts, -7.5f, -6.1f, TEXT("RESET"), TEXT("PARTS"), FLinearColor(0.45f, 0.45f, 0.5f));
+	// 第一排方块；第二排电机、阀门；第三排无人机、爆炸 / 还原
+	MakeButton(TEXT("Spawn"), EToyScreenAction::SpawnCube, 7.5f, 5.6f, TEXT("SPAWN"), TEXT("CUBE"), FLinearColor(0.1f, 0.7f, 0.25f));
+	MakeButton(TEXT("Clear"), EToyScreenAction::ClearCubes, -7.5f, 5.6f, TEXT("CLEAR"), TEXT("CUBES"), FLinearColor(0.8f, 0.15f, 0.12f));
+	MakeButton(TEXT("Motor"), EToyScreenAction::ToggleMotor, 7.5f, 1.5f, TEXT("SHOW"), TEXT("MOTOR"), FLinearColor(0.15f, 0.35f, 0.85f));
+	MakeButton(TEXT("Valve"), EToyScreenAction::ToggleValve, -7.5f, 1.5f, TEXT("SHOW"), TEXT("VALVE"), FLinearColor(0.1f, 0.55f, 0.6f));
+	MakeButton(TEXT("Drone"), EToyScreenAction::ToggleDrone, 7.5f, -2.6f, TEXT("SHOW"), TEXT("DRONE"), FLinearColor(0.45f, 0.3f, 0.75f));
+	MakeButton(TEXT("Explode"), EToyScreenAction::ToggleExplode, -7.5f, -2.6f, TEXT("EXPLODE"), TEXT("VIEW"), FLinearColor(0.85f, 0.5f, 0.05f));
+	// 第四排：所有零件松手、飞回原位
+	MakeButton(TEXT("Reset"), EToyScreenAction::ResetParts, 0.f, -6.7f, TEXT("RESET"), TEXT("PARTS"), FLinearColor(0.45f, 0.45f, 0.5f));
 }
 
 UTextRenderComponent* AToyTouchScreen::MakeText(FName Name, const FVector& Location, const FString& Text, float Size, const FColor& Color)
@@ -75,8 +79,8 @@ void AToyTouchScreen::MakeButton(const FString& Id, EToyScreenAction Action, flo
 	Button.RestLocation = FVector(FaceX, Y, Z);
 	Button.Face = UToyShapeComponent::Create(this, *(Id + TEXT("Face")), Pivot, EToyShape::Box,
 		FVector(0.8f, ButtonWidth, ButtonHeight), Button.RestLocation, Color, FRotator::ZeroRotator);
-	Button.Line1 = MakeText(*(Id + TEXT("Line1")), FVector(FaceX + 0.5f, Y, Z + 1.1f), Line1, 1.8f, FColor::White);
-	Button.Line2 = MakeText(*(Id + TEXT("Line2")), FVector(FaceX + 0.5f, Y, Z - 1.1f), Line2, 1.8f, FColor::White);
+	Button.Line1 = MakeText(*(Id + TEXT("Line1")), FVector(FaceX + 0.5f, Y, Z + LineOffset), Line1, LineSize, FColor::White);
+	Button.Line2 = MakeText(*(Id + TEXT("Line2")), FVector(FaceX + 0.5f, Y, Z - LineOffset), Line2, LineSize, FColor::White);
 
 	// 触发盒从按钮面里 0.8cm 一直延伸到面前 1.6cm：指尖快碰到就算按下，戳穿了也还在盒子里
 	UBoxComponent* Zone = CreateDefaultSubobject<UBoxComponent>(*(Id + TEXT("Zone")));
@@ -143,6 +147,10 @@ void AToyTouchScreen::RefreshStatus()
 	if (FToyScreenButton* ValveButton = FindButton(EToyScreenAction::ToggleValve))
 	{
 		ValveButton->Line1->SetText(FText::FromString(StudioActor->IsModelShown(EToyModelKind::Valve) ? TEXT("HIDE") : TEXT("SHOW")));
+	}
+	if (FToyScreenButton* DroneButton = FindButton(EToyScreenAction::ToggleDrone))
+	{
+		DroneButton->Line1->SetText(FText::FromString(StudioActor->IsModelShown(EToyModelKind::Drone) ? TEXT("HIDE") : TEXT("SHOW")));
 	}
 	if (FToyScreenButton* ExplodeButton = FindButton(EToyScreenAction::ToggleExplode))
 	{

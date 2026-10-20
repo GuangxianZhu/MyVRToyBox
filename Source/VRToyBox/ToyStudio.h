@@ -12,7 +12,8 @@ class AToyExplodedModel;
 enum class EToyModelKind : uint8
 {
 	Motor,
-	Valve
+	Valve,
+	Drone
 };
 
 /**
@@ -52,6 +53,8 @@ public:
 	/** 屏幕底部那行状态文字。 */
 	FString GetStatusText() const;
 
+	static FString KindName(EToyModelKind Kind);
+
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	int32 MaxCubes = 20;
 
@@ -76,8 +79,15 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	FString MotorManifest = TEXT("Models/Motor/parts.json");
 
+	/** 无人机也放在同一个位置，转 90° 让机头（相机）朝着玩家。 */
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<USceneComponent> DroneMount;
+
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	FString ValveManifest = TEXT("Models/Valve/parts.json");
+
+	UPROPERTY(EditAnywhere, Category = "ToyBox")
+	FString DroneManifest = TEXT("Models/Drone/parts.json");
 
 	/** 模型装配状态下最长边的长度（厘米）。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")

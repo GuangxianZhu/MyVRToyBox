@@ -110,8 +110,9 @@ bool AToyExplodedModel::LoadManifest(const FString& ManifestPath)
 		if (Info.IsValid())
 		{
 			Title = FText::FromString(Info->GetStringField(TEXT("name_cn")));
-			Body = FText::FromString(FString::Printf(TEXT("材料：%s\n%s"),
-				*Info->GetStringField(TEXT("material")), *Info->GetStringField(TEXT("desc"))));
+			const FString Material = Info->GetStringField(TEXT("material"));
+			const FString Desc = Info->GetStringField(TEXT("desc"));
+			Body = FText::FromString(Material.IsEmpty() ? Desc : FString::Printf(TEXT("材料：%s\n%s"), *Material, *Desc));
 			if (Info->GetBoolField(TEXT("grabbable")) && Info->TryGetObjectField(TEXT("grab"), GrabObject))
 			{
 				Grab = ParseGrabType((*GrabObject)->GetStringField(TEXT("type")));
