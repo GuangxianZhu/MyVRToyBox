@@ -6,6 +6,7 @@
 #include "ToyStudio.generated.h"
 
 class AToyCube;
+class UChildActorComponent;
 class AToyExplodedModel;
 
 /** 桌上能摆出来的爆炸图模型。一次只摆一个，换模型时先收起原来的，所以不会互相重叠。 */
@@ -20,8 +21,8 @@ enum class EToyModelKind : uint8
  * 6m x 6m 的小工作室：地板、四面墙、天花板、灯，以及一张桌子。
  * Actor 原点 = 玩家站立的位置（地面高度），玩家面朝 +X，桌子就在正前方。
  *
- * 房间和桌子在构造函数里建，所以把它拖进任何关卡，编辑器里立刻能看到；
- * 触屏在 BeginPlay 时生成并放到 ScreenMount 上。
+ * 房间、桌子和触屏（ChildActorComponent）都在构造函数里建，所以把它拖进任何关卡，编辑器视口里立刻能看到；
+ * 会动的东西（方块、爆炸图模型、手）还是运行时生成。默认关卡 Content/Maps/L_Studio 里就只放了一个它。
  */
 UCLASS()
 class VRTOYBOX_API AToyStudio : public AActor
@@ -69,6 +70,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<USceneComponent> ScreenMount;
+
+	/** 触屏：作为子 Actor 在构造时就建出来（编辑器视口里看得见），BeginPlay 时接上按钮回调。 */
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<UChildActorComponent> ScreenChild;
 
 	/** 电机放在这里：桌面中间，电机轴沿桌子长边，爆炸时零件往左右两边飞。 */
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")

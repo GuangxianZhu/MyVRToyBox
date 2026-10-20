@@ -4,6 +4,7 @@
 #include "ToyExplodedModel.h"
 #include "ToyShapeComponent.h"
 #include "ToyTouchScreen.h"
+#include "Components/ChildActorComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Engine/World.h"
 #include "Misc/Paths.h"
@@ -118,20 +119,24 @@ AToyStudio::AToyStudio()
 	ScreenMount = CreateDefaultSubobject<USceneComponent>(TEXT("ScreenMount"));
 	ScreenMount->SetupAttachment(Root);
 	ScreenMount->SetRelativeLocationAndRotation(ScreenLocation, FVector(-ScreenLocation.X, -ScreenLocation.Y, 0.f).Rotation());
+	ScreenChild = CreateDefaultSubobject<UChildActorComponent>(TEXT("ScreenChild"));
+	ScreenChild->SetupAttachment(ScreenMount);
+	ScreenChild->SetChildActorClass(AToyTouchScreen::StaticClass());
 }
 
 void AToyStudio::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FActorSpawnParameters Params;
-	Params.Owner = this;
-	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	Screen = GetWorld()->SpawnActor<AToyTouchScreen>(AToyTouchScreen::StaticClass(), ScreenMount->GetComponentTransform(), Params);
+	// 触屏是构造时建好的子 Actor（编辑器里也看得见），这里只接上回调
+	Screen = Cast<AToyTouchScreen>(ScreenChild->GetChildActor());
 	if (Screen)
 	{
-		Screen->AttachToComponent(ScreenMount, FAttachmentTransformRules::KeepWorldTransform);
 		Screen->SetStudio(this);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("ToyBox: 工作室的触屏子 Actor 没生成"));
 	}
 }
 
