@@ -9,6 +9,12 @@
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "MotionControllerComponent.h"
 #include "TimerManager.h"
+#include "HAL/IConsoleManager.h"
+
+static TAutoConsoleVariable<int32> CVarHandPreview(
+	TEXT("toy.HandPreview"),
+	0,
+	TEXT("桌面模式下把左手侧着摆在镜头前，检查手模型：1 = 张开，2 = 握拳，3 = 来回握"));
 
 AToyBoxPawn::AToyBoxPawn()
 {
@@ -292,6 +298,20 @@ void AToyBoxPawn::TickDesktop()
 	// 只取视线的水平朝向（不跟着低头），Roll -90 让掌心真的朝下（+90 是掌心朝上，抓零件时零件会翻到手掌上面去）
 	RightHand->SetDesktopPose(GripTarget, FRotator(0.f, Direction.Rotation().Yaw, -90.f));
 	RightHand->SetInputs(bLeftDown && !bDesktopClickIsPoke ? 1.f : 0.f, 0.f);
+
+	// 调试：左手平时在桌面模式下藏着，toy.HandPreview 打开时摆到镜头右前方、侧面朝镜头，方便看手指怎么弯
+	const int32 Preview = CVarHandPreview.GetValueOnGameThread();
+	LeftHand->SetActorHiddenInGame(Preview == 0);
+	LeftHand->SetActorTickEnabled(Preview != 0);
+	if (Preview != 0)
+	{
+		const FTransform View = Camera->GetComponentTransform();
+		const FVector Location = View.GetLocation() + View.GetUnitAxis(EAxis::X) * 35.f + View.GetUnitAxis(EAxis::Y) * 8.f;
+		LeftHand->SetActorLocationAndRotation(Location,
+			FRotationMatrix::MakeFromXZ(View.GetUnitAxis(EAxis::Y), View.GetUnitAxis(EAxis::Z)).Rotator());
+		const float Curl = Preview == 1 ? 0.f : (Preview == 2 ? 1.f : 0.5f + 0.5f * FMath::Sin(GetWorld()->GetTimeSeconds() * 2.f));
+		LeftHand->SetInputs(Curl, Curl);
+	}
 }
 
 void AToyBoxPawn::PlayHaptic(EControllerHand Hand, float Amplitude, float Duration)

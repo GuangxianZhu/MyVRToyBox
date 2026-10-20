@@ -8,21 +8,26 @@
 class AToyBoxPawn;
 class IToyGrabbable;
 class STextBlock;
+class UAnimSequence;
 class UArrowComponent;
+class UPoseableMeshComponent;
 class UPrimitiveComponent;
+class USkeletalMesh;
 class UWidgetComponent;
 
 /**
- * 用基础形状拼出来的一只手，挂在动作控制器（握把姿态）上。
+ * 一只手，挂在动作控制器（握把姿态）上。模型用 UE VR 模板自带的 MannyXR 手（Content/XRMannequins），
+ * 左右手各用自己的网格；手指不用动画蓝图，而是每帧在"张开"（Idle）和"握拳"（Grasp）两个姿势之间按手指分组插值：
+ * 握把 → 中指、无名指、小指、拇指；扳机 → 食指（见 TickCurls / ApplyFingerPose）。
  *
- * 坐标约定（右手，左手由 VisualRoot 的 Y 轴镜像得到）：
- *   手指朝 +X，掌心朝 -Y，拇指在 +Z 一侧，原点 = 控制器握把姿态。
+ * 坐标约定（右手；左手是镜像）：
+ *   手指朝 +X，掌心朝 -Y（左手 +Y），原点 = 控制器握把姿态。网格怎么摆由 InitHand 从骨骼自动算：
+ *   手腕→中指根 = +X，手指握拳时指尖移动的方向 = 掌心方向。
  *
  * - GripPoint：手掌表面的抓点。X 轴从掌心指向手背，Z 轴指向手指。
  *   方块的抓点用同样约定（X = 面的外法线），两者重合 = 手掌贴住方块的一个面。
- * - PokeTip：食指指尖，用来戳触屏。
- * - ThumbTip：拇指指尖。抓取判定点 = 拇指指尖和食指指尖（PokeTip）的中点（"捏合点"），跟着手指弯曲实时变化；
- *   小零件也"捏"在这个点上。
+ * - PokeTip：食指指尖（每帧对到食指末节骨骼的指尖），用来戳触屏。
+ * - 捏合点：拇指指尖和食指指尖的中点，跟着手指弯曲实时变化。抓取判定只在这里，小零件也"捏"在这里。
  * - InfoLabel：拿着零件时浮在零件上方、始终面向玩家的信息牌（Slate 文字，能显示中文）。
  *
  * 能抓的东西都实现 IToyGrabbable（方块、电机零件、整台电机），手只认这个接口。
@@ -60,18 +65,15 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<USceneComponent> Root;
 
-	/** 所有可见的手部形状都挂在这里；左手把它的 Y 缩放设成 -1 来镜像。 */
+	/** MannyXR 手模型。骨骼局部变换由 ApplyFingerPose 每帧直接写。 */
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
-	TObjectPtr<USceneComponent> VisualRoot;
+	TObjectPtr<UPoseableMeshComponent> HandMesh;
 
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<UArrowComponent> GripPoint;
 
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<USceneComponent> PokeTip;
-
-	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
-	TObjectPtr<USceneComponent> ThumbTip;
 
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<UWidgetComponent> InfoLabel;
@@ -84,12 +86,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float SnapTime = 0.08f;
 
-	/** 全手握着东西时手指至少弯这么多度，看起来像握住了 10cm 的方块。捏和托用更小的角度（见 TickCurls）。 */
+	/** 全手握着东西时手指至少弯到"握拳"的这么多（0~1），看起来像握住了 10cm 的方块。捏和托见 TickCurls。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
-	float HoldCurl = 55.f;
-
-	UPROPERTY(EditAnywhere, Category = "ToyBox")
-	float MaxCurl = 85.f;
+	float HoldCurl = 0.6f;
 
 protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -102,20 +101,41 @@ private:
 	void TickInfo();
 	void TickHeld(float DeltaSeconds);
 	void TickCurls(float DeltaSeconds);
+	void SetupHandMesh();
+	void ApplyFingerPose();
+	FVector GetFingerTip(int32 TipBone, int32 PrevBone) const;
 	void TickPoke();
 	void RecordMotion();
 	FVector GetThrowVelocity() const;
 	void Pulse(float Amplitude, float Duration) const;
 
-	/** 每根手指两个关节：[手指序号 * 2] = 指根，[手指序号 * 2 + 1] = 中节。0 号是食指。 */
 	UPROPERTY()
-	TArray<TObjectPtr<USceneComponent>> FingerJoints;
+	TObjectPtr<USkeletalMesh> RightMesh;
 
 	UPROPERTY()
-	TObjectPtr<USceneComponent> ThumbBase;
+	TObjectPtr<USkeletalMesh> LeftMesh;
 
 	UPROPERTY()
-	TObjectPtr<USceneComponent> ThumbMid;
+	TObjectPtr<UAnimSequence> OpenAnim;
+
+	UPROPERTY()
+	TObjectPtr<UAnimSequence> FistAnim;
+
+	UPROPERTY()
+	TObjectPtr<UAnimSequence> IndexCurlAnim;
+
+	UPROPERTY()
+	TObjectPtr<UAnimSequence> ThumbUpAnim;
+
+	/** 每根骨骼（网格骨骼序号）的张开 / 握拳局部变换和所属手指组：0 = 不动，1 = 食指，2 = 中指无名指小指，3 = 拇指。 */
+	TArray<FTransform> OpenPose;
+	TArray<FTransform> FistPose;
+	TArray<uint8> BoneGroup;
+	int32 IndexTipBone = INDEX_NONE;
+	int32 IndexMidBone = INDEX_NONE;
+	int32 ThumbTipBone = INDEX_NONE;
+	int32 ThumbMidBone = INDEX_NONE;
+	float ThumbCurl = 0.f;
 
 	TWeakObjectPtr<AToyBoxPawn> OwnerPawn;
 	EControllerHand Side = EControllerHand::Right;

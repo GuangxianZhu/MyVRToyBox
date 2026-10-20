@@ -3,10 +3,11 @@
 #include "ToyBoxPawn.h"
 #include "ToyCube.h"
 #include "ToyGrabbable.h"
-#include "ToyShapeComponent.h"
 #include "ToyTouchScreen.h"
 #include "Camera/PlayerCameraManager.h"
+#include "Animation/AnimSequence.h"
 #include "Components/ArrowComponent.h"
+#include "Components/PoseableMeshComponent.h"
 #include "Components/WidgetComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/CollisionProfile.h"
@@ -14,6 +15,7 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "Styling/CoreStyle.h"
+#include "UObject/ConstructorHelpers.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/SBoxPanel.h"
@@ -21,17 +23,19 @@
 
 namespace
 {
-	// 右手尺寸，单位厘米。手感不对时先改这里。
-	constexpr float PalmY = 3.f;          // 手掌中心在握把姿态右侧 3cm（握住手柄时手掌包在外侧）
+	// 手掌中心放在握把姿态手背一侧 3cm 处，掌心表面在 1.75cm 处（握住手柄时手掌包在手柄外侧）
+	constexpr float PalmY = 3.f;
 	constexpr float PalmThickness = 2.5f;
-	constexpr float KnuckleX = 4.5f;
-	constexpr float FingerZ[4] = { 2.9f, 1.0f, -0.9f, -2.8f };      // 食指、中指、无名指、小指
-	constexpr float FingerLength[4] = { 7.5f, 8.0f, 7.5f, 6.0f };
-	constexpr float FingerWidth[4] = { 1.8f, 1.8f, 1.7f, 1.5f };
-	const FRotator ThumbOpen(15.f, -30.f, 0.f);
-	const FRotator AlongX(-90.f, 0.f, 0.f);  // 把圆柱的 Z 轴转到 +X
-	const FLinearColor HandColor(0.55f, 0.75f, 1.f);
-	const FLinearColor TipColor(1.f, 0.55f, 0.1f);
+
+	// UE VR 模板的 MannyXR 手（Content/XRMannequins，从引擎 Templates/TemplateResources/Standard/XRMannequins 拷来）
+	const TCHAR* RightMeshPath = TEXT("/Game/XRMannequins/Meshes/SKM_MannyXR_right.SKM_MannyXR_right");
+	const TCHAR* LeftMeshPath = TEXT("/Game/XRMannequins/Meshes/SKM_MannyXR_left.SKM_MannyXR_left");
+	const TCHAR* OpenAnimPath = TEXT("/Game/XRMannequins/Animations/A_MannequinsXR_Idle_Right.A_MannequinsXR_Idle_Right");
+	// 模板的 Grasp 只弯中指、无名指、小指（食指伸直 = 指的手势），食指弯曲另有 IndexCurl，两个合起来才是握拳
+	const TCHAR* FistAnimPath = TEXT("/Game/XRMannequins/Animations/A_MannequinsXR_Grasp_Right.A_MannequinsXR_Grasp_Right");
+	const TCHAR* IndexCurlAnimPath = TEXT("/Game/XRMannequins/Animations/A_MannequinsXR_IndexCurl_Right.A_MannequinsXR_IndexCurl_Right");
+	// 拇指：模板里没有"拇指扣下"的动画，只有"竖大拇指"（ThumbUp）。把 ThumbUp 相对张开姿势的转动反过来用，拇指就往掌心扣
+	const TCHAR* ThumbUpAnimPath = TEXT("/Game/XRMannequins/Animations/A_MannequinsXR_ThumbUp_Right.A_MannequinsXR_ThumbUp_Right");
 
 	// 信息牌：Slate 像素 → 厘米。560 像素宽 ≈ 22cm，手边看正合适
 	constexpr float LabelScale = 0.04f;
@@ -42,6 +46,87 @@ namespace
 	{
 		return Cast<IToyGrabbable>(Actor);
 	}
+
+	/** 骨骼名 → 手指组：1 = 食指，2 = 中指 / 无名指 / 小指，3 = 拇指，0 = 手腕、掌骨等不动的 */
+	uint8 FingerGroupOf(const FString& Bone)
+	{
+		if (Bone.StartsWith(TEXT("index")))
+		{
+			return Bone.Contains(TEXT("metacarpal")) ? 0 : 1;
+		}
+		if (Bone.StartsWith(TEXT("middle")) || Bone.StartsWith(TEXT("ring")) || Bone.StartsWith(TEXT("pinky")))
+		{
+			return Bone.Contains(TEXT("metacarpal")) ? 0 : 2;
+		}
+		if (Bone.StartsWith(TEXT("thumb")))
+		{
+			return 3;
+		}
+		return 0;
+	}
+
+	/**
+	 * 左手网格是右手的镜像，但骨骼局部坐标轴怎么镜像要看建模约定，几种常见的都试一下：
+	 * 用右手参考姿势按某种规则镜像后和左手参考姿势比，误差最小的那种就是这套骨骼的规则，
+	 * 右手动画（模板只带了右手的）按同样规则镜像就能用在左手上。
+	 */
+	FTransform MirrorBone(const FTransform& T, int32 Mode)
+	{
+		const FQuat Q = T.GetRotation();
+		const FVector P = T.GetTranslation();
+		switch (Mode)
+		{
+		case 0: return FTransform(FQuat(Q.X, -Q.Y, -Q.Z, Q.W), FVector(-P.X, P.Y, P.Z), T.GetScale3D());
+		case 1: return FTransform(FQuat(-Q.X, Q.Y, -Q.Z, Q.W), FVector(P.X, -P.Y, P.Z), T.GetScale3D());
+		case 2: return FTransform(FQuat(-Q.X, -Q.Y, Q.Z, Q.W), FVector(P.X, P.Y, -P.Z), T.GetScale3D());
+		case 3: return FTransform(Q, -P, T.GetScale3D());
+		default: return T;
+		}
+	}
+
+	float BoneDifference(const FTransform& A, const FTransform& B)
+	{
+		return (1.f - FMath::Abs(static_cast<float>(A.GetRotation() | B.GetRotation()))) * 10.f
+			+ static_cast<float>(FVector::Dist(A.GetTranslation(), B.GetTranslation()));
+	}
+
+	FString OtherSideName(const FString& Bone)
+	{
+		if (Bone.EndsWith(TEXT("_l"))) return Bone.LeftChop(2) + TEXT("_r");
+		if (Bone.EndsWith(TEXT("_r"))) return Bone.LeftChop(2) + TEXT("_l");
+		return Bone;
+	}
+
+	/** 从动画里取一根骨骼在某个时刻的局部变换；动画里没有这根骨骼就返回 false。 */
+	bool SampleBone(const UAnimSequence* Anim, const FName Bone, double Time, FTransform& Out)
+	{
+		const USkeleton* Skeleton = Anim ? Anim->GetSkeleton() : nullptr;
+		if (!Skeleton)
+		{
+			return false;
+		}
+		const int32 SkeletonIndex = Skeleton->GetReferenceSkeleton().FindBoneIndex(Bone);
+		if (SkeletonIndex == INDEX_NONE)
+		{
+			return false;
+		}
+		const FAnimExtractContext Context(Time);
+		Anim->GetBoneTransform(Out, FSkeletonPoseBoneIndex(SkeletonIndex), Context, false);
+		return true;
+	}
+
+	/** 由局部变换逐级累乘出每根骨骼的组件空间变换（父骨骼的序号总比子骨骼小）。 */
+	TArray<FTransform> ComponentSpace(const FReferenceSkeleton& Ref, const TArray<FTransform>& Local)
+	{
+		TArray<FTransform> Result;
+		Result.SetNum(Local.Num());
+		for (int32 Index = 0; Index < Local.Num(); ++Index)
+		{
+			const int32 Parent = Ref.GetParentIndex(Index);
+			Result[Index] = Parent == INDEX_NONE ? Local[Index] : Local[Index] * Result[Parent];
+		}
+		return Result;
+	}
 }
 
 AToyHand::AToyHand()
@@ -51,61 +136,28 @@ AToyHand::AToyHand()
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	SetRootComponent(Root);
 
-	VisualRoot = CreateDefaultSubobject<USceneComponent>(TEXT("VisualRoot"));
-	VisualRoot->SetupAttachment(Root);
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> RightFinder(RightMeshPath);
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> LeftFinder(LeftMeshPath);
+	static ConstructorHelpers::FObjectFinder<UAnimSequence> OpenFinder(OpenAnimPath);
+	static ConstructorHelpers::FObjectFinder<UAnimSequence> FistFinder(FistAnimPath);
+	static ConstructorHelpers::FObjectFinder<UAnimSequence> IndexCurlFinder(IndexCurlAnimPath);
+	static ConstructorHelpers::FObjectFinder<UAnimSequence> ThumbUpFinder(ThumbUpAnimPath);
+	RightMesh = RightFinder.Object;
+	LeftMesh = LeftFinder.Object;
+	OpenAnim = OpenFinder.Object;
+	FistAnim = FistFinder.Object;
+	IndexCurlAnim = IndexCurlFinder.Object;
+	ThumbUpAnim = ThumbUpFinder.Object;
 
-	auto Part = [this](FName Name, USceneComponent* Parent, EToyShape Shape, const FVector& Size, const FVector& Location,
-		const FRotator& Rotation, const FLinearColor& Color)
-	{
-		UToyShapeComponent* Shape3D = UToyShapeComponent::Create(this, Name, Parent, Shape, Size, Location, Color, Rotation);
-		// 手是"幽灵"：不推开方块，也不挡桌面模式的鼠标射线
-		Shape3D->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
-		return Shape3D;
-	};
-	auto Joint = [this](FName Name, USceneComponent* Parent, const FVector& Location, const FRotator& Rotation)
-	{
-		USceneComponent* Pivot = CreateDefaultSubobject<USceneComponent>(Name);
-		Pivot->SetupAttachment(Parent);
-		Pivot->SetRelativeLocationAndRotation(Location, Rotation);
-		return Pivot;
-	};
+	// 手是"幽灵"：不推开方块，也不挡桌面模式的鼠标射线
+	HandMesh = CreateDefaultSubobject<UPoseableMeshComponent>(TEXT("HandMesh"));
+	HandMesh->SetupAttachment(Root);
+	HandMesh->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
 
-	Part(TEXT("Palm"), VisualRoot, EToyShape::Box, FVector(9.f, PalmThickness, 8.f), FVector(0.f, PalmY, 0.f), FRotator::ZeroRotator, HandColor);
-	Part(TEXT("Wrist"), VisualRoot, EToyShape::Cylinder, FVector(4.5f, 4.5f, 6.f), FVector(-7.f, PalmY, 0.f), AlongX, HandColor);
+	// 食指指尖：每帧对到骨骼上（见 ApplyFingerPose）
+	PokeTip = CreateDefaultSubobject<USceneComponent>(TEXT("PokeTip"));
+	PokeTip->SetupAttachment(Root);
 
-	for (int32 Finger = 0; Finger < 4; ++Finger)
-	{
-		const float Proximal = FingerLength[Finger] * 0.55f;
-		const float Distal = FingerLength[Finger] * 0.45f;
-		const float Width = FingerWidth[Finger];
-
-		USceneComponent* Base = Joint(*FString::Printf(TEXT("Finger%d_Base"), Finger), VisualRoot,
-			FVector(KnuckleX, PalmY, FingerZ[Finger]), FRotator::ZeroRotator);
-		Part(*FString::Printf(TEXT("Finger%d_Proximal"), Finger), Base, EToyShape::Cylinder,
-			FVector(Width, Width, Proximal), FVector(Proximal * 0.5f, 0.f, 0.f), AlongX, HandColor);
-
-		USceneComponent* Mid = Joint(*FString::Printf(TEXT("Finger%d_Mid"), Finger), Base,
-			FVector(Proximal, 0.f, 0.f), FRotator::ZeroRotator);
-		Part(*FString::Printf(TEXT("Finger%d_Distal"), Finger), Mid, EToyShape::Cylinder,
-			FVector(Width, Width, Distal), FVector(Distal * 0.5f, 0.f, 0.f), AlongX, HandColor);
-
-		FingerJoints.Add(Base);
-		FingerJoints.Add(Mid);
-
-		if (Finger == 0)
-		{
-			PokeTip = Joint(TEXT("PokeTip"), Mid, FVector(Distal, 0.f, 0.f), FRotator::ZeroRotator);
-			Part(TEXT("PokeTipVisual"), PokeTip, EToyShape::Sphere, FVector(1.6f), FVector::ZeroVector, FRotator::ZeroRotator, TipColor);
-		}
-	}
-
-	ThumbBase = Joint(TEXT("Thumb_Base"), VisualRoot, FVector(0.5f, PalmY - 1.2f, 3.6f), ThumbOpen);
-	Part(TEXT("Thumb_Proximal"), ThumbBase, EToyShape::Cylinder, FVector(2.f, 2.f, 3.8f), FVector(1.9f, 0.f, 0.f), AlongX, HandColor);
-	ThumbMid = Joint(TEXT("Thumb_Mid"), ThumbBase, FVector(3.8f, 0.f, 0.f), FRotator::ZeroRotator);
-	Part(TEXT("Thumb_Distal"), ThumbMid, EToyShape::Cylinder, FVector(1.9f, 1.9f, 3.f), FVector(1.5f, 0.f, 0.f), AlongX, HandColor);
-	ThumbTip = Joint(TEXT("ThumbTip"), ThumbMid, FVector(3.f, 0.f, 0.f), FRotator::ZeroRotator);
-
-	// GripPoint 不放在 VisualRoot 下面：镜像（负缩放）会让它的旋转变得不可靠，所以单独挂在 Root 上，由 InitHand 按左右手摆好
 	GripPoint = CreateDefaultSubobject<UArrowComponent>(TEXT("GripPoint"));
 	GripPoint->SetupAttachment(Root);
 	GripPoint->ArrowColor = FColor(0, 220, 255);
@@ -137,12 +189,13 @@ void AToyHand::InitHand(AToyBoxPawn* InPawn, EControllerHand InSide)
 	Side = InSide;
 
 	const float Mirror = (Side == EControllerHand::Left) ? -1.f : 1.f;
-	VisualRoot->SetRelativeScale3D(FVector(1.f, Mirror, 1.f));
 
 	// 掌心表面在 Y = PalmY - 厚度/2 处；X 轴从掌心指向手背（右手 +Y，左手 -Y），Z 轴沿手指（+X）
 	const FVector PalmSurface(1.f, Mirror * (PalmY - PalmThickness * 0.5f), 0.f);
 	const FRotator GripRotation = FRotationMatrix::MakeFromXZ(FVector(0.f, Mirror, 0.f), FVector::ForwardVector).Rotator();
 	GripPoint->SetRelativeLocationAndRotation(PalmSurface, GripRotation);
+
+	SetupHandMesh();
 
 	// 信息牌：标题一行，下面材料和作用自动换行。字体用引擎默认字体，它带中文后备字形
 	SAssignNew(InfoTitle, STextBlock)
@@ -169,6 +222,173 @@ void AToyHand::InitHand(AToyBoxPawn* InPawn, EControllerHand InSide)
 		]);
 }
 
+void AToyHand::SetupHandMesh()
+{
+	const bool bLeft = Side == EControllerHand::Left;
+	const float Mirror = bLeft ? -1.f : 1.f;
+	USkeletalMesh* Mesh = bLeft ? LeftMesh : RightMesh;
+	if (!Mesh || !RightMesh || !OpenAnim || !FistAnim || !IndexCurlAnim)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ToyBox: 找不到 MannyXR 手的网格或动画（Content/XRMannequins），手不显示"));
+		return;
+	}
+	HandMesh->SetSkinnedAssetAndUpdate(Mesh);
+
+	// 1) 每根骨骼的"张开 / 握拳"局部变换：右手直接从模板的 Idle / Grasp 动画里取；
+	//    左手取右手同名骨骼，按这套骨骼的镜像规则换算（规则用两只手的参考姿势比出来）
+	const FReferenceSkeleton& Ref = Mesh->GetRefSkeleton();
+	const FReferenceSkeleton& RightRef = RightMesh->GetRefSkeleton();
+	const int32 NumBones = Ref.GetNum();
+	int32 MirrorMode = 4;
+	if (bLeft)
+	{
+		float BestError = TNumericLimits<float>::Max();
+		for (int32 Mode = 0; Mode < 5; ++Mode)
+		{
+			float Error = 0.f;
+			for (int32 Index = 0; Index < NumBones; ++Index)
+			{
+				const FString Name = Ref.GetBoneName(Index).ToString();
+				const int32 RightIndex = RightRef.FindBoneIndex(*OtherSideName(Name));
+				if (RightIndex != INDEX_NONE && FingerGroupOf(Name) != 0)
+				{
+					Error += BoneDifference(Ref.GetRefBonePose()[Index], MirrorBone(RightRef.GetRefBonePose()[RightIndex], Mode));
+				}
+			}
+			if (Error < BestError)
+			{
+				BestError = Error;
+				MirrorMode = Mode;
+			}
+		}
+		UE_LOG(LogTemp, Log, TEXT("ToyBox: 左手骨骼镜像规则 %d，手指参考姿势总误差 %.4f"), MirrorMode, BestError);
+	}
+
+	OpenPose = Ref.GetRefBonePose();
+	FistPose = Ref.GetRefBonePose();
+	BoneGroup.Init(0, NumBones);
+	int32 Sampled = 0;
+	for (int32 Index = 0; Index < NumBones; ++Index)
+	{
+		const FString Name = Ref.GetBoneName(Index).ToString();
+		BoneGroup[Index] = FingerGroupOf(Name);
+		if (BoneGroup[Index] == 0)
+		{
+			continue;
+		}
+		const FName AnimBone = bLeft ? FName(*OtherSideName(Name)) : FName(*Name);
+		// "握拳"姿势：Grasp 和 IndexCurl 两个动画的最后一帧里，哪个把这根骨骼弯得最多就用哪个
+		FTransform Open;
+		FTransform Fist;
+		float BestBend = -1.f;
+		if (SampleBone(OpenAnim, AnimBone, 0.0, Open))
+		{
+			for (const UAnimSequence* Anim : { FistAnim.Get(), IndexCurlAnim.Get() })
+			{
+				FTransform Candidate;
+				if (SampleBone(Anim, AnimBone, Anim->GetPlayLength(), Candidate))
+				{
+					const float Bend = static_cast<float>(Open.GetRotation().AngularDistance(Candidate.GetRotation()));
+					if (Bend > BestBend)
+					{
+						BestBend = Bend;
+						Fist = Candidate;
+					}
+				}
+			}
+		}
+		FTransform Up;
+		if (BoneGroup[Index] == 3 && ThumbUpAnim && SampleBone(ThumbUpAnim, AnimBone, ThumbUpAnim->GetPlayLength(), Up))
+		{
+			// 张开 → 竖起 的局部转动是 Delta = Open⁻¹ · Up；扣下 = Open · Delta⁻¹ 再打个 0.8 折，免得扣过头
+			const FQuat Delta = Open.GetRotation().Inverse() * Up.GetRotation();
+			const FQuat Down = Open.GetRotation() * FQuat::Slerp(FQuat::Identity, Delta.Inverse(), 0.8f);
+			Fist = Open;
+			Fist.SetRotation(Down);
+			BestBend = 1.f;
+		}
+		if (BestBend >= 0.f)
+		{
+			OpenPose[Index] = bLeft ? MirrorBone(Open, MirrorMode) : Open;
+			FistPose[Index] = bLeft ? MirrorBone(Fist, MirrorMode) : Fist;
+			++Sampled;
+		}
+	}
+
+	const FString Suffix = bLeft ? TEXT("_l") : TEXT("_r");
+	auto Find = [&Ref, &Suffix](const TCHAR* Base) { return Ref.FindBoneIndex(*(FString(Base) + Suffix)); };
+	IndexTipBone = Find(TEXT("index_03"));
+	IndexMidBone = Find(TEXT("index_02"));
+	ThumbTipBone = Find(TEXT("thumb_03"));
+	ThumbMidBone = Find(TEXT("thumb_02"));
+	const int32 WristBone = Find(TEXT("hand"));
+	const int32 MiddleBone = Find(TEXT("middle_01"));
+	const int32 MiddleTip = Find(TEXT("middle_03"));
+	UE_LOG(LogTemp, Log, TEXT("ToyBox: %s手 MannyXR，%d 根骨骼，%d 根手指骨骼从动画取到张开/握拳姿势"),
+		bLeft ? TEXT("左") : TEXT("右"), NumBones, Sampled);
+	if (WristBone == INDEX_NONE || MiddleBone == INDEX_NONE || MiddleTip == INDEX_NONE || IndexTipBone == INDEX_NONE || ThumbTipBone == INDEX_NONE)
+	{
+		FString Names;
+		for (int32 Index = 0; Index < NumBones; ++Index)
+		{
+			Names += Ref.GetBoneName(Index).ToString() + TEXT(" ");
+		}
+		UE_LOG(LogTemp, Error, TEXT("ToyBox: MannyXR 手的骨骼名和预期不一样，手不显示。骨骼：%s"), *Names);
+		HandMesh->SetSkinnedAssetAndUpdate(nullptr);
+		return;
+	}
+
+	// 2) 网格怎么摆：手腕→中指根 = 手指方向（我们的 +X）；握拳时中指尖移动的方向 = 掌心方向（右手 -Y，左手 +Y）。
+	//    两个方向都从骨骼算，不依赖网格本身的坐标轴约定
+	const TArray<FTransform> OpenCS = ComponentSpace(Ref, OpenPose);
+	const TArray<FTransform> FistCS = ComponentSpace(Ref, FistPose);
+	const FVector Wrist = OpenCS[WristBone].GetLocation();
+	const FVector Knuckle = OpenCS[MiddleBone].GetLocation();
+	const FVector FingerDir = (Knuckle - Wrist).GetSafeNormal();
+	FVector PalmDir = FistCS[MiddleTip].GetLocation() - OpenCS[MiddleTip].GetLocation();
+	PalmDir = (PalmDir - FingerDir * (PalmDir | FingerDir)).GetSafeNormal();
+
+	// 网格空间里"我们的手坐标系"的朝向（X = 手指，Y = 手背方向），取逆就是网格相对手的旋转
+	const FQuat HandInMesh = FRotationMatrix::MakeFromXY(FingerDir, -PalmDir * Mirror).ToQuat();
+	const FQuat MeshInHand = HandInMesh.Inverse();
+	// 手掌中心（手腕和中指根的中点）放到 (0, ±PalmY, 0)
+	const FVector PalmCenter = (Wrist + Knuckle) * 0.5f;
+	const FVector Target(0.f, Mirror * PalmY, 0.f);
+	HandMesh->SetRelativeLocationAndRotation(Target - MeshInHand.RotateVector(PalmCenter), MeshInHand);
+	ApplyFingerPose();
+}
+
+FVector AToyHand::GetFingerTip(int32 TipBone, int32 PrevBone) const
+{
+	if (!HandMesh->GetSkinnedAsset() || TipBone == INDEX_NONE || PrevBone == INDEX_NONE)
+	{
+		return GripPoint->GetComponentLocation() + GripPoint->GetUpVector() * 9.f;
+	}
+	// 末节骨骼原点在指节上，指尖再往外延伸差不多一节末节的长度
+	const FVector Tip = HandMesh->GetBoneLocation(HandMesh->GetBoneName(TipBone));
+	const FVector Prev = HandMesh->GetBoneLocation(HandMesh->GetBoneName(PrevBone));
+	return Tip + (Tip - Prev) * 0.85f;
+}
+
+void AToyHand::ApplyFingerPose()
+{
+	if (!HandMesh->GetSkinnedAsset() || OpenPose.Num() != HandMesh->BoneSpaceTransforms.Num())
+	{
+		return;
+	}
+	// 每根骨骼在张开和握拳之间按所属手指组的弯曲程度插值（旋转球面插值，位置线性插值）
+	const float Weights[4] = { 0.f, IndexCurl, FingerCurl, ThumbCurl };
+	for (int32 Index = 0; Index < OpenPose.Num(); ++Index)
+	{
+		FTransform Pose;
+		Pose.Blend(OpenPose[Index], FistPose[Index], Weights[BoneGroup[Index]]);
+		HandMesh->BoneSpaceTransforms[Index] = Pose;
+	}
+	HandMesh->MarkRefreshTransformDirty();
+	HandMesh->RefreshBoneTransforms();
+	PokeTip->SetWorldLocation(GetFingerTip(IndexTipBone, IndexMidBone));
+}
+
 void AToyHand::SetInputs(float InGrip, float InTrigger)
 {
 	Grip = FMath::Clamp(InGrip, 0.f, 1.f);
@@ -185,7 +405,7 @@ void AToyHand::SetDesktopPose(const FVector& PinchWorldLocation, const FRotator&
 
 FVector AToyHand::GetPinchLocation() const
 {
-	return (ThumbTip->GetComponentLocation() + PokeTip->GetComponentLocation()) * 0.5f;
+	return (GetFingerTip(ThumbTipBone, ThumbMidBone) + PokeTip->GetComponentLocation()) * 0.5f;
 }
 
 void AToyHand::SetPokeEnabled(bool bEnabled)
@@ -422,35 +642,27 @@ void AToyHand::TickHeld(float DeltaSeconds)
 
 void AToyHand::TickCurls(float DeltaSeconds)
 {
-	// 拿着东西时按抓法定手指的最小弯曲：全手握 = HoldCurl；捏 = 食指半弯、其余三指收起；托整机 = 手指微弯
+	// 弯曲程度 0 = 张开（Idle），1 = 握拳（Grasp）。
+	// 拿着东西时按抓法定最小弯曲：全手握 = HoldCurl；捏 = 食指和拇指半弯、其余三指收起；托整机 = 手指微弯
 	float MinFinger = 0.f;
 	float MinIndex = 0.f;
-	float ThumbCurl = -1.f;
+	float MinThumb = 0.f;
+	bool bPinch = false;
 	if (const IToyGrabbable* Held = AsGrabbable(HeldActor.Get()))
 	{
 		switch (Held->GetGripStyle())
 		{
-		case EToyGripStyle::Power: MinFinger = HoldCurl; MinIndex = HoldCurl; break;
-		case EToyGripStyle::Pinch: MinFinger = MaxCurl; MinIndex = 35.f; ThumbCurl = 55.f; break;
-		case EToyGripStyle::Palm:  MinFinger = 20.f; MinIndex = 20.f; break;
+		case EToyGripStyle::Power: MinFinger = HoldCurl; MinIndex = HoldCurl; MinThumb = HoldCurl; break;
+		case EToyGripStyle::Pinch: MinFinger = 1.f; MinIndex = 0.45f; MinThumb = 0.55f; bPinch = true; break;
+		case EToyGripStyle::Palm:  MinFinger = 0.25f; MinIndex = 0.25f; MinThumb = 0.2f; break;
 		}
 	}
-	FingerCurl = FMath::FInterpTo(FingerCurl, FMath::Max(Grip * MaxCurl, MinFinger), DeltaSeconds, 20.f);
-	// 捏的时候握把按满食指也不弯到底，保持捏的样子
-	const float IndexTarget = (ThumbCurl >= 0.f) ? MinIndex : FMath::Max(Trigger * MaxCurl, MinIndex);
-	IndexCurl = FMath::FInterpTo(IndexCurl, IndexTarget, DeltaSeconds, 20.f);
-
-	// 绕 Z 轴负方向转 = 手指朝掌心（-Y）弯；左手在镜像空间里自动变成反方向
-	for (int32 Finger = 0; Finger < 4; ++Finger)
-	{
-		const float Curl = (Finger == 0) ? IndexCurl : FingerCurl;
-		FingerJoints[Finger * 2]->SetRelativeRotation(FRotator(0.f, -Curl, 0.f));
-		FingerJoints[Finger * 2 + 1]->SetRelativeRotation(FRotator(0.f, -Curl * 1.1f, 0.f));
-	}
-	// 拇指平时跟着另外三指；捏的时候往食指方向收一个固定角度
-	const float Thumb = (ThumbCurl >= 0.f) ? ThumbCurl : FingerCurl;
-	ThumbBase->SetRelativeRotation(ThumbOpen + FRotator(-Thumb * 0.2f, -Thumb * 0.4f, 0.f));
-	ThumbMid->SetRelativeRotation(FRotator(0.f, -Thumb * 0.6f, 0.f));
+	const float Speed = 20.f;
+	FingerCurl = FMath::FInterpTo(FingerCurl, FMath::Max(Grip, MinFinger), DeltaSeconds, Speed);
+	// 捏的时候握把按满食指和拇指也不弯到底，保持捏的样子
+	IndexCurl = FMath::FInterpTo(IndexCurl, bPinch ? MinIndex : FMath::Max(Trigger, MinIndex), DeltaSeconds, Speed);
+	ThumbCurl = FMath::FInterpTo(ThumbCurl, bPinch ? MinThumb : FMath::Max(Grip, MinThumb), DeltaSeconds, Speed);
+	ApplyFingerPose();
 }
 
 void AToyHand::TickPoke()
