@@ -2,6 +2,7 @@
 
 #include "ToyCube.h"
 #include "ToyExplodedModel.h"
+#include "ToyMenuPanel.h"
 #include "ToyShapeComponent.h"
 #include "ToyTouchScreen.h"
 #include "Components/ChildActorComponent.h"
@@ -45,6 +46,7 @@ namespace
 			{ TEXT("explode"), EToyScreenAction::ToggleExplode }, { TEXT("reset"), EToyScreenAction::ResetParts },
 			{ TEXT("movenear"), EToyScreenAction::MoveNear }, { TEXT("movefar"), EToyScreenAction::MoveFar },
 			{ TEXT("moveleft"), EToyScreenAction::MoveLeft }, { TEXT("moveright"), EToyScreenAction::MoveRight },
+			{ TEXT("menu"), EToyScreenAction::OpenMenu },
 		};
 		AToyStudio* Studio = nullptr;
 		for (TActorIterator<AToyStudio> It(World); It && !Studio; ++It)
@@ -186,6 +188,16 @@ void AToyStudio::BeginPlay()
 	{
 		UE_LOG(LogTemp, Error, TEXT("ToyBox: 工作室的触屏子 Actor 没生成"));
 	}
+
+	// 主菜单：进游戏先看到 START / SETTINGS。-ExecCmds 里的调试命令（toy.GrabAudit 等）想直接开始，用 toy.Menu close
+	FActorSpawnParameters Params;
+	Params.Owner = this;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	Menu = GetWorld()->SpawnActor<AToyMenuPanel>(AToyMenuPanel::StaticClass(), GetActorTransform(), Params);
+	if (Menu)
+	{
+		Menu->Open();
+	}
 }
 
 bool AToyStudio::SpawnCube()
@@ -251,6 +263,7 @@ void AToyStudio::HandleScreenAction(EToyScreenAction Action)
 	case EToyScreenAction::MoveFar:       MoveModel(FVector(MoveStepCm, 0.f, 0.f)); break;
 	case EToyScreenAction::MoveLeft:      MoveModel(FVector(0.f, -MoveStepCm, 0.f)); break;
 	case EToyScreenAction::MoveRight:     MoveModel(FVector(0.f, MoveStepCm, 0.f)); break;
+	case EToyScreenAction::OpenMenu:      if (Menu) { Menu->Open(); } break;
 	}
 	// 戳按钮时触屏自己也会刷新；调试命令 toy.Screen 不经过触屏，这里统一刷新一次按钮上的字和状态栏
 	if (Screen)

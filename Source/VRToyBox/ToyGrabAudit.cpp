@@ -3,6 +3,7 @@
 #include "ToyBoxPawn.h"
 #include "ToyExplodedModel.h"
 #include "ToyHand.h"
+#include "ToyMenuPanel.h"
 #include "ToyPartUnit.h"
 #include "Camera/CameraComponent.h"
 #include "Components/ArrowComponent.h"
@@ -126,6 +127,11 @@ void AToyGrabAudit::Tick(float DeltaSeconds)
 		if (Pawn.IsValid() && Studio.IsValid() && Pawn->GetRightHand())
 		{
 			Pawn->SetExternalControl(true);
+			// 开局的主菜单会挡在镜头前面，体检时收起来
+			for (TActorIterator<AToyMenuPanel> It(GetWorld()); It; ++It)
+			{
+				It->Close();
+			}
 			CameraOriginal = Pawn->Camera->GetRelativeTransform();
 			Pawn->GetRightHand()->AddTickPrerequisiteActor(this);
 			NextModel();

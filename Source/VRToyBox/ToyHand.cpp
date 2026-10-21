@@ -4,6 +4,8 @@
 #include "ToyCube.h"
 #include "ToyGrabbable.h"
 #include "ToyHandCalib.h"
+#include "ToyMenuPanel.h"
+#include "ToySettings.h"
 #include "ToyTouchScreen.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Animation/AnimSequence.h"
@@ -535,6 +537,8 @@ void AToyHand::Tick(float DeltaSeconds)
 		ShowInfo(nullptr);
 	}
 
+	// 抓取范围跟着设置走（SMALL / MEDIUM / LARGE），范围小球的大小也跟着变
+	GrabRadius = ToySettings::GrabRadiusCm();
 	UpdateHover();
 	TickHeld(DeltaSeconds);
 	TickCurls(DeltaSeconds);
@@ -752,6 +756,8 @@ void AToyHand::TickRangeSphere(float DeltaSeconds)
 	{
 		return;
 	}
+	// 设置里可以把小球关掉（抓取判定不变，只是不显示）
+	RangeSphere->SetHiddenInGame(!ToySettings::Get().bPinchBall);
 	// 平时淡白；有东西进范围（零件同时高亮）变绿；捏住后缩到一半、更淡，不挡着看手里的零件
 	const bool bHolding = HeldActor.IsValid();
 	const bool bHover = !bHolding && HoveredActor.IsValid();
@@ -777,13 +783,14 @@ void AToyHand::TickPoke()
 	{
 		UPrimitiveComponent* Component = Overlap.GetComponent();
 		AToyTouchScreen* Screen = Cast<AToyTouchScreen>(Overlap.GetActor());
-		if (!Component || !Screen)
+		AToyMenuPanel* Menu = Cast<AToyMenuPanel>(Overlap.GetActor());
+		if (!Component || (!Screen && !Menu))
 		{
 			continue;
 		}
 		const TWeakObjectPtr<UPrimitiveComponent> WeakComponent(Component);
 		NowTouching.Add(WeakComponent);
-		if (!Touching.Contains(WeakComponent) && Screen->Poke(Component))
+		if (!Touching.Contains(WeakComponent) && (Screen ? Screen->Poke(Component) : Menu->Poke(Component)))
 		{
 			Pulse(0.5f, 0.05f);
 		}

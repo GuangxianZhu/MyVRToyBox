@@ -6,6 +6,7 @@
 #include "ToyStudio.generated.h"
 
 class AToyCube;
+class AToyMenuPanel;
 class UChildActorComponent;
 class AToyExplodedModel;
 
@@ -133,6 +134,10 @@ protected:
 private:
 	UPROPERTY(Transient)
 	TObjectPtr<AToyTouchScreen> Screen;
+
+	/** 主菜单面板：开局生成并打开，触屏的 MENU 再叫出来。 */
+	UPROPERTY(Transient)
+	TObjectPtr<AToyMenuPanel> Menu;
 
 	/** 桌上现在摆着的模型（没有就是空）和它是哪一种。 */
 	UPROPERTY(Transient)

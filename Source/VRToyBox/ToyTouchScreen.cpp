@@ -17,7 +17,6 @@ namespace
 	// 屏幕 32 × 22 cm。宽按钮两个一排，窄按钮四个一排（指尖大约 1.5cm 宽，7cm 的按钮在 VR 里也好戳）
 	constexpr float WideWidth = 14.f;
 	constexpr float NarrowWidth = 7.f;
-	constexpr float ButtonHeight = 3.6f;
 	constexpr float LineOffset = 0.8f;    // 按钮上两行字离按钮中心的高度
 	constexpr float WideText = 1.5f;
 	constexpr float NarrowText = 1.15f;
@@ -67,6 +66,9 @@ AToyTouchScreen::AToyTouchScreen()
 	MakeButton(TEXT("MoveNear"), EToyScreenAction::MoveNear, Col4[1], Row[3], TEXT("MOVE"), TEXT("NEAR"), MoveColor, NarrowWidth, NarrowText);
 	MakeButton(TEXT("MoveFar"), EToyScreenAction::MoveFar, Col4[2], Row[3], TEXT("MOVE"), TEXT("FAR"), MoveColor, NarrowWidth, NarrowText);
 	MakeButton(TEXT("MoveRight"), EToyScreenAction::MoveRight, Col4[3], Row[3], TEXT(">>"), TEXT("RIGHT"), MoveColor, NarrowWidth, NarrowText);
+	// 右上角、标题右边：矮一点的 MENU，叫出主菜单（开始 / 设置）
+	MakeButton(TEXT("Menu"), EToyScreenAction::OpenMenu, Col4[3], 9.4f, TEXT("MENU"), TEXT(""), FLinearColor(0.45f, 0.45f, 0.5f),
+		NarrowWidth, NarrowText, 2.6f);
 }
 
 UTextRenderComponent* AToyTouchScreen::MakeText(FName Name, const FVector& Location, const FString& Text, float Size, const FColor& Color)
@@ -84,7 +86,7 @@ UTextRenderComponent* AToyTouchScreen::MakeText(FName Name, const FVector& Locat
 }
 
 void AToyTouchScreen::MakeButton(const FString& Id, EToyScreenAction Action, float Y, float Z, const FString& Line1,
-	const FString& Line2, const FLinearColor& Color, float Width, float TextSize)
+	const FString& Line2, const FLinearColor& Color, float Width, float TextSize, float ButtonHeight)
 {
 	FToyScreenButton& Button = Buttons.AddDefaulted_GetRef();
 	Button.Action = Action;
@@ -93,8 +95,9 @@ void AToyTouchScreen::MakeButton(const FString& Id, EToyScreenAction Action, flo
 	Button.RestLocation = FVector(FaceX, Y, Z);
 	Button.Face = UToyShapeComponent::Create(this, *(Id + TEXT("Face")), Pivot, EToyShape::Box,
 		FVector(0.8f, Width, ButtonHeight), Button.RestLocation, Button.Color, FRotator::ZeroRotator);
-	Button.Line1 = MakeText(*(Id + TEXT("Line1")), FVector(FaceX + 0.5f, Y, Z + LineOffset), Line1, TextSize, FColor::White);
-	Button.Line2 = MakeText(*(Id + TEXT("Line2")), FVector(FaceX + 0.5f, Y, Z - LineOffset), Line2, TextSize, FColor::White);
+	const float Offset = Line2.IsEmpty() ? 0.f : LineOffset;
+	Button.Line1 = MakeText(*(Id + TEXT("Line1")), FVector(FaceX + 0.5f, Y, Z + Offset), Line1, TextSize, FColor::White);
+	Button.Line2 = MakeText(*(Id + TEXT("Line2")), FVector(FaceX + 0.5f, Y, Z - Offset), Line2, TextSize, FColor::White);
 
 	// 触发盒从按钮面里 0.8cm 一直延伸到面前 1.6cm：指尖快碰到就算按下，戳穿了也还在盒子里
 	UBoxComponent* Zone = CreateDefaultSubobject<UBoxComponent>(*(Id + TEXT("Zone")));

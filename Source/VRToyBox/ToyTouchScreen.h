@@ -25,7 +25,8 @@ enum class EToyScreenAction : uint8
 	MoveNear,
 	MoveFar,
 	MoveLeft,
-	MoveRight
+	MoveRight,
+	OpenMenu
 };
 
 /** 屏幕上的一个按钮：看得见的按钮面、两行文字、按钮面前方看不见的触发盒。 */
@@ -53,6 +54,7 @@ struct FToyScreenButton
 
 /**
  * 桌上的支架触屏：底座 + 立杆 + 倾斜 30° 的屏幕，屏幕上 4 排按钮：方块；四个模型；爆炸 / 复位；挪模型（左、近、远、右）。
+ * 右上角还有一个小 MENU 按钮，叫出主菜单（AToyMenuPanel）。
  *
  * 食指指尖（AToyHand::PokeTip）进入某个按钮触发盒的那一帧算一次点击；桌面模式下鼠标射线打到触发盒也算。
  * 按钮只负责把动作交给 AToyStudio，状态文字和按钮上的字由 RefreshStatus 从工作室读回来。
@@ -91,9 +93,9 @@ public:
 
 private:
 	UTextRenderComponent* MakeText(FName Name, const FVector& Location, const FString& Text, float Size, const FColor& Color);
-	/** Width = 按钮宽度（厘米），TextSize = 两行字的字高。 */
+	/** Width / Height = 按钮宽高（厘米），TextSize = 两行字的字高。Line2 为空时 Line1 放在正中间。 */
 	void MakeButton(const FString& Id, EToyScreenAction Action, float Y, float Z, const FString& Line1, const FString& Line2,
-		const FLinearColor& Color, float Width, float TextSize);
+		const FLinearColor& Color, float Width, float TextSize, float Height = 3.6f);
 	FToyScreenButton* FindButton(EToyScreenAction Action);
 	void Flash(int32 ButtonIndex);
 
