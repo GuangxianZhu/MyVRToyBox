@@ -2,7 +2,7 @@
  "source": "lathe.glb",
  "model": {
   "title": "迷你桌面金属车床（8 合 1 小车床，按产品图估算尺寸建模）",
-  "body": "24 V 直流电机 · 皮带减速约 2.7 : 1 · Φ64 三爪卡盘 · 中心高 87 mm · 整机长约 37 cm\n装配状态：抓任意位置拿起整台车床看。点 EXPLODE 拆开后，每个零件都能单独抓。",
+  "body": "24 V 有刷直流电机 · 皮带减速约 2.7 : 1 · Φ50 三爪卡盘 · 中心高 87 mm · 整机长约 37 cm · 84 个零件\n装配状态：抓任意位置拿起整台车床看。点 EXPLODE 拆开后，每个零件都能单独抓（电机、卡盘、主轴箱都拆到了里面）。",
   "explode_scale": 1.0
  },
  "units": [
@@ -19,7 +19,7 @@
    "grabbable": true,
    "name_cn": "丝杠",
    "material": "45 钢，梯形螺纹 T8 × 2",
-   "desc": "转动左端手轮，丝杠带着拖板下面的螺母左右走，就是\"纵向进给\"：车刀沿工件轴线走一刀。",
+   "desc": "转动左端手轮，丝杠带着拖板下面的铜螺母左右走，就是\"纵向进给\"：车刀沿工件轴线走一刀。",
    "grab": {
     "type": "cylinder",
     "axis": [
@@ -46,7 +46,7 @@
    "id": "P06_HandwheelZ",
    "grabbable": true,
    "name_cn": "纵向进给手轮",
-   "material": "铝合金手轮 + 黄铜手柄",
+   "material": "铝合金",
    "desc": "装在丝杠左端。摇一圈拖板走 2 mm（一个螺距），手摇的快慢就是进给速度。",
    "grab": {
     "type": "pinch",
@@ -59,21 +59,48 @@
    }
   },
   {
-   "id": "headstock",
+   "id": "P07_Headstock",
    "grabbable": true,
-   "name_cn": "主轴箱与主轴",
-   "material": "6061 铝合金箱体 + 40Cr 主轴 + 一对深沟球轴承",
-   "desc": "主轴由箱体里的两个轴承撑住，只能转不能晃。左端装卡盘、右端装皮带轮，电机经皮带带它转，工件跟着转。",
+   "name_cn": "主轴箱",
+   "material": "6061 铝合金主轴套 + 立板",
+   "desc": "主轴套里前后各压一个轴承，把主轴撑住，让它只能转、不能晃。主轴套的轴线和导轨平行，车出来的才是圆柱而不是锥。",
    "grab": {
     "type": "surface"
    }
   },
   {
+   "id": "P08_Spindle",
+   "grabbable": true,
+   "name_cn": "主轴",
+   "material": "40Cr 钢，调质",
+   "desc": "左端装卡盘，右端装皮带轮、用锁紧螺母压住。电机通过皮带带它转，工件跟着一起转。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     11.5,
+     0.0,
+     10.01
+    ],
+    "segments": [
+     [
+      -4.5,
+      4.5,
+      0.8
+     ]
+    ]
+   }
+  },
+  {
    "id": "P09_Chuck",
    "grabbable": true,
-   "name_cn": "三爪卡盘",
+   "name_cn": "三爪卡盘（盘体）",
    "material": "钢制盘体 + 黑色连接盘",
-   "desc": "拧卡盘侧面的方孔，三个卡爪同步向中心收紧，工件自动对中夹牢。",
+   "desc": "盘面上三条径向导槽，卡爪就在槽里滑。侧面的方孔插卡盘扳手，转的是里面的平面螺纹盘。",
    "grab": {
     "type": "pinch"
    }
@@ -83,7 +110,7 @@
    "grabbable": true,
    "name_cn": "卡爪",
    "material": "45 钢，淬火",
-   "desc": "三个卡爪由卡盘里的平面螺纹盘同时推动，所以总是一起进、一起退，自动定心。台阶面可以反夹大直径工件。",
+   "desc": "背面一排弧形齿，啮合在平面螺纹盘的螺旋槽里。螺纹盘一转，三个卡爪同时往里或往外走，工件自动对中。",
    "grab": {
     "type": "pinch"
    }
@@ -93,7 +120,7 @@
    "grabbable": true,
    "name_cn": "卡爪",
    "material": "45 钢，淬火",
-   "desc": "三个卡爪由卡盘里的平面螺纹盘同时推动，所以总是一起进、一起退，自动定心。台阶面可以反夹大直径工件。",
+   "desc": "背面一排弧形齿，啮合在平面螺纹盘的螺旋槽里。螺纹盘一转，三个卡爪同时往里或往外走，工件自动对中。",
    "grab": {
     "type": "pinch"
    }
@@ -103,7 +130,7 @@
    "grabbable": true,
    "name_cn": "卡爪",
    "material": "45 钢，淬火",
-   "desc": "三个卡爪由卡盘里的平面螺纹盘同时推动，所以总是一起进、一起退，自动定心。台阶面可以反夹大直径工件。",
+   "desc": "背面一排弧形齿，啮合在平面螺纹盘的螺旋槽里。螺纹盘一转，三个卡爪同时往里或往外走，工件自动对中。",
    "grab": {
     "type": "pinch"
    }
@@ -123,19 +150,9 @@
    "grabbable": true,
    "name_cn": "拖板（大拖板）",
    "material": "6061 铝合金",
-   "desc": "骑在导轨上，由丝杠带着左右走。前面的方孔和两个小块是燕尾滑块的压板，顶上是安装十字滑台的螺孔。",
+   "desc": "装在导轨滑块上，下面挂着丝杠螺母，跟着丝杠左右走。顶上是安装十字滑台的螺孔。",
    "grab": {
-    "type": "box",
-    "center": [
-     1.0,
-     0.0,
-     6.9
-    ],
-    "extent": [
-     3.0,
-     4.0,
-     1.1
-    ]
+    "type": "surface"
    }
   },
   {
@@ -161,9 +178,9 @@
   {
    "id": "P14_CrossWheel",
    "grabbable": true,
-   "name_cn": "横向刻度手轮",
-   "material": "铝合金 + 刻度环",
-   "desc": "摇它让十字滑台前后走。刻度环一格 0.02 mm：车刀往里进 0.1 mm，工件直径就小 0.2 mm。",
+   "name_cn": "横向进给手轮",
+   "material": "铝合金",
+   "desc": "摇它，通过横向丝杠让十字滑台前后走。",
    "grab": {
     "type": "pinch",
     "point": [
@@ -178,8 +195,8 @@
    "id": "P15_ToolPost",
    "grabbable": true,
    "name_cn": "四方刀架",
-   "material": "6061 铝合金 + 黑色内六角压紧螺钉",
-   "desc": "四个面都能夹车刀，转 90° 就换一把刀，不用重新对刀。",
+   "material": "6061 铝合金",
+   "desc": "四个面都能夹车刀，松开中间的手柄螺母转 90° 就换一把刀，不用重新对刀。",
    "grab": {
     "type": "pinch"
    }
@@ -227,9 +244,9 @@
   {
    "id": "P17_ToolBit",
    "grabbable": true,
-   "name_cn": "车刀",
+   "name_cn": "外圆车刀",
    "material": "高速钢 HSS 8 × 8",
-   "desc": "刀尖要对准主轴中心高：高了会顶、低了会啃。",
+   "desc": "车外圆、车端面。刀尖要对准主轴中心高：高了会顶、低了会啃。",
    "grab": {
     "type": "pinch"
    }
@@ -239,7 +256,7 @@
    "grabbable": true,
    "name_cn": "尾座",
    "material": "6061 铝合金",
-   "desc": "骑在导轨上，可以沿床身滑到任意位置再锁紧。里面的套筒能前后伸缩，用来顶住长工件或者钻孔。",
+   "desc": "装在导轨滑块上，可以沿床身滑到任意位置再锁紧。里面的套筒能前后伸缩，用来顶住长工件或者钻孔。",
    "grab": {
     "type": "surface"
    }
@@ -248,8 +265,8 @@
    "id": "P19_TailWheel",
    "grabbable": true,
    "name_cn": "尾座手轮",
-   "material": "铝合金手轮 + 黄铜手柄",
-   "desc": "摇它让尾座套筒伸出 / 缩回：钻孔时就是靠它把钻头推进工件。",
+   "material": "铝合金",
+   "desc": "摇它，丝杆推着套筒伸出 / 缩回：钻孔时就是靠它把钻头推进工件。",
    "grab": {
     "type": "pinch",
     "point": [
@@ -333,9 +350,9 @@
   {
    "id": "motor",
    "grabbable": true,
-   "name_cn": "直流电机（含电源线）",
-   "material": "775 有刷直流电机 24 V · 铝端盖 · DC 5.5 × 2.1 插头",
-   "desc": "电压越高转得越快，调速器改电压就能无级调速。电机轴上的小皮带轮经皮带带动主轴上的大皮带轮，转速降到约 1/2.7、扭矩放大约 2.7 倍。",
+   "name_cn": "直流电机外壳（含电源线）",
+   "material": "冷轧钢板机壳 · PVC 电源线 · DC 5.5 × 2.1 插头",
+   "desc": "机壳也是磁路的一部分：两块磁钢的磁力线穿过转子，再经机壳绕回来。电压越高电机转得越快，调速器改电压就能无级调速。",
    "grab": {
     "type": "cylinder",
     "axis": [
@@ -344,15 +361,15 @@
      0
     ],
     "center": [
-     8.8,
+     9.45,
      5.0,
      4.0
     ],
     "segments": [
      [
-      -5.8,
-      5.8,
-      2.45
+      -5.45,
+      5.45,
+      2.4
      ]
     ],
     "override": "motor"
@@ -384,6 +401,440 @@
    "name_cn": "底板锁紧螺丝",
    "material": "滚花铝头 + M5 螺杆",
    "desc": "把床身锁在底板上。松开后床身可以微调对中。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P30_BearingFront",
+   "grabbable": true,
+   "name_cn": "主轴前轴承",
+   "material": "6202 深沟球轴承",
+   "desc": "离卡盘近，承受切削力的大头。轴承间隙大了，车出来的工件表面就有振纹。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P31_BearingRear",
+   "grabbable": true,
+   "name_cn": "主轴后轴承",
+   "material": "6202 深沟球轴承",
+   "desc": "和前轴承一起把主轴架成一根稳定的\"两点支撑梁\"。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P32_SpindleNut",
+   "grabbable": true,
+   "name_cn": "主轴锁紧螺母",
+   "material": "45 钢，M14 × 1",
+   "desc": "把皮带轮和轴承压紧在主轴上，防止主轴前后窜动。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P33_OilCup",
+   "grabbable": true,
+   "name_cn": "油杯",
+   "material": "黄铜",
+   "desc": "往主轴轴承里加润滑油的地方。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P34_Scroll",
+   "grabbable": true,
+   "name_cn": "平面螺纹盘",
+   "material": "45 钢",
+   "desc": "正面是一条阿基米德螺旋槽，三个卡爪背面的齿都啮合在槽里；背面一圈伞齿，被扳手插进去的小伞齿轮带着转。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P35_ChuckKey",
+   "grabbable": true,
+   "name_cn": "卡盘扳手",
+   "material": "45 钢，发黑",
+   "desc": "方头插进卡盘侧面的方孔，转一下三个卡爪就同时夹紧或松开。用完一定要拔下来，忘了就开机会把它甩出去。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P36_RailBlock_Carriage",
+   "grabbable": true,
+   "name_cn": "导轨滑块",
+   "material": "轴承钢，内含滚珠",
+   "desc": "骑在直线导轨上，里面一圈圈滚珠循环滚动，所以推起来又轻又没有间隙。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P36_RailBlock_Tailstock",
+   "grabbable": true,
+   "name_cn": "导轨滑块",
+   "material": "轴承钢，内含滚珠",
+   "desc": "骑在直线导轨上，里面一圈圈滚珠循环滚动，所以推起来又轻又没有间隙。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P37_LeadNut",
+   "grabbable": true,
+   "name_cn": "丝杠螺母",
+   "material": "H62 黄铜",
+   "desc": "挂在拖板下面，套在丝杠上。丝杠一转，螺母连同拖板一起沿轴线走。用铜做是因为铜和钢配对耐磨、不咬死。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P38_CrossScrew",
+   "grabbable": true,
+   "name_cn": "横向丝杠",
+   "material": "45 钢，M6 × 1",
+   "desc": "藏在十字滑台里面，横向手轮转一圈，滑台前后走 1 mm。",
+   "grab": {
+    "type": "box",
+    "center": [
+     0.97,
+     0.1,
+     8.5
+    ],
+    "extent": [
+     0.28,
+     3.1,
+     0.28
+    ]
+   }
+  },
+  {
+   "id": "P39_PostStud",
+   "grabbable": true,
+   "name_cn": "刀架中心螺柱",
+   "material": "45 钢",
+   "desc": "四方刀架就套在这根螺柱上转，上面的手柄螺母把刀架压死在滑台上。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P40_LeverNut",
+   "grabbable": true,
+   "name_cn": "刀架手柄螺母",
+   "material": "45 钢 + 胶木球",
+   "desc": "松开它，刀架就能转 90° 换刀；拧紧它，刀架就纹丝不动。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P41_PartingTool",
+   "grabbable": true,
+   "name_cn": "切断刀",
+   "material": "高速钢 HSS 刀片 3 mm",
+   "desc": "很窄的刀片，从侧面切进去把工件切断。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P42_Quill",
+   "grabbable": true,
+   "name_cn": "尾座套筒",
+   "material": "45 钢，镀铬",
+   "desc": "在尾座里前后伸缩，前端是莫氏锥孔，插钻夹头或顶尖。上面的长槽卡着导向键，所以套筒只能直着走、不能转。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     -12.2,
+     0.0,
+     10.01
+    ],
+    "segments": [
+     [
+      -3.61,
+      3.61,
+      1.1
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P43_TailScrew",
+   "grabbable": true,
+   "name_cn": "尾座丝杆",
+   "material": "45 钢",
+   "desc": "一头连手轮，一头拧在套筒尾部的螺母里：手轮转，套筒就直线伸缩。",
+   "grab": {
+    "type": "box",
+    "center": [
+     -14.4,
+     0.0,
+     10.04
+    ],
+    "extent": [
+     3.2,
+     0.4,
+     0.38
+    ]
+   }
+  },
+  {
+   "id": "P44_MotorEndCap",
+   "grabbable": true,
+   "name_cn": "电机端盖",
+   "material": "压铸铝",
+   "desc": "装着电刷架，中间是轴承。端面上的散热孔让转子转起来时把热风甩出去。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P45_Rotor",
+   "grabbable": true,
+   "name_cn": "电机转子（电枢）",
+   "material": "硅钢片铁芯 + 漆包铜线 + 铜换向器",
+   "desc": "电流经电刷、换向器流进绕组，绕组在磁钢的磁场里受力转起来；每转过一格，换向器就把电流方向倒一次，所以能一直朝一个方向转。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     9.65,
+     5.0,
+     4.0
+    ],
+    "segments": [
+     [
+      -6.25,
+      6.25,
+      1.4
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P46_Magnet_1",
+   "grabbable": true,
+   "name_cn": "磁钢",
+   "material": "铁氧体永磁，一 N 一 S",
+   "desc": "贴在机壳内壁上，给转子提供固定的磁场。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P46_Magnet_2",
+   "grabbable": true,
+   "name_cn": "磁钢",
+   "material": "铁氧体永磁，一 N 一 S",
+   "desc": "贴在机壳内壁上，给转子提供固定的磁场。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P47_Brush_1",
+   "grabbable": true,
+   "name_cn": "电刷",
+   "material": "碳刷 + 黄铜刷架",
+   "desc": "碳刷被弹簧压在换向器上，转子转着它也一直接触，把电流送进去。用久了会磨短，要换。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P47_Brush_2",
+   "grabbable": true,
+   "name_cn": "电刷",
+   "material": "碳刷 + 黄铜刷架",
+   "desc": "碳刷被弹簧压在换向器上，转子转着它也一直接触，把电流送进去。用久了会磨短，要换。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P48_EndCapScrew_1",
+   "grabbable": true,
+   "name_cn": "端盖螺钉",
+   "material": "M3 十字盘头螺钉",
+   "desc": "把端盖固定在机壳上。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P48_EndCapScrew_2",
+   "grabbable": true,
+   "name_cn": "端盖螺钉",
+   "material": "M3 十字盘头螺钉",
+   "desc": "把端盖固定在机壳上。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P49_RailScrew_1",
+   "grabbable": true,
+   "name_cn": "导轨固定螺钉",
+   "material": "M4 内六角螺钉",
+   "desc": "藏在导轨顶面的沉孔里，把导轨拉紧在床身上。沉孔让螺钉头低于导轨面，滑块才能从上面滑过去。",
+   "grab": {
+    "type": "box",
+    "center": [
+     -16.0,
+     0.0,
+     5.19
+    ],
+    "extent": [
+     0.15,
+     0.15,
+     0.61
+    ]
+   }
+  },
+  {
+   "id": "P50_BedScrew_1",
+   "grabbable": true,
+   "name_cn": "床身固定螺钉",
+   "material": "M5 内六角螺钉",
+   "desc": "从上往下把床身拉紧在底板上。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P50_BedScrew_2",
+   "grabbable": true,
+   "name_cn": "床身固定螺钉",
+   "material": "M5 内六角螺钉",
+   "desc": "从上往下把床身拉紧在底板上。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P50_BedScrew_3",
+   "grabbable": true,
+   "name_cn": "床身固定螺钉",
+   "material": "M5 内六角螺钉",
+   "desc": "从上往下把床身拉紧在底板上。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P50_BedScrew_4",
+   "grabbable": true,
+   "name_cn": "床身固定螺钉",
+   "material": "M5 内六角螺钉",
+   "desc": "从上往下把床身拉紧在底板上。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P50_BedScrew_5",
+   "grabbable": true,
+   "name_cn": "床身固定螺钉",
+   "material": "M5 内六角螺钉",
+   "desc": "从上往下把床身拉紧在底板上。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P50_BedScrew_6",
+   "grabbable": true,
+   "name_cn": "床身固定螺钉",
+   "material": "M5 内六角螺钉",
+   "desc": "从上往下把床身拉紧在底板上。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P51_Handle_Cross",
+   "grabbable": true,
+   "name_cn": "铜手柄",
+   "material": "H62 黄铜",
+   "desc": "套在手轮的销子上，手捏着它摇，手柄自己会转，所以手不会被磨。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P51_Handle_Tail",
+   "grabbable": true,
+   "name_cn": "铜手柄",
+   "material": "H62 黄铜",
+   "desc": "套在手轮的销子上，手捏着它摇，手柄自己会转，所以手不会被磨。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P51_Handle_Z",
+   "grabbable": true,
+   "name_cn": "铜手柄",
+   "material": "H62 黄铜",
+   "desc": "套在手轮的销子上，手捏着它摇，手柄自己会转，所以手不会被磨。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P52_Dial",
+   "grabbable": true,
+   "name_cn": "刻度环",
+   "material": "铝合金，激光刻线",
+   "desc": "一圈 50 格、一格 0.02 mm：车刀往里进 0.1 mm，工件直径就小 0.2 mm（两边都被车掉）。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P53_CoverScrew_1",
+   "grabbable": true,
+   "name_cn": "皮带罩螺钉",
+   "material": "M4 内六角螺钉",
+   "desc": "把皮带罩固定在主轴箱立板上。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P53_CoverScrew_2",
+   "grabbable": true,
+   "name_cn": "皮带罩螺钉",
+   "material": "M4 内六角螺钉",
+   "desc": "把皮带罩固定在主轴箱立板上。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P53_CoverScrew_3",
+   "grabbable": true,
+   "name_cn": "皮带罩螺钉",
+   "material": "M4 内六角螺钉",
+   "desc": "把皮带罩固定在主轴箱立板上。",
    "grab": {
     "type": "pinch"
    }
@@ -481,13 +932,13 @@
    "name_cn": "主轴箱",
    "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P07_Headstock.P07_Headstock",
    "spin": 0,
-   "unit": "headstock",
+   "unit": "P07_Headstock",
    "ex": [
     [
      0.0,
      0.0,
      6.0,
-     0.92
+     0.9
     ]
    ]
   },
@@ -496,25 +947,25 @@
    "name_cn": "主轴",
    "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P08_Spindle.P08_Spindle",
    "spin": 0,
-   "unit": "headstock",
+   "unit": "P08_Spindle",
    "ex": [
     [
      0.0,
      0.0,
-     6.0,
-     0.92
+     2.5,
+     0.94
     ]
    ]
   },
   {
    "name": "P09_Chuck",
-   "name_cn": "三爪卡盘",
+   "name_cn": "三爪卡盘（盘体）",
    "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P09_Chuck.P09_Chuck",
    "spin": 0,
    "unit": "P09_Chuck",
    "ex": [
     [
-     -2.0,
+     -2.5,
      0.0,
      0.0,
      0.36
@@ -530,12 +981,12 @@
    "ex": [
     [
      0.0,
-     -1.1021821673266511e-16,
+     -1.1021821192326179e-16,
      1.8,
      0.3
     ],
     [
-     -2.0,
+     -2.5,
      0.0,
      0.0,
      0.36
@@ -551,12 +1002,12 @@
    "ex": [
     [
      0.0,
-     1.5588456988334656,
-     -0.9,
+     1.55884572681199,
+     -0.8999999999999995,
      0.3
     ],
     [
-     -2.0,
+     -2.5,
      0.0,
      0.0,
      0.36
@@ -572,12 +1023,12 @@
    "ex": [
     [
      0.0,
-     -1.5588456988334656,
-     -0.9,
+     -1.558845726811989,
+     -0.9000000000000008,
      0.3
     ],
     [
-     -2.0,
+     -2.5,
      0.0,
      0.0,
      0.36
@@ -592,8 +1043,8 @@
    "unit": "P11_Workpiece",
    "ex": [
     [
-     0.0,
-     6.0,
+     -2.0,
+     7.5,
      0.0,
      0.24
     ]
@@ -631,7 +1082,7 @@
   },
   {
    "name": "P14_CrossWheel",
-   "name_cn": "横向刻度手轮",
+   "name_cn": "横向进给手轮",
    "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P14_CrossWheel.P14_CrossWheel",
    "spin": 0,
    "unit": "P14_CrossWheel",
@@ -721,7 +1172,7 @@
   },
   {
    "name": "P17_ToolBit",
-   "name_cn": "车刀",
+   "name_cn": "外圆车刀",
    "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P17_ToolBit.P17_ToolBit",
    "spin": 0,
    "unit": "P17_ToolBit",
@@ -780,8 +1231,8 @@
     [
      2.5,
      0.0,
-     0.0,
-     0.44
+     4.0,
+     0.4
     ]
    ]
   },
@@ -870,7 +1321,7 @@
   },
   {
    "name": "P27_Motor",
-   "name_cn": "直流电机",
+   "name_cn": "直流电机外壳",
    "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P27_Motor.P27_Motor",
    "spin": 0,
    "unit": "motor",
@@ -879,7 +1330,7 @@
      0.0,
      5.0,
      0.0,
-     0.76
+     0.74
     ]
    ]
   },
@@ -894,7 +1345,7 @@
      0.0,
      5.0,
      0.0,
-     0.76
+     0.74
     ]
    ]
   },
@@ -940,6 +1391,831 @@
      0.0,
      3.0,
      0.86
+    ]
+   ]
+  },
+  {
+   "name": "P30_BearingFront",
+   "name_cn": "主轴前轴承",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P30_BearingFront.P30_BearingFront",
+   "spin": 0,
+   "unit": "P30_BearingFront",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.5,
+     0.94
+    ],
+    [
+     -2.5,
+     0.0,
+     0.0,
+     0.97
+    ]
+   ]
+  },
+  {
+   "name": "P31_BearingRear",
+   "name_cn": "主轴后轴承",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P31_BearingRear.P31_BearingRear",
+   "spin": 0,
+   "unit": "P31_BearingRear",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.5,
+     0.94
+    ],
+    [
+     2.0,
+     0.0,
+     0.0,
+     0.97
+    ]
+   ]
+  },
+  {
+   "name": "P32_SpindleNut",
+   "name_cn": "主轴锁紧螺母",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P32_SpindleNut.P32_SpindleNut",
+   "spin": 0,
+   "unit": "P32_SpindleNut",
+   "ex": [
+    [
+     2.6,
+     0.0,
+     0.0,
+     0.67
+    ]
+   ]
+  },
+  {
+   "name": "P33_OilCup",
+   "name_cn": "油杯",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P33_OilCup.P33_OilCup",
+   "spin": 0,
+   "unit": "P33_OilCup",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     7.5,
+     0.88
+    ]
+   ]
+  },
+  {
+   "name": "P34_Scroll",
+   "name_cn": "平面螺纹盘",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P34_Scroll.P34_Scroll",
+   "spin": 0,
+   "unit": "P34_Scroll",
+   "ex": [
+    [
+     -2.5,
+     0.0,
+     0.0,
+     0.36
+    ],
+    [
+     0.0,
+     5.5,
+     0.0,
+     0.4
+    ]
+   ]
+  },
+  {
+   "name": "P35_ChuckKey",
+   "name_cn": "卡盘扳手",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P35_ChuckKey.P35_ChuckKey",
+   "spin": 0,
+   "unit": "P35_ChuckKey",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.5,
+     0.01
+    ]
+   ]
+  },
+  {
+   "name": "P36_RailBlock_Carriage",
+   "name_cn": "导轨滑块",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P36_RailBlock_Carriage.P36_RailBlock_Carriage",
+   "spin": 0,
+   "unit": "P36_RailBlock_Carriage",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     0.6000000000000001,
+     0.31
+    ]
+   ]
+  },
+  {
+   "name": "P36_RailBlock_Tailstock",
+   "name_cn": "导轨滑块",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P36_RailBlock_Tailstock.P36_RailBlock_Tailstock",
+   "spin": 0,
+   "unit": "P36_RailBlock_Tailstock",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     0.8,
+     0.55
+    ]
+   ]
+  },
+  {
+   "name": "P37_LeadNut",
+   "name_cn": "丝杠螺母",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P37_LeadNut.P37_LeadNut",
+   "spin": 0,
+   "unit": "P37_LeadNut",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     1.0,
+     0.28
+    ],
+    [
+     0.0,
+     2.8000000000000003,
+     0.0,
+     0.32
+    ]
+   ]
+  },
+  {
+   "name": "P38_CrossScrew",
+   "name_cn": "横向丝杠",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P38_CrossScrew.P38_CrossScrew",
+   "spin": 0,
+   "unit": "P38_CrossScrew",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     1.8,
+     0.22
+    ]
+   ]
+  },
+  {
+   "name": "P39_PostStud",
+   "name_cn": "刀架中心螺柱",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P39_PostStud.P39_PostStud",
+   "spin": 0,
+   "unit": "P39_PostStud",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.2
+    ],
+    [
+     0.0,
+     2.5,
+     0.0,
+     0.23
+    ]
+   ]
+  },
+  {
+   "name": "P40_LeverNut",
+   "name_cn": "刀架手柄螺母",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P40_LeverNut.P40_LeverNut",
+   "spin": 0,
+   "unit": "P40_LeverNut",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     7.5,
+     0.02
+    ]
+   ]
+  },
+  {
+   "name": "P41_PartingTool",
+   "name_cn": "切断刀",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P41_PartingTool.P41_PartingTool",
+   "spin": 0,
+   "unit": "P41_PartingTool",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     5.5,
+     0.1
+    ],
+    [
+     -2.5,
+     0.0,
+     0.0,
+     0.17
+    ]
+   ]
+  },
+  {
+   "name": "P42_Quill",
+   "name_cn": "尾座套筒",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P42_Quill.P42_Quill",
+   "spin": 0,
+   "unit": "P42_Quill",
+   "ex": [
+    [
+     3.5,
+     0.0,
+     0.0,
+     0.48
+    ],
+    [
+     0.0,
+     4.5,
+     0.0,
+     0.52
+    ]
+   ]
+  },
+  {
+   "name": "P43_TailScrew",
+   "name_cn": "尾座丝杆",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P43_TailScrew.P43_TailScrew",
+   "spin": 0,
+   "unit": "P43_TailScrew",
+   "ex": [
+    [
+     -2.0,
+     0.0,
+     0.0,
+     0.5
+    ]
+   ]
+  },
+  {
+   "name": "P44_MotorEndCap",
+   "name_cn": "电机端盖",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P44_MotorEndCap.P44_MotorEndCap",
+   "spin": 0,
+   "unit": "P44_MotorEndCap",
+   "ex": [
+    [
+     0.0,
+     5.0,
+     0.0,
+     0.74
+    ],
+    [
+     -2.0,
+     0.0,
+     0.0,
+     0.82
+    ],
+    [
+     0.0,
+     0.0,
+     4.5,
+     0.86
+    ]
+   ]
+  },
+  {
+   "name": "P45_Rotor",
+   "name_cn": "电机转子（电枢）",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P45_Rotor.P45_Rotor",
+   "spin": 0,
+   "unit": "P45_Rotor",
+   "ex": [
+    [
+     0.0,
+     5.0,
+     0.0,
+     0.74
+    ],
+    [
+     -11.0,
+     0.0,
+     0.0,
+     0.9
+    ]
+   ]
+  },
+  {
+   "name": "P46_Magnet_1",
+   "name_cn": "磁钢",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P46_Magnet_1.P46_Magnet_1",
+   "spin": 0,
+   "unit": "P46_Magnet_1",
+   "ex": [
+    [
+     0.0,
+     5.0,
+     0.0,
+     0.74
+    ],
+    [
+     -7.0,
+     0.0,
+     0.0,
+     0.94
+    ],
+    [
+     0.0,
+     -1.4000000000000001,
+     0.0,
+     0.97
+    ]
+   ]
+  },
+  {
+   "name": "P46_Magnet_2",
+   "name_cn": "磁钢",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P46_Magnet_2.P46_Magnet_2",
+   "spin": 0,
+   "unit": "P46_Magnet_2",
+   "ex": [
+    [
+     0.0,
+     5.0,
+     0.0,
+     0.74
+    ],
+    [
+     -7.0,
+     0.0,
+     0.0,
+     0.94
+    ],
+    [
+     0.0,
+     1.4000000000000001,
+     0.0,
+     0.97
+    ]
+   ]
+  },
+  {
+   "name": "P47_Brush_1",
+   "name_cn": "电刷",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P47_Brush_1.P47_Brush_1",
+   "spin": 0,
+   "unit": "P47_Brush_1",
+   "ex": [
+    [
+     0.0,
+     5.0,
+     0.0,
+     0.74
+    ],
+    [
+     -2.0,
+     0.0,
+     0.0,
+     0.82
+    ],
+    [
+     0.0,
+     0.0,
+     4.5,
+     0.86
+    ],
+    [
+     0.0,
+     0.0,
+     1.2000000000000002,
+     0.91
+    ]
+   ]
+  },
+  {
+   "name": "P47_Brush_2",
+   "name_cn": "电刷",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P47_Brush_2.P47_Brush_2",
+   "spin": 0,
+   "unit": "P47_Brush_2",
+   "ex": [
+    [
+     0.0,
+     5.0,
+     0.0,
+     0.74
+    ],
+    [
+     -2.0,
+     0.0,
+     0.0,
+     0.82
+    ],
+    [
+     0.0,
+     0.0,
+     4.5,
+     0.86
+    ],
+    [
+     0.0,
+     0.0,
+     -1.2000000000000002,
+     0.91
+    ]
+   ]
+  },
+  {
+   "name": "P48_EndCapScrew_1",
+   "name_cn": "端盖螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P48_EndCapScrew_1.P48_EndCapScrew_1",
+   "spin": 0,
+   "unit": "P48_EndCapScrew_1",
+   "ex": [
+    [
+     0.0,
+     5.0,
+     0.0,
+     0.74
+    ],
+    [
+     -3.0,
+     0.0,
+     0.0,
+     0.8
+    ]
+   ]
+  },
+  {
+   "name": "P48_EndCapScrew_2",
+   "name_cn": "端盖螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P48_EndCapScrew_2.P48_EndCapScrew_2",
+   "spin": 0,
+   "unit": "P48_EndCapScrew_2",
+   "ex": [
+    [
+     0.0,
+     5.0,
+     0.0,
+     0.74
+    ],
+    [
+     -3.0,
+     0.0,
+     0.0,
+     0.8
+    ]
+   ]
+  },
+  {
+   "name": "P49_RailScrew_1",
+   "name_cn": "导轨固定螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P49_RailScrew_1.P49_RailScrew_1",
+   "spin": 0,
+   "unit": "P49_RailScrew_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.2,
+     0.96
+    ]
+   ]
+  },
+  {
+   "name": "P49_RailScrew_2",
+   "name_cn": "导轨固定螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P49_RailScrew_2.P49_RailScrew_2",
+   "spin": 0,
+   "unit": "P49_RailScrew_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.2,
+     0.96
+    ]
+   ]
+  },
+  {
+   "name": "P49_RailScrew_3",
+   "name_cn": "导轨固定螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P49_RailScrew_3.P49_RailScrew_3",
+   "spin": 0,
+   "unit": "P49_RailScrew_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.2,
+     0.96
+    ]
+   ]
+  },
+  {
+   "name": "P49_RailScrew_4",
+   "name_cn": "导轨固定螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P49_RailScrew_4.P49_RailScrew_4",
+   "spin": 0,
+   "unit": "P49_RailScrew_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.2,
+     0.96
+    ]
+   ]
+  },
+  {
+   "name": "P49_RailScrew_5",
+   "name_cn": "导轨固定螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P49_RailScrew_5.P49_RailScrew_5",
+   "spin": 0,
+   "unit": "P49_RailScrew_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.2,
+     0.96
+    ]
+   ]
+  },
+  {
+   "name": "P49_RailScrew_6",
+   "name_cn": "导轨固定螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P49_RailScrew_6.P49_RailScrew_6",
+   "spin": 0,
+   "unit": "P49_RailScrew_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.2,
+     0.96
+    ]
+   ]
+  },
+  {
+   "name": "P49_RailScrew_7",
+   "name_cn": "导轨固定螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P49_RailScrew_7.P49_RailScrew_7",
+   "spin": 0,
+   "unit": "P49_RailScrew_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.2,
+     0.96
+    ]
+   ]
+  },
+  {
+   "name": "P49_RailScrew_8",
+   "name_cn": "导轨固定螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P49_RailScrew_8.P49_RailScrew_8",
+   "spin": 0,
+   "unit": "P49_RailScrew_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.2,
+     0.96
+    ]
+   ]
+  },
+  {
+   "name": "P49_RailScrew_9",
+   "name_cn": "导轨固定螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P49_RailScrew_9.P49_RailScrew_9",
+   "spin": 0,
+   "unit": "P49_RailScrew_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.2,
+     0.96
+    ]
+   ]
+  },
+  {
+   "name": "P50_BedScrew_1",
+   "name_cn": "床身固定螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P50_BedScrew_1.P50_BedScrew_1",
+   "spin": 0,
+   "unit": "P50_BedScrew_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.0,
+     0.98
+    ]
+   ]
+  },
+  {
+   "name": "P50_BedScrew_2",
+   "name_cn": "床身固定螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P50_BedScrew_2.P50_BedScrew_2",
+   "spin": 0,
+   "unit": "P50_BedScrew_2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.0,
+     0.98
+    ]
+   ]
+  },
+  {
+   "name": "P50_BedScrew_3",
+   "name_cn": "床身固定螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P50_BedScrew_3.P50_BedScrew_3",
+   "spin": 0,
+   "unit": "P50_BedScrew_3",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.0,
+     0.98
+    ]
+   ]
+  },
+  {
+   "name": "P50_BedScrew_4",
+   "name_cn": "床身固定螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P50_BedScrew_4.P50_BedScrew_4",
+   "spin": 0,
+   "unit": "P50_BedScrew_4",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.0,
+     0.98
+    ]
+   ]
+  },
+  {
+   "name": "P50_BedScrew_5",
+   "name_cn": "床身固定螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P50_BedScrew_5.P50_BedScrew_5",
+   "spin": 0,
+   "unit": "P50_BedScrew_5",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.0,
+     0.98
+    ]
+   ]
+  },
+  {
+   "name": "P50_BedScrew_6",
+   "name_cn": "床身固定螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P50_BedScrew_6.P50_BedScrew_6",
+   "spin": 0,
+   "unit": "P50_BedScrew_6",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.0,
+     0.98
+    ]
+   ]
+  },
+  {
+   "name": "P51_Handle_Cross",
+   "name_cn": "铜手柄",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P51_Handle_Cross.P51_Handle_Cross",
+   "spin": 0,
+   "unit": "P51_Handle_Cross",
+   "ex": [
+    [
+     0.0,
+     -3.5,
+     0.0,
+     0.14
+    ],
+    [
+     0.0,
+     -1.2000000000000002,
+     0.0,
+     0.17
+    ]
+   ]
+  },
+  {
+   "name": "P51_Handle_Tail",
+   "name_cn": "铜手柄",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P51_Handle_Tail.P51_Handle_Tail",
+   "spin": 0,
+   "unit": "P51_Handle_Tail",
+   "ex": [
+    [
+     -3.5,
+     0.0,
+     0.0,
+     0.48
+    ],
+    [
+     -1.8,
+     0.0,
+     0.0,
+     0.51
+    ]
+   ]
+  },
+  {
+   "name": "P51_Handle_Z",
+   "name_cn": "铜手柄",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P51_Handle_Z.P51_Handle_Z",
+   "spin": 0,
+   "unit": "P51_Handle_Z",
+   "ex": [
+    [
+     -4.0,
+     0.0,
+     0.0,
+     0.06
+    ],
+    [
+     -1.8,
+     0.0,
+     0.0,
+     0.09
+    ]
+   ]
+  },
+  {
+   "name": "P52_Dial",
+   "name_cn": "刻度环",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P52_Dial.P52_Dial",
+   "spin": 0,
+   "unit": "P52_Dial",
+   "ex": [
+    [
+     0.0,
+     -2.2,
+     0.0,
+     0.14
+    ]
+   ]
+  },
+  {
+   "name": "P53_CoverScrew_1",
+   "name_cn": "皮带罩螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P53_CoverScrew_1.P53_CoverScrew_1",
+   "spin": 0,
+   "unit": "P53_CoverScrew_1",
+   "ex": [
+    [
+     10.0,
+     0.0,
+     0.0,
+     0.55
+    ]
+   ]
+  },
+  {
+   "name": "P53_CoverScrew_2",
+   "name_cn": "皮带罩螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P53_CoverScrew_2.P53_CoverScrew_2",
+   "spin": 0,
+   "unit": "P53_CoverScrew_2",
+   "ex": [
+    [
+     10.0,
+     0.0,
+     0.0,
+     0.55
+    ]
+   ]
+  },
+  {
+   "name": "P53_CoverScrew_3",
+   "name_cn": "皮带罩螺钉",
+   "mesh": "/Game/Models/Lathe/lathe/StaticMeshes/P53_CoverScrew_3.P53_CoverScrew_3",
+   "spin": 0,
+   "unit": "P53_CoverScrew_3",
+   "ex": [
+    [
+     10.0,
+     0.0,
+     0.0,
+     0.55
     ]
    ]
   }
