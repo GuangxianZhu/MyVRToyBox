@@ -1,0 +1,891 @@
+{
+ "source": "drone.glb",
+ "model": {
+  "title": "涵道无人机（3 寸涵道穿越机，原创设计）",
+  "body": "4S 650mAh · 1404 外转子电机 × 4 · 3 寸三叶桨 · 数字图传\n装配状态：抓任意位置拿起整机看。点 EXPLODE 拆开后，每个零件都能单独抓。",
+  "explode_scale": 0.8
+ },
+ "units": [
+  {
+   "id": "base",
+   "grabbable": false,
+   "name_cn": "机架与立柱",
+   "material": "3 mm 碳纤维板 + 尼龙立柱",
+   "desc": "中央板、4 条机臂和电机座是一整块碳板；尼龙立柱撑起飞控塔。拆机时它不动，其他零件都从它上面拆下来。",
+   "grab": null
+  },
+  {
+   "id": "P03_Foot_FL",
+   "grabbable": true,
+   "name_cn": "橡胶脚垫",
+   "material": "橡胶",
+   "desc": "落地缓冲，也让涵道底面不直接蹭地。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P03_Foot_FR",
+   "grabbable": true,
+   "name_cn": "橡胶脚垫",
+   "material": "橡胶",
+   "desc": "落地缓冲，也让涵道底面不直接蹭地。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P03_Foot_RL",
+   "grabbable": true,
+   "name_cn": "橡胶脚垫",
+   "material": "橡胶",
+   "desc": "落地缓冲，也让涵道底面不直接蹭地。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P03_Foot_RR",
+   "grabbable": true,
+   "name_cn": "橡胶脚垫",
+   "material": "橡胶",
+   "desc": "落地缓冲，也让涵道底面不直接蹭地。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P04_Duct_FL",
+   "grabbable": true,
+   "name_cn": "涵道（桨保护圈）",
+   "material": "PA 尼龙注塑",
+   "desc": "保护桨。桨尖和内壁单边只留 1 mm，能减少桨尖涡流；外侧 8 条加强筋提高刚性。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     -5.2,
+     5.2,
+     2.0
+    ],
+    "segments": [
+     [
+      -1.1,
+      1.1,
+      4.33
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P04_Duct_FR",
+   "grabbable": true,
+   "name_cn": "涵道（桨保护圈）",
+   "material": "PA 尼龙注塑",
+   "desc": "保护桨。桨尖和内壁单边只留 1 mm，能减少桨尖涡流；外侧 8 条加强筋提高刚性。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     5.2,
+     5.2,
+     2.0
+    ],
+    "segments": [
+     [
+      -1.1,
+      1.1,
+      4.33
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P04_Duct_RL",
+   "grabbable": true,
+   "name_cn": "涵道（桨保护圈）",
+   "material": "PA 尼龙注塑",
+   "desc": "保护桨。桨尖和内壁单边只留 1 mm，能减少桨尖涡流；外侧 8 条加强筋提高刚性。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     -5.2,
+     -5.2,
+     2.0
+    ],
+    "segments": [
+     [
+      -1.1,
+      1.1,
+      4.33
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P04_Duct_RR",
+   "grabbable": true,
+   "name_cn": "涵道（桨保护圈）",
+   "material": "PA 尼龙注塑",
+   "desc": "保护桨。桨尖和内壁单边只留 1 mm，能减少桨尖涡流；外侧 8 条加强筋提高刚性。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     5.2,
+     -5.2,
+     2.0
+    ],
+    "segments": [
+     [
+      -1.1,
+      1.1,
+      4.33
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P05_Motor_FL",
+   "grabbable": true,
+   "name_cn": "1404 外转子无刷电机",
+   "material": "1404 外转子无刷 · 钕磁铁 + 漆包铜线",
+   "desc": "外转子无刷电机：钟罩带着桨一起转。三根相线沿机臂焊到电调焊盘。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "center": [
+     -5.2,
+     5.2,
+     0.9
+    ],
+    "segments": [
+     [
+      0.82,
+      2.06,
+      0.9
+     ]
+    ],
+    "override": "P05_Motor_*"
+   }
+  },
+  {
+   "id": "P05_Motor_FR",
+   "grabbable": true,
+   "name_cn": "1404 外转子无刷电机",
+   "material": "1404 外转子无刷 · 钕磁铁 + 漆包铜线",
+   "desc": "外转子无刷电机：钟罩带着桨一起转。三根相线沿机臂焊到电调焊盘。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "center": [
+     5.2,
+     5.2,
+     0.9
+    ],
+    "segments": [
+     [
+      0.82,
+      2.06,
+      0.9
+     ]
+    ],
+    "override": "P05_Motor_*"
+   }
+  },
+  {
+   "id": "P05_Motor_RL",
+   "grabbable": true,
+   "name_cn": "1404 外转子无刷电机",
+   "material": "1404 外转子无刷 · 钕磁铁 + 漆包铜线",
+   "desc": "外转子无刷电机：钟罩带着桨一起转。三根相线沿机臂焊到电调焊盘。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "center": [
+     -5.2,
+     -5.2,
+     0.9
+    ],
+    "segments": [
+     [
+      0.82,
+      2.06,
+      0.9
+     ]
+    ],
+    "override": "P05_Motor_*"
+   }
+  },
+  {
+   "id": "P05_Motor_RR",
+   "grabbable": true,
+   "name_cn": "1404 外转子无刷电机",
+   "material": "1404 外转子无刷 · 钕磁铁 + 漆包铜线",
+   "desc": "外转子无刷电机：钟罩带着桨一起转。三根相线沿机臂焊到电调焊盘。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "center": [
+     5.2,
+     -5.2,
+     0.9
+    ],
+    "segments": [
+     [
+      0.82,
+      2.06,
+      0.9
+     ]
+    ],
+    "override": "P05_Motor_*"
+   }
+  },
+  {
+   "id": "P06_Prop_FL",
+   "grabbable": true,
+   "name_cn": "3 寸三叶桨（反桨 CW）",
+   "material": "PC 三叶桨（正 / 反桨）",
+   "desc": "前橙后灰，一眼看出机头方向。正桨和反桨叶片是镜像的，装错位置会直接翻机。",
+   "grab": {
+    "type": "pinch",
+    "point": [
+     -5.2,
+     5.2,
+     2.62
+    ],
+    "override": "P06_Prop_*"
+   }
+  },
+  {
+   "id": "P06_Prop_FR",
+   "grabbable": true,
+   "name_cn": "3 寸三叶桨（正桨 CCW）",
+   "material": "PC 三叶桨（正 / 反桨）",
+   "desc": "前橙后灰，一眼看出机头方向。正桨和反桨叶片是镜像的，装错位置会直接翻机。",
+   "grab": {
+    "type": "pinch",
+    "point": [
+     5.2,
+     5.2,
+     2.62
+    ],
+    "override": "P06_Prop_*"
+   }
+  },
+  {
+   "id": "P06_Prop_RL",
+   "grabbable": true,
+   "name_cn": "3 寸三叶桨（正桨 CCW）",
+   "material": "PC 三叶桨（正 / 反桨）",
+   "desc": "前橙后灰，一眼看出机头方向。正桨和反桨叶片是镜像的，装错位置会直接翻机。",
+   "grab": {
+    "type": "pinch",
+    "point": [
+     -5.2,
+     -5.2,
+     2.62
+    ],
+    "override": "P06_Prop_*"
+   }
+  },
+  {
+   "id": "P06_Prop_RR",
+   "grabbable": true,
+   "name_cn": "3 寸三叶桨（反桨 CW）",
+   "material": "PC 三叶桨（正 / 反桨）",
+   "desc": "前橙后灰，一眼看出机头方向。正桨和反桨叶片是镜像的，装错位置会直接翻机。",
+   "grab": {
+    "type": "pinch",
+    "point": [
+     5.2,
+     -5.2,
+     2.62
+    ],
+    "override": "P06_Prop_*"
+   }
+  },
+  {
+   "id": "P07_ESC",
+   "grabbable": true,
+   "name_cn": "四合一电调（含电源线、电容、XT30 母头）",
+   "material": "四合一电调 · 4 层 PCB + 24 颗 MOS 管",
+   "desc": "每个电机 6 颗 MOS 管组成三相桥，按飞控的指令决定电机转多快。电源线上的电容吸收电压尖峰。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P08_FC",
+   "grabbable": true,
+   "name_cn": "飞控（含到电调的 8P 排线）",
+   "material": "飞控 · F7 MCU + 陀螺仪 + 气压计",
+   "desc": "读陀螺仪算姿态，再由混控器把“想要的力矩”分配给四个电机。左侧 USB-C 用来调参。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P09_VTX",
+   "grabbable": true,
+   "name_cn": "数字图传（含到飞控的 6P 排线）",
+   "material": "数字图传 · 铝散热片 + 屏蔽罩",
+   "desc": "把相机画面发给眼镜。屏蔽罩上的铝散热片负责散热，两个 MMCX 座接天线。",
+   "grab": {
+    "type": "box",
+    "center": [
+     -0.0,
+     0.0,
+     3.13
+    ],
+    "extent": [
+     1.5,
+     1.5,
+     0.33
+    ]
+   }
+  },
+  {
+   "id": "P10_Canopy",
+   "grabbable": true,
+   "name_cn": "TPU 机身罩",
+   "material": "TPU 3D 打印",
+   "desc": "TPU 机身罩：保护飞控塔，开有 USB 口、散热格栅和前后走线孔。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P11_CamMount",
+   "grabbable": true,
+   "name_cn": "TPU 相机支架",
+   "material": "TPU 3D 打印",
+   "desc": "TPU 软支架吸收振动；两侧转轴可以调相机仰角。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P12_Camera",
+   "grabbable": true,
+   "name_cn": "FPV 相机（上仰 15°，含相机线）",
+   "material": "数字 FPV 相机（上仰 15°）",
+   "desc": "上仰 15°：平飞时机身前倾，相机上仰才能拍到地平线。",
+   "grab": {
+    "type": "box",
+    "center": [
+     0.0,
+     4.21,
+     2.68
+    ],
+    "extent": [
+     0.95,
+     1.8,
+     0.98
+    ]
+   }
+  },
+  {
+   "id": "P13_Battery",
+   "grabbable": true,
+   "name_cn": "4S 650mAh 锂电池",
+   "material": "4S 650 mAh 锂聚合物电池 · XT30",
+   "desc": "4S 锂电池，标称 14.8 V。XT30 插头接电调的电源线。",
+   "grab": {
+    "type": "box",
+    "center": [
+     0.0,
+     -0.1,
+     5.02
+    ],
+    "extent": [
+     1.5,
+     2.8,
+     1.0
+    ]
+   }
+  },
+  {
+   "id": "P14_Strap",
+   "grabbable": true,
+   "name_cn": "电池绑带",
+   "material": "尼龙魔术贴绑带",
+   "desc": "从机架底面绕上来，把电池压在机身罩顶上。拆机第一步就是松开它。",
+   "grab": {
+    "type": "pinch",
+    "point": [
+     -0.42,
+     1.42,
+     6.24
+    ],
+    "override": "P14_Strap"
+   }
+  },
+  {
+   "id": "P15_Antennas",
+   "grabbable": true,
+   "name_cn": "图传天线 ×2（含同轴线）",
+   "material": "偶极子天线 × 2 · MMCX",
+   "desc": "两根天线做分集接收，同轴线接到图传的 MMCX 座。",
+   "grab": {
+    "type": "pinch",
+    "point": [
+     -1.58,
+     -4.5,
+     6.95
+    ],
+    "override": "P15_Antennas"
+   }
+  }
+ ],
+ "parts": [
+  {
+   "name": "P01_Frame",
+   "name_cn": "碳纤维机架",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P01_Frame.P01_Frame",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "P02_Standoffs",
+   "name_cn": "尼龙立柱 ×4",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P02_Standoffs.P02_Standoffs",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "P03_Foot_FL",
+   "name_cn": "橡胶脚垫",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P03_Foot_FL.P03_Foot_FL",
+   "spin": 0,
+   "unit": "P03_Foot_FL",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -2.5,
+     0.8
+    ]
+   ]
+  },
+  {
+   "name": "P03_Foot_FR",
+   "name_cn": "橡胶脚垫",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P03_Foot_FR.P03_Foot_FR",
+   "spin": 0,
+   "unit": "P03_Foot_FR",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -2.5,
+     0.8
+    ]
+   ]
+  },
+  {
+   "name": "P03_Foot_RL",
+   "name_cn": "橡胶脚垫",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P03_Foot_RL.P03_Foot_RL",
+   "spin": 0,
+   "unit": "P03_Foot_RL",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -2.5,
+     0.8
+    ]
+   ]
+  },
+  {
+   "name": "P03_Foot_RR",
+   "name_cn": "橡胶脚垫",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P03_Foot_RR.P03_Foot_RR",
+   "spin": 0,
+   "unit": "P03_Foot_RR",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -2.5,
+     0.8
+    ]
+   ]
+  },
+  {
+   "name": "P04_Duct_FL",
+   "name_cn": "涵道（桨保护圈）",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P04_Duct_FL.P04_Duct_FL",
+   "spin": 0,
+   "unit": "P04_Duct_FL",
+   "ex": [
+    [
+     -3.1819801926612854,
+     3.1819801926612854,
+     0.0,
+     0.72
+    ]
+   ]
+  },
+  {
+   "name": "P04_Duct_FR",
+   "name_cn": "涵道（桨保护圈）",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P04_Duct_FR.P04_Duct_FR",
+   "spin": 0,
+   "unit": "P04_Duct_FR",
+   "ex": [
+    [
+     3.1819801926612854,
+     3.1819801926612854,
+     0.0,
+     0.72
+    ]
+   ]
+  },
+  {
+   "name": "P04_Duct_RL",
+   "name_cn": "涵道（桨保护圈）",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P04_Duct_RL.P04_Duct_RL",
+   "spin": 0,
+   "unit": "P04_Duct_RL",
+   "ex": [
+    [
+     -3.1819801926612854,
+     -3.1819801926612854,
+     0.0,
+     0.72
+    ]
+   ]
+  },
+  {
+   "name": "P04_Duct_RR",
+   "name_cn": "涵道（桨保护圈）",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P04_Duct_RR.P04_Duct_RR",
+   "spin": 0,
+   "unit": "P04_Duct_RR",
+   "ex": [
+    [
+     3.1819801926612854,
+     -3.1819801926612854,
+     0.0,
+     0.72
+    ]
+   ]
+  },
+  {
+   "name": "P05_Motor_FL",
+   "name_cn": "1404 外转子无刷电机",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P05_Motor_FL.P05_Motor_FL",
+   "spin": 0,
+   "unit": "P05_Motor_FL",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.8000000000000003,
+     0.64
+    ]
+   ]
+  },
+  {
+   "name": "P05_Motor_FR",
+   "name_cn": "1404 外转子无刷电机",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P05_Motor_FR.P05_Motor_FR",
+   "spin": 0,
+   "unit": "P05_Motor_FR",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.8000000000000003,
+     0.64
+    ]
+   ]
+  },
+  {
+   "name": "P05_Motor_RL",
+   "name_cn": "1404 外转子无刷电机",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P05_Motor_RL.P05_Motor_RL",
+   "spin": 0,
+   "unit": "P05_Motor_RL",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.8000000000000003,
+     0.64
+    ]
+   ]
+  },
+  {
+   "name": "P05_Motor_RR",
+   "name_cn": "1404 外转子无刷电机",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P05_Motor_RR.P05_Motor_RR",
+   "spin": 0,
+   "unit": "P05_Motor_RR",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.8000000000000003,
+     0.64
+    ]
+   ]
+  },
+  {
+   "name": "P06_Prop_FL",
+   "name_cn": "3 寸三叶桨（反桨 CW）",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P06_Prop_FL.P06_Prop_FL",
+   "spin": -1,
+   "unit": "P06_Prop_FL",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     4.800000000000001,
+     0.2
+    ],
+    [
+     -2.121320128440857,
+     2.121320128440857,
+     0.0,
+     0.2
+    ]
+   ]
+  },
+  {
+   "name": "P06_Prop_FR",
+   "name_cn": "3 寸三叶桨（正桨 CCW）",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P06_Prop_FR.P06_Prop_FR",
+   "spin": 1,
+   "unit": "P06_Prop_FR",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     4.800000000000001,
+     0.2
+    ],
+    [
+     2.121320128440857,
+     2.121320128440857,
+     0.0,
+     0.2
+    ]
+   ]
+  },
+  {
+   "name": "P06_Prop_RL",
+   "name_cn": "3 寸三叶桨（正桨 CCW）",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P06_Prop_RL.P06_Prop_RL",
+   "spin": 1,
+   "unit": "P06_Prop_RL",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     4.800000000000001,
+     0.2
+    ],
+    [
+     -2.121320128440857,
+     -2.121320128440857,
+     0.0,
+     0.2
+    ]
+   ]
+  },
+  {
+   "name": "P06_Prop_RR",
+   "name_cn": "3 寸三叶桨（反桨 CW）",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P06_Prop_RR.P06_Prop_RR",
+   "spin": -1,
+   "unit": "P06_Prop_RR",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     4.800000000000001,
+     0.2
+    ],
+    [
+     2.121320128440857,
+     -2.121320128440857,
+     0.0,
+     0.2
+    ]
+   ]
+  },
+  {
+   "name": "P07_ESC",
+   "name_cn": "四合一电调（含电源线、电容、XT30 母头）",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P07_ESC.P07_ESC",
+   "spin": 0,
+   "unit": "P07_ESC",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     1.2000000000000002,
+     0.58
+    ]
+   ]
+  },
+  {
+   "name": "P08_FC",
+   "name_cn": "飞控（含到电调的 8P 排线）",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P08_FC.P08_FC",
+   "spin": 0,
+   "unit": "P08_FC",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     2.8000000000000003,
+     0.52
+    ]
+   ]
+  },
+  {
+   "name": "P09_VTX",
+   "name_cn": "数字图传（含到飞控的 6P 排线）",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P09_VTX.P09_VTX",
+   "spin": 0,
+   "unit": "P09_VTX",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     4.4,
+     0.46
+    ]
+   ]
+  },
+  {
+   "name": "P10_Canopy",
+   "name_cn": "TPU 机身罩",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P10_Canopy.P10_Canopy",
+   "spin": 0,
+   "unit": "P10_Canopy",
+   "ex": [
+    [
+     0.0,
+     -4.0,
+     8.5,
+     0.28
+    ]
+   ]
+  },
+  {
+   "name": "P11_CamMount",
+   "name_cn": "TPU 相机支架",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P11_CamMount.P11_CamMount",
+   "spin": 0,
+   "unit": "P11_CamMount",
+   "ex": [
+    [
+     0.0,
+     2.8000000000000003,
+     0.0,
+     0.42
+    ]
+   ]
+  },
+  {
+   "name": "P12_Camera",
+   "name_cn": "FPV 相机（上仰 15°，含相机线）",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P12_Camera.P12_Camera",
+   "spin": 0,
+   "unit": "P12_Camera",
+   "ex": [
+    [
+     0.0,
+     5.5,
+     0.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "P13_Battery",
+   "name_cn": "4S 650mAh 锂电池",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P13_Battery.P13_Battery",
+   "spin": 0,
+   "unit": "P13_Battery",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     11.200000000000001,
+     0.08
+    ]
+   ]
+  },
+  {
+   "name": "P14_Strap",
+   "name_cn": "电池绑带",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P14_Strap.P14_Strap",
+   "spin": 0,
+   "unit": "P14_Strap",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     16.5,
+     0.0
+    ]
+   ]
+  },
+  {
+   "name": "P15_Antennas",
+   "name_cn": "图传天线 ×2（含同轴线）",
+   "mesh": "/Game/Models/Drone/drone/StaticMeshes/P15_Antennas.P15_Antennas",
+   "spin": 0,
+   "unit": "P15_Antennas",
+   "ex": [
+    [
+     0.0,
+     -5.800000000000001,
+     6.2,
+     0.14
+    ]
+   ]
+  }
+ ]
+}
