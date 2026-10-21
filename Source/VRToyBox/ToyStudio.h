@@ -17,7 +17,8 @@ enum class EToyModelKind : uint8
 	Valve,
 	Drone,
 	Lathe,
-	Multimeter
+	Multimeter,
+	Server
 };
 
 /**
@@ -133,7 +134,15 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	FString MultimeterManifest = TEXT("Models/Multimeter/parts.json");
 
-	/** 模型装配状态下最长边的长度（厘米）。模型清单里写了 length_cm 的以清单为准（万用表 40）。 */
+	/** AI 服务器：Yaw 180，前面板（风扇）朝左手边、后面（电源、网卡）朝右手边，侧面朝着玩家。
+	 *  拆开后 GPU 托盘往左上抽出、主板托盘往右后抽出（避开右手边的触屏）。展示尺寸 55cm（写在它的 parts.json 里）。 */
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<USceneComponent> ServerMount;
+
+	UPROPERTY(EditAnywhere, Category = "ToyBox")
+	FString ServerManifest = TEXT("Models/AIServer/parts.json");
+
+	/** 模型装配状态下最长边的长度（厘米）。模型清单里写了 length_cm 的以清单为准（万用表 40、AI 服务器 55）。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float ModelLengthCm = 50.f;
 

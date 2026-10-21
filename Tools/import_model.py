@@ -3,7 +3,7 @@
 在编辑器里跑（命令行由 scripts/import_motor.bat、scripts/import_valve.bat 调用）：
     UnrealEditor-Cmd.exe VRToyBox.uproject -run=pythonscript -script=...
 环境变量：
-    MODEL_NAME           模型名，决定资产目录 /Game/Models/<名字> 和下面 MODELS 里的配置（Motor / Valve / Drone / Lathe / Multimeter）
+    MODEL_NAME           模型名，决定资产目录 /Game/Models/<名字> 和下面 MODELS 里的配置（Motor / Valve / Drone / Lathe / Multimeter / AIServer）
     MODEL_GLB            glb 路径（电机兼容旧的 MOTOR_GLB）
     MODEL_MANIFEST_ONLY  =1 时不重新导入资产，只重写 parts.json（兼容旧的 MOTOR_MANIFEST_ONLY）
 
@@ -133,6 +133,24 @@ MODELS = {
         length_cm=40.0,
         # 屏幕在模型 -Y（Blender +Y），表笔：红的在右（+X）
         check={'P07_LCD': (0, -1, 1), 'P31_ProbeRed': (1, 0, 0), 'P32_ProbeBlack': (-1, 0, 0)},
+    ),
+    'AIServer': dict(
+        info=dict(
+            title='AI 训练服务器 · 8U 八卡 HGX H100 平台（按公开图片原创简化）',
+            body='8 × H100 SXM5 · 4 × NVSwitch · 双路 56 核 CPU · 2 TB DDR5 · 8 × 400G 网卡 · 6 × 3000 W 电源（满载约 10 kW）\n'
+                 '装配状态：抓任意位置拿起整台机器看。点 EXPLODE 拆开：GPU 托盘往左上抽出、主板托盘往右抽出，每个零件都能单独抓。',
+        ),
+        named={},
+        units={
+            'base': dict(name_cn='机箱', material='镀锌钢板冲压 · 8U（355.6 mm 高）· 19 英寸机架挂耳',
+                         desc='整台服务器的骨架：前面是风扇墙和硬盘笼，后面上方是电源插槽和出风网孔，两侧有托盘导轨。'
+                              '拆机时它不动，其他零件都从它上面拿走。'),
+        },
+        rotor=None,
+        # 实物 8U 机箱深约 85cm，桌上展示 55cm（约 0.6 倍）；拆开后左右各伸出约 60~70cm，在桌子长边范围内
+        length_cm=55.0,
+        # 模型 +Y 是前面板（Blender 的 -Y）：风扇在前上方，电源在后上方，硬盘在前下方靠 -X
+        check={'P03_GpuFan_1': (0, 1, 1), 'P07_PSU_1': (0, -1, 1), 'P05_Drive_1': (-1, 1, 0)},
     ),
 }
 CONFIG = MODELS.get(MODEL, dict(info=dict(title=MODEL, body=''), named={}, units={}, rotor=None, check={}))

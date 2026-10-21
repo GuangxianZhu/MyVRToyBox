@@ -35,7 +35,7 @@ namespace
 	const FLinearColor LegColor(0.1f, 0.1f, 0.1f);
 	const FLinearColor ShelfColor(0.3f, 0.2f, 0.12f);
 
-	// 调试命令 toy.Screen <按钮名>：和戳触屏上那个按钮一样（Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Explode / Reset /
+	// 调试命令 toy.Screen <按钮名>：和戳触屏上那个按钮一样（Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Server / Explode / Reset /
 	// MoveNear / MoveFar / MoveLeft / MoveRight），可以在 -ExecCmds 里连着写，不用鼠标点
 	void ScreenCommand(const TArray<FString>& Args, UWorld* World)
 	{
@@ -44,6 +44,7 @@ namespace
 			{ TEXT("motor"), EToyScreenAction::ToggleMotor }, { TEXT("valve"), EToyScreenAction::ToggleValve },
 			{ TEXT("drone"), EToyScreenAction::ToggleDrone }, { TEXT("lathe"), EToyScreenAction::ToggleLathe },
 			{ TEXT("meter"), EToyScreenAction::ToggleMultimeter }, { TEXT("multimeter"), EToyScreenAction::ToggleMultimeter },
+			{ TEXT("server"), EToyScreenAction::ToggleServer }, { TEXT("aiserver"), EToyScreenAction::ToggleServer },
 			{ TEXT("explode"), EToyScreenAction::ToggleExplode }, { TEXT("reset"), EToyScreenAction::ResetParts },
 			{ TEXT("movenear"), EToyScreenAction::MoveNear }, { TEXT("movefar"), EToyScreenAction::MoveFar },
 			{ TEXT("moveleft"), EToyScreenAction::MoveLeft }, { TEXT("moveright"), EToyScreenAction::MoveRight },
@@ -171,6 +172,13 @@ AToyStudio::AToyStudio()
 	MultimeterMount->SetupAttachment(ModelAnchor);
 	MultimeterMount->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
 
+	// AI 服务器：同一个位置。模型 +Y 是前面板（Blender 里的 -Y：风扇、硬盘），+X 是 Blender 的 +X。
+	// Yaw 180 让前面板朝左手边、后面（电源、网卡口）朝右手边、Blender +X 那个侧面朝着玩家。
+	// 爆炸时 GPU 托盘往左上方抽出，主板托盘往右抽出后再往远处让 13cm，不碰右手边的触屏
+	ServerMount = CreateDefaultSubobject<USceneComponent>(TEXT("ServerMount"));
+	ServerMount->SetupAttachment(ModelAnchor);
+	ServerMount->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
+
 	// 触屏：桌面右手边靠前，转过来正对玩家站立点
 	const FVector ScreenLocation(TableX - 20.f, 60.f, TableHeight);
 	ScreenMount = CreateDefaultSubobject<USceneComponent>(TEXT("ScreenMount"));
@@ -251,6 +259,7 @@ FString AToyStudio::KindName(EToyModelKind Kind)
 	case EToyModelKind::Valve: return TEXT("VALVE");
 	case EToyModelKind::Lathe: return TEXT("LATHE");
 	case EToyModelKind::Multimeter: return TEXT("METER");
+	case EToyModelKind::Server:     return TEXT("SERVER");
 	default:                   return TEXT("DRONE");
 	}
 }
@@ -266,6 +275,7 @@ void AToyStudio::HandleScreenAction(EToyScreenAction Action)
 	case EToyScreenAction::ToggleDrone:   ToggleModel(EToyModelKind::Drone); break;
 	case EToyScreenAction::ToggleLathe:   ToggleModel(EToyModelKind::Lathe); break;
 	case EToyScreenAction::ToggleMultimeter: ToggleModel(EToyModelKind::Multimeter); break;
+	case EToyScreenAction::ToggleServer:  ToggleModel(EToyModelKind::Server); break;
 	case EToyScreenAction::ToggleExplode: ToggleModelExploded(); break;
 	case EToyScreenAction::ResetParts:    ResetModel(); break;
 	case EToyScreenAction::MoveNear:      MoveModel(FVector(-MoveStepCm, 0.f, 0.f)); break;
@@ -318,6 +328,7 @@ bool AToyStudio::ToggleModel(EToyModelKind Kind)
 	case EToyModelKind::Valve: Mount = ValveMount; Manifest = &ValveManifest; break;
 	case EToyModelKind::Lathe: Mount = LatheMount; Manifest = &LatheManifest; break;
 	case EToyModelKind::Multimeter: Mount = MultimeterMount; Manifest = &MultimeterManifest; break;
+	case EToyModelKind::Server: Mount = ServerMount; Manifest = &ServerManifest; break;
 	default: break;
 	}
 	FActorSpawnParameters Params;
