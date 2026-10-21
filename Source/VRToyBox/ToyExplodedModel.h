@@ -71,7 +71,7 @@ public:
 
 	/** 装配状态下最长边缩放到这么长（厘米）。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
-	float TargetLengthCm = 50.f;
+	float TargetLengthCm = 50.f;  // 清单里 model.length_cm 有值时以清单为准
 
 	/** 从完全装配到完全爆炸用的秒数。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")

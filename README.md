@@ -6,11 +6,11 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 - 桌上一个支架触屏，用食指戳 **SPAWN CUBE**，桌上就掉下一个随机颜色的 10cm 方块；**CLEAR ALL** 清空；
 - 方块可以用拇指和食指捏起来（扣扳机）、换手、扔出去；捏起时保持捏住那一刻的位置和角度，捏合点有一个半透明小球表示范围。
 - 左摇杆平滑移动，右摇杆左右快速转身，右摇杆往前推瞄准传送（抛物线 + 落点圈）。
-- 触屏上能摆出四个爆炸图模型（一次一个，换模型时先收起原来的）：**三相电机**（ITBasics 里的 YE4-132M-4）、**气动球阀**（three.js 写的三片式球阀 + 齿轮齿条气动执行器）、**涵道无人机**（ITBasics 里的 3 寸涵道穿越机）和**迷你车床**（ITBasics 里照产品图建的 8 合 1 小车床），都缩放到最长边约 0.5 米。**SHOW/HIDE MOTOR / VALVE / DRONE / LATHE** 摆出 / 收起，**EXPLODE/ASSEMBLE** 让桌上的模型在爆炸图和原始装配之间切换，零件按真实拆装顺序先后飞出。
-- **挪模型**：触屏最下面一排 **<< LEFT / MOVE NEAR / MOVE FAR / >> RIGHT**，每按一下把桌上的模型整体挪 10cm（离站立点 55~95cm、左右 -40~+20cm，不会挪出桌面或撞上触屏），状态栏显示现在离你多远。四个模型共用这个位置，换模型也不会弹回去。默认放在 70cm（以前是 90cm，站着伸手够不着）。
+- 触屏上能摆出五个爆炸图模型（一次一个，换模型时先收起原来的）：**三相电机**（ITBasics 里的 YE4-132M-4）、**气动球阀**（three.js 写的三片式球阀 + 齿轮齿条气动执行器）、**涵道无人机**（ITBasics 里的 3 寸涵道穿越机）、**迷你车床**（ITBasics 里照产品图建的 8 合 1 小车床）和**数字万用表**（外观参考 SATA DO5054 的原理爆炸图），前四个缩放到最长边约 0.5 米，万用表 0.4 米。**SHOW/HIDE MOTOR / VALVE / DRONE / LATHE / METER** 摆出 / 收起，**EXPLODE/ASSEMBLE** 让桌上的模型在爆炸图和原始装配之间切换，零件按真实拆装顺序先后飞出。
+- **挪模型**：触屏最下面一排 **<< LEFT / MOVE NEAR / MOVE FAR / >> RIGHT**，每按一下把桌上的模型整体挪 10cm（离站立点 55~95cm、左右 -40~+20cm，不会挪出桌面或撞上触屏），状态栏显示现在离你多远。所有模型共用这个位置，换模型也不会弹回去。默认放在 70cm（以前是 90cm，站着伸手够不着）。
 - **零件抓取查看**：装配状态下抓电机任意位置 = 拿起整台电机；爆炸后每个零件（转子总成、端盖、风扇、螺钉……共 27 个抓取单元）都能单独抓起来看，手边浮出中文信息牌（名字、材料、作用）。松手零件自己飞回原位，拿着靠近原位 5cm 会出现半透明虚影、松手吸回去；触屏 **RESET PARTS** 一键全部复位。
 
-房间、桌子、触屏、方块都是 C++ 用引擎自带的基础形状拼出来的（默认关卡 `L_Studio` 只是放了一个工作室的壳），每一处改动都能在 PR 里看 diff。二进制资产只有：电机、阀门、无人机、车床模型（`Content/Models/Motor`、`Valve`、`Drone`、`Lathe`）和虚影 / 高亮用的半透明材质（`Content/Materials/M_ToyGhost`），由脚本生成，见下面「电机模型从哪来」「阀门模型从哪来」「无人机模型从哪来」「车床模型从哪来」；手模型（`Content/XRMannequins`），是从 UE 自带的 VR 模板拷来的，见「手的模型」。
+房间、桌子、触屏、方块都是 C++ 用引擎自带的基础形状拼出来的（默认关卡 `L_Studio` 只是放了一个工作室的壳），每一处改动都能在 PR 里看 diff。二进制资产只有：电机、阀门、无人机、车床、万用表模型（`Content/Models/Motor`、`Valve`、`Drone`、`Lathe`、`Multimeter`）和虚影 / 高亮用的半透明材质（`Content/Materials/M_ToyGhost`），由脚本生成，见下面「电机模型从哪来」「阀门模型从哪来」「无人机模型从哪来」「车床模型从哪来」「万用表模型从哪来」；手模型（`Content/XRMannequins`），是从 UE 自带的 VR 模板拷来的，见「手的模型」。
 
 ## 怎么跑（Windows）
 
@@ -25,6 +25,7 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 | `导入阀门模型.bat` | 球阀模型改了才需要：从打包好的 html 导出 glb 并导入（见下文） |
 | `导入无人机模型.bat` | 无人机模型改了才需要：ITBasics 里用 Blender 重新生成并导入（见下文） |
 | `导入车床模型.bat` | 车床模型改了才需要：ITBasics 里用 Blender 重新生成并导入（见下文） |
+| `导入万用表模型.bat` | 万用表模型改了才需要：ITBasics 里用 Blender 重新生成并导入（见下文） |
 
 - 引擎不在 `C:\Program Files\Epic Games\UE_5.8` 的话，先设置环境变量 `UE_ROOT` 指向引擎根目录（脚本也会读 Epic 启动器写的注册表）。
 - 更新脚本只在「当前在 main、没有未提交改动、本地没有 main 上没有的提交」时才 `git pull --ff-only`，其他情况只提示不动手，避免把你的改动搞乱。
@@ -52,7 +53,7 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 | --- | --- | --- |
 | ![](docs/screenshots/move_back.jpg) | ![](docs/screenshots/teleport_valid.jpg) | ![](docs/screenshots/teleport_invalid.jpg) |
 
-控制台输入 `toy.Screen <按钮>` 等于戳触屏上那个按钮，可以连着写：`toy.Screen Lathe MoveNear MoveNear Explode`（按钮名：Spawn / Clear / Motor / Valve / Drone / Lathe / Explode / Reset / MoveNear / MoveFar / MoveLeft / MoveRight），命令行里用 `-ExecCmds=` 也行。`toy.ShowGrabPoints 1` 可以在游戏里看到手和方块的抓点箭头（之后生成的方块生效）。`toy.PalmSnap 1` 切回旧的"手掌贴合"抓法（见「零件抓取」）。`toy.HandPreview 1 / 2 / 3` 在桌面模式下把左手侧着摆到镜头前（张开 / 握拳 / 来回握），用来检查手模型。
+控制台输入 `toy.Screen <按钮>` 等于戳触屏上那个按钮，可以连着写：`toy.Screen Lathe MoveNear MoveNear Explode`（按钮名：Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Explode / Reset / MoveNear / MoveFar / MoveLeft / MoveRight），命令行里用 `-ExecCmds=` 也行。`toy.ShowGrabPoints 1` 可以在游戏里看到手和方块的抓点箭头（之后生成的方块生效）。`toy.PalmSnap 1` 切回旧的"手掌贴合"抓法（见「零件抓取」）。`toy.HandPreview 1 / 2 / 3` 在桌面模式下把左手侧着摆到镜头前（张开 / 握拳 / 来回握），用来检查手模型。
 
 ## 手的模型
 
@@ -164,6 +165,25 @@ ITBasics/迷你车床爆炸图/build_lathe.py ──Blender──▶ lathe.glb �
 - **桌上的位置**：同一个位置，Yaw 90：床身沿桌子长边，正面（电机、手轮把手、刻度手轮）朝着玩家，主轴箱在右手边，皮带罩往右飞。
 - **抓取单元**：通用规则得出 30 个单元，底板与床身是基座，29 个能抓。主轴和主轴箱路线相同合成一个单元，电机和电源线合成一个单元（`MODELS['Lathe']` 里给这三个单元写了名字和说明）。抓法：捏 21、圆柱 2、方块 3、贴表面 3。手写覆盖（`Tools/grab_overrides/Lathe.json`）5 条：三个手轮捏轮缘最高处（不捏轮毂中心）、电机握机壳外圆（电源线把包围盒拉长到 37cm）、丝杠写成沿 X 的细圆柱。
 
+## 万用表模型从哪来
+
+| 装配 | 爆炸（中间主板和元件、左边屏幕叠层、右边面壳和按键） |
+| --- | --- |
+| ![](docs/screenshots/multimeter_assembled.jpg) | ![](docs/screenshots/multimeter_exploded.jpg) |
+| **拿起 PTC 热敏电阻（错档防烧）** | **拿起主控芯片** |
+| ![](docs/screenshots/multimeter_hold_ptc.jpg) | ![](docs/screenshots/multimeter_hold_soc.jpg) |
+
+```
+ITBasics/万用表爆炸图/build_multimeter.py ──Blender──▶ multimeter.glb ──Tools/import_model.py（MODEL_NAME=Multimeter）──▶ Content/Models/Multimeter/*.uasset + parts.json
+```
+
+- **模型**：口袋式自动量程数字万用表，外观照 SATA 世达 DO5054 智能款的产品图（白底大屏读数 226.7 V、黄色电源键 + SEL / HOLD / NCV 三个灰键、橙色功能图标框、A / COM / V 三个插孔、红黑表笔）。内部按这类表的常见结构补的，是"原理爆炸图"：每个零件的信息牌讲它在电路里干什么。32 种零件 38 个实例：底壳 + 电池弹片、橡胶护套、面壳（面板印刷是真几何体）+ 4 颗螺丝、硅胶导电按键、LCD + 2 根斑马条 + 背光导光板 + LCD 支架、主板（浅绿走线按信号走向画）、主控 SoC、自动量程模拟开关、EEPROM、晶振、基准电压源、电源 MOS + 稳压、4 个精密分压电阻、PTC、压敏电阻、4A 陶瓷保险丝、锰铜分流器、蜂鸣器、V / COM / A 三个插孔、2 颗背光 LED、NCV 感应线圈、NCV 指示灯、2 节 AAA 电池、红黑表笔（含线和插头）。尺寸估算和原理速记见 ITBasics 的 `万用表爆炸图/README.md`。
+- **展示尺寸 40cm**（其他模型 50cm）：`MODELS['Multimeter']` 里写 `length_cm=40`，导入时写进 `parts.json` 的 `model.length_cm`，`AToyExplodedModel::LoadManifest` 读到就用它代替工作室的 `ModelLengthCm`。实物（含表笔）约 15 × 12.5 × 6.8 cm，放大 2.67 倍。
+- **拆机顺序**：拔表笔 → 剥护套 → 拧面壳螺丝 → 掀面壳 → 拿按键 → 拆屏幕叠层（液晶屏 → 斑马条 → 导光板 → 支架）→ 拔保险丝 → 抬主板，元件一个接一个浮到各自焊盘正上方 → 取电池。底壳和电池弹片是基座。
+- **爆炸后的摆法**：表面朝上平放，人从前上方往下看，单纯往上摞会挡住主板，所以分三列：中间主板和元件，左边屏幕叠层（电池在它前面），右边面壳（正面朝上）和螺丝、按键在面壳前下方；护套往上往后，表笔往前挪。爆炸后最高的护套在桌面上方约 40cm。
+- **桌上的位置**：同一个位置，Yaw 90：屏幕那头朝远处、插孔和表笔插头朝着玩家，红表笔在右手边。
+- **抓取单元**：主板上的元件路线本来都一样（会被合成一个单元），Blender 脚本给每个元件的出场时刻错开 0.008，所以每个元件都能单独抓、单独看信息牌。通用规则得出 37 个单元，底壳与电池弹片是基座，36 个能抓：捏 22、圆柱 4、方块 3、贴表面 7。手写覆盖（`Tools/grab_overrides/Multimeter.json`）2 条：红黑表笔写成握笔杆（线和插头把包围盒撑大了）。
+
 ## 原理
 
 ### 先猜一下
@@ -237,7 +257,7 @@ ITBasics/迷你车床爆炸图/build_lathe.py ──Blender──▶ lathe.glb �
 | 4 | `box` 实心盒的面 | 从包围盒中心沿 X/Y/Z 打穿透射线，碰到的第一层和最后一层三角形围成"实心盒" | 和方块的 6 个抓点同一套规则 |
 | 5 | `surface` 贴实物表面（兜底） | 空心件、成对件、环形件、中间有孔的 | 从指尖往掌心方向按三角形打这个单元自己的网格，手掌贴在命中点上 |
 
-覆盖文件每条都要写 `why`：无人机电机、螺旋桨（捏桨毂）、电池绑带和天线（捏最高点）、电机吊环螺钉（捏吊环顶上）、球阀齿轮轴、执行器端盖、位置指示器（捏顶上）、车床的三个手轮（捏轮缘）、电机、丝杠。`point` / `center` 可以写坐标，也可以写 `"top"`（最高的顶点）或 `"node"`（零件节点原点）。
+覆盖文件每条都要写 `why`：无人机电机、螺旋桨（捏桨毂）、电池绑带和天线（捏最高点）、电机吊环螺钉（捏吊环顶上）、球阀齿轮轴、执行器端盖、位置指示器（捏顶上）、车床的三个手轮（捏轮缘）、电机、丝杠，万用表的两支表笔（握笔杆）。`point` / `center` 可以写坐标，也可以写 `"top"`（最高的顶点）或 `"node"`（零件节点原点）。
 
 | 模型 | 可抓单元 | 抓法统计 |
 | --- | --- | --- |
@@ -245,8 +265,9 @@ ITBasics/迷你车床爆炸图/build_lathe.py ──Blender──▶ lathe.glb �
 | 球阀 | 63 | 捏 36、圆柱 20、方块 2、贴表面 5（手写 3） |
 | 无人机 | 25 | 捏 10、圆柱 8、方块 3、贴表面 4（手写 10） |
 | 车床 | 29 | 捏 21、圆柱 2、方块 3、贴表面 3（手写 5） |
+| 万用表 | 36 | 捏 22、圆柱 4、方块 3、贴表面 7（手写 2） |
 
-**抓取体检 `toy.GrabAudit`。** 控制台输入 `toy.GrabAudit`（或 `Motor` / `Valve` / `Drone` / `Lathe`，加 `quit` 跑完退出），会依次摆出模型（先拍一张装配全景 `00_assembled.png`）、爆炸（再拍一张 `00_exploded.png`），用右手按桌面模式的方式（捏合点放在零件上离镜头最近的表面点、扣扳机）把每个单元捏一遍，捏住后手往上提、镜头给一个特写，截图到 `Saved/GrabAudit/<模型>/<序号>_<单元>.png`，并写 `Saved/GrabAudit/summary.csv`。四个模型 144 个单元约 5 分钟跑完（只跑车床约 1 分钟）。命令行批量跑：
+**抓取体检 `toy.GrabAudit`。** 控制台输入 `toy.GrabAudit`（或 `Motor` / `Valve` / `Drone` / `Lathe` / `Multimeter`，加 `quit` 跑完退出），会依次摆出模型（先拍一张装配全景 `00_assembled.png`）、爆炸（再拍一张 `00_exploded.png`），用右手按桌面模式的方式（捏合点放在零件上离镜头最近的表面点、扣扳机）把每个单元捏一遍，捏住后手往上提、镜头给一个特写，截图到 `Saved/GrabAudit/<模型>/<序号>_<单元>.png`，并写 `Saved/GrabAudit/summary.csv`。五个模型 180 个单元约 6 分钟跑完（只跑车床或万用表约 1 分钟）。命令行批量跑：
 
 ```
 UnrealEditor.exe VRToyBox.uproject -game -windowed -ResX=1280 -ResY=720 "-ExecCmds=toy.GrabAudit All quit"
@@ -266,7 +287,7 @@ UnrealEditor.exe VRToyBox.uproject -game -windowed -ResX=1280 -ResY=720 "-ExecCm
 
 ![触屏](docs/screenshots/touchscreen.jpg)
 
-四排按钮：方块（生成 / 清空）；四个模型（SHOW / HIDE，一次只摆一个）；爆炸 / 复位；挪模型（左 / 近 / 远 / 右）。常用的宽按钮 14cm，一排四个的窄按钮 7cm（指尖约 1.5cm 宽，7cm 在 VR 里也好戳）。按钮面的颜色压暗到 45%，灯就在桌子正上方，原来的颜色在画面里发白，白字看不清。
+四排按钮：方块（生成 / 清空）；五个模型（SHOW / HIDE，一次只摆一个）；爆炸 / 复位；挪模型（左 / 近 / 远 / 右）。常用的宽按钮 14cm，一排四个的窄按钮 7cm（指尖约 1.5cm 宽，7cm 在 VR 里也好戳），一排五个的模型按钮 5.8cm。按钮面的颜色压暗到 45%，灯就在桌子正上方，原来的颜色在画面里发白，白字看不清。
 
 
 每个按钮前面有一个看不见的触发盒（`AToyTouchScreen::MakeButton`）。手每帧在食指指尖做一次小球重叠查询，**刚进入**触发盒的那一帧算一次点击，再加 0.35 秒冷却，防止手指抖一下触发两次。按钮按下时变白、往里缩 0.5cm，控制器震一下。
@@ -292,6 +313,7 @@ OpenXR 只会给"项目里用到的按键"向运行时申请绑定，所以 `Con
 - ✅ **手柄输入（VR，用户实测）**：旧式轴映射在 UE 5.8 + Quest 3 上生效，握把 / 扳机都能读到。⚠️ 新加的左摇杆、右摇杆 Y 是同一套机制，应该也行，还没在头显上测。
 - ✅ **无人机（桌面模式）**：SHOW DRONE 摆出（机头朝玩家）、EXPLODE / ASSEMBLE、抓桨 / 电机 / 电池 / 相机 / 涵道都能抓、信息牌中文、松手飞回；`导入无人机模型.bat` 从头跑通。
 - ✅ **车床（桌面模式）**：`toy.GrabAudit Lathe` 摆出车床（正面朝玩家）、爆炸、29 个单元全部捏到，信息牌中文。⚠️ 新触屏布局（四个模型一排、挪模型一排）和挪动按钮只在桌面模式用 `toy.Screen` 测过（挪到 55cm、左右撞到边界停住、换模型保持位置，体检 144 个单元全部捏到），还没在头显里戳过；尺寸是按产品图估的，和实物可能差 10% 左右。
+- ✅ **万用表（桌面模式）**：`toy.GrabAudit Multimeter` 摆出万用表（插孔朝玩家）、爆炸、36 个单元全部捏到，信息牌中文。⚠️ 第二排五个模型按钮（5.8cm 宽）只在桌面模式看过，还没在头显里戳过；外形尺寸按产品图估，内部结构是按同类表补的示意。
 - ✅ **球阀（桌面模式）**：SHOW VALVE 摆出球阀（执行器缸体沿桌子长边）、EXPLODE / ASSEMBLE、左键捏起执行器缸体并显示中文信息牌、松手飞回；`toy.GrabAudit Valve` 63 个单元全部捏到。
 - ✅ **扳机捏取（桌面模式）**：左键 = 扳机，零件、整机、方块都能捏起；进入 / 离开捏合范围有日志（`右手捏合范围内：…`）。⚠️ 范围小球在桌面模式的镜头里被手背挡住，看不到颜色变化，要在 VR 里确认大小、颜色是否合适。
 - ✅ **移动的小修**：平滑移动 / 传送检查忽略手里拿着的东西；一开始就卡在东西里时只允许往外走；落点无效时红圈贴到正下方的地上（找不到地就不显示）。
@@ -324,7 +346,7 @@ OpenXR 只会给"项目里用到的按键"向运行时申请绑定，所以 `Con
 | 文件 | 内容 |
 | --- | --- |
 | `ToyBoxGameMode` | 没有工作室就生成一个，玩家站在它的原点 |
-| `ToyStudio` | 房间、桌子、灯；生成/清空方块；摆出 / 换 / 收起电机、球阀、无人机或车床 |
+| `ToyStudio` | 房间、桌子、灯；生成/清空方块；摆出 / 换 / 收起电机、球阀、无人机、车床或万用表 |
 | `ToyTouchScreen` | 支架触屏和按钮（布局在构造函数里：四排，宽 / 窄两种按钮） |
 | `ToyCube` | 可抓方块和 6 个抓点，抓点对齐的数学 |
 | `ToyExplodedModel` | 读 parts.json、生成抓取单元，原始 / 爆炸切换动画，整机抓取，虚影 / 高亮 / 复位 |
@@ -332,7 +354,7 @@ OpenXR 只会给"项目里用到的按键"向运行时申请绑定，所以 `Con
 | `ToyGrabAudit` | 调试命令 `toy.GrabAudit`：自动把每个单元抓一遍、截图、写 summary.csv |
 | `Tools/grab_overrides/*.json` | 各模型手写的抓法覆盖，每条带 `why` |
 | `ToyGrabbable` | 可抓物体的接口（方块、零件、整机都实现它） |
-| `Tools/import_model.py` | glb → UE 资产 + parts.json（含抓取单元和抓点），电机、球阀、无人机、车床共用，`MODELS` 里是各模型的配置 |
+| `Tools/import_model.py` | glb → UE 资产 + parts.json（含抓取单元和抓点），电机、球阀、无人机、车床、万用表共用，`MODELS` 里是各模型的配置 |
 | `Tools/export_ball_valve_glb.mjs` | 把打包好的球阀 html 导出成 glb |
 | `Tools/create_toy_materials.py` | 建虚影 / 高亮用的半透明材质 `M_ToyGhost` |
 | `Tools/disable_nanite.py` | 关掉 `/Game/Models` 下所有网格的 Nanite（`import_model.py` 导入后自动调用） |

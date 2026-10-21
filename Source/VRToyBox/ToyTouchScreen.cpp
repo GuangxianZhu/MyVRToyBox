@@ -14,15 +14,19 @@ namespace
 	const FLinearColor DisplayColor(0.02f, 0.05f, 0.12f);
 	// 按钮面的中心在屏幕坐标 X = FaceX 处，按下时往里缩 0.5cm
 	constexpr float FaceX = 1.8f;
-	// 屏幕 32 × 22 cm。宽按钮两个一排，窄按钮四个一排（指尖大约 1.5cm 宽，7cm 的按钮在 VR 里也好戳）
+	// 屏幕 32 × 22 cm。宽按钮两个一排，窄按钮四个一排（指尖大约 1.5cm 宽，7cm 的按钮在 VR 里也好戳），
+	// 模型按钮五个一排（5.8cm 宽，比窄按钮略窄，字也小一号）
 	constexpr float WideWidth = 14.f;
 	constexpr float NarrowWidth = 7.f;
+	constexpr float ModelWidth = 5.8f;
+	constexpr float ModelText = 1.0f;
 	constexpr float LineOffset = 0.8f;    // 按钮上两行字离按钮中心的高度
 	constexpr float WideText = 1.5f;
 	constexpr float NarrowText = 1.15f;
 	// 窄按钮的四列、宽按钮的两列（屏幕坐标 Y，站在屏幕前看 +Y 在左手边）
 	constexpr float Col4[4] = { 11.4f, 3.8f, -3.8f, -11.4f };
 	constexpr float Col2[2] = { 7.6f, -7.6f };
+	constexpr float Col5[5] = { 12.4f, 6.2f, 0.f, -6.2f, -12.4f };
 	// 四排按钮的高度（标题在 9、状态栏在 -9.8）
 	constexpr float Row[4] = { 5.5f, 1.6f, -2.3f, -6.2f };
 }
@@ -51,14 +55,15 @@ AToyTouchScreen::AToyTouchScreen()
 	MakeText(TEXT("Title"), FVector(1.5f, 0.f, 9.f), TEXT("TOY BOX"), 2.f, FColor::White);
 	Status = MakeText(TEXT("Status"), FVector(1.5f, 0.f, -9.8f), TEXT(""), 1.0f, FColor(150, 200, 255));
 
-	// 第一排：方块（宽）。第二排：四个模型（窄）。第三排：爆炸 / 复位（宽）。
+	// 第一排：方块（宽）。第二排：五个模型。第三排：爆炸 / 复位（宽）。
 	// 第四排：挪模型（窄，灰蓝色），左 / 拉近 / 推远 / 右
 	MakeButton(TEXT("Spawn"), EToyScreenAction::SpawnCube, Col2[0], Row[0], TEXT("SPAWN"), TEXT("CUBE"), FLinearColor(0.1f, 0.7f, 0.25f), WideWidth, WideText);
 	MakeButton(TEXT("Clear"), EToyScreenAction::ClearCubes, Col2[1], Row[0], TEXT("CLEAR"), TEXT("CUBES"), FLinearColor(0.8f, 0.15f, 0.12f), WideWidth, WideText);
-	MakeButton(TEXT("Motor"), EToyScreenAction::ToggleMotor, Col4[0], Row[1], TEXT("SHOW"), TEXT("MOTOR"), FLinearColor(0.15f, 0.35f, 0.85f), NarrowWidth, NarrowText);
-	MakeButton(TEXT("Valve"), EToyScreenAction::ToggleValve, Col4[1], Row[1], TEXT("SHOW"), TEXT("VALVE"), FLinearColor(0.1f, 0.55f, 0.6f), NarrowWidth, NarrowText);
-	MakeButton(TEXT("Drone"), EToyScreenAction::ToggleDrone, Col4[2], Row[1], TEXT("SHOW"), TEXT("DRONE"), FLinearColor(0.45f, 0.3f, 0.75f), NarrowWidth, NarrowText);
-	MakeButton(TEXT("Lathe"), EToyScreenAction::ToggleLathe, Col4[3], Row[1], TEXT("SHOW"), TEXT("LATHE"), FLinearColor(0.7f, 0.25f, 0.45f), NarrowWidth, NarrowText);
+	MakeButton(TEXT("Motor"), EToyScreenAction::ToggleMotor, Col5[0], Row[1], TEXT("SHOW"), TEXT("MOTOR"), FLinearColor(0.15f, 0.35f, 0.85f), ModelWidth, ModelText);
+	MakeButton(TEXT("Valve"), EToyScreenAction::ToggleValve, Col5[1], Row[1], TEXT("SHOW"), TEXT("VALVE"), FLinearColor(0.1f, 0.55f, 0.6f), ModelWidth, ModelText);
+	MakeButton(TEXT("Drone"), EToyScreenAction::ToggleDrone, Col5[2], Row[1], TEXT("SHOW"), TEXT("DRONE"), FLinearColor(0.45f, 0.3f, 0.75f), ModelWidth, ModelText);
+	MakeButton(TEXT("Lathe"), EToyScreenAction::ToggleLathe, Col5[3], Row[1], TEXT("SHOW"), TEXT("LATHE"), FLinearColor(0.7f, 0.25f, 0.45f), ModelWidth, ModelText);
+	MakeButton(TEXT("Meter"), EToyScreenAction::ToggleMultimeter, Col5[4], Row[1], TEXT("SHOW"), TEXT("METER"), FLinearColor(0.85f, 0.65f, 0.05f), ModelWidth, ModelText);
 	MakeButton(TEXT("Explode"), EToyScreenAction::ToggleExplode, Col2[0], Row[2], TEXT("EXPLODE"), TEXT("VIEW"), FLinearColor(0.85f, 0.5f, 0.05f), WideWidth, WideText);
 	MakeButton(TEXT("Reset"), EToyScreenAction::ResetParts, Col2[1], Row[2], TEXT("RESET"), TEXT("PARTS"), FLinearColor(0.45f, 0.45f, 0.5f), WideWidth, WideText);
 	const FLinearColor MoveColor(0.2f, 0.32f, 0.45f);
@@ -172,6 +177,10 @@ void AToyTouchScreen::RefreshStatus()
 	if (FToyScreenButton* LatheButton = FindButton(EToyScreenAction::ToggleLathe))
 	{
 		LatheButton->Line1->SetText(FText::FromString(StudioActor->IsModelShown(EToyModelKind::Lathe) ? TEXT("HIDE") : TEXT("SHOW")));
+	}
+	if (FToyScreenButton* MeterButton = FindButton(EToyScreenAction::ToggleMultimeter))
+	{
+		MeterButton->Line1->SetText(FText::FromString(StudioActor->IsModelShown(EToyModelKind::Multimeter) ? TEXT("HIDE") : TEXT("SHOW")));
 	}
 	if (FToyScreenButton* ExplodeButton = FindButton(EToyScreenAction::ToggleExplode))
 	{

@@ -1,0 +1,1157 @@
+{
+ "source": "multimeter.glb",
+ "model": {
+  "title": "数字万用表 · 原理爆炸图（外观参考 SATA 世达 DO5054）",
+  "body": "自动识别 · 零火线判断 · NCV 非接触测电 · 错档防烧 · 背光 LCD · 2 节 AAA\n装配状态：抓任意位置拿起整台表看。点 EXPLODE 拆开后每个零件都能单独抓，信息牌讲它在电路里干什么。",
+  "explode_scale": 1.0,
+  "length_cm": 40.0
+ },
+ "units": [
+  {
+   "id": "base",
+   "grabbable": false,
+   "name_cn": "底壳与电池弹片",
+   "material": "黑色 ABS 注塑 + 镀镍弹簧钢片",
+   "desc": "底壳、电池弹簧和引线。拆表时它不动，其他零件都从它上面拿走。两节 AAA 电池在这里串联成 3 V，经红黑引线送到主板。",
+   "grab": null
+  },
+  {
+   "id": "P03_Holster",
+   "grabbable": true,
+   "name_cn": "橡胶护套",
+   "material": "TPE 软胶 · 侧面防滑凸棱",
+   "desc": "包住整台表：摔到地上先撞的是软胶，不是外壳和屏幕。正面唇边比屏幕高 3 mm，表面朝下放也刮不到屏幕；它还盖住了四颗面壳螺丝。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P04_FrontShell",
+   "grabbable": true,
+   "name_cn": "面壳（含面板印刷）",
+   "material": "PC+ABS 注塑 · 丝印",
+   "desc": "屏幕窗口、4 个按键孔、3 个表笔插孔都开在这里。橙色图标框是能测的项目：交直流电压 V、通断蜂鸣、电阻 Ω、电流 A、频率 Hz、LIVE 火线判断、NCV 非接触测电。\"600V CAT III\" 是安全等级：能在配电箱这类场合测 600 V 以内的电。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P05_Screw_1",
+   "grabbable": true,
+   "name_cn": "面壳螺丝",
+   "material": "十字盘头自攻螺丝 M2.5 × 15 · 黑色镀锌",
+   "desc": "从正面穿过面壳的螺丝柱，拧进底壳的螺丝柱。四颗都藏在护套唇边下面，不拆护套看不见。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P05_Screw_2",
+   "grabbable": true,
+   "name_cn": "面壳螺丝",
+   "material": "十字盘头自攻螺丝 M2.5 × 15 · 黑色镀锌",
+   "desc": "从正面穿过面壳的螺丝柱，拧进底壳的螺丝柱。四颗都藏在护套唇边下面，不拆护套看不见。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P05_Screw_3",
+   "grabbable": true,
+   "name_cn": "面壳螺丝",
+   "material": "十字盘头自攻螺丝 M2.5 × 15 · 黑色镀锌",
+   "desc": "从正面穿过面壳的螺丝柱，拧进底壳的螺丝柱。四颗都藏在护套唇边下面，不拆护套看不见。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P05_Screw_4",
+   "grabbable": true,
+   "name_cn": "面壳螺丝",
+   "material": "十字盘头自攻螺丝 M2.5 × 15 · 黑色镀锌",
+   "desc": "从正面穿过面壳的螺丝柱，拧进底壳的螺丝柱。四颗都藏在护套唇边下面，不拆护套看不见。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P06_Keypad",
+   "grabbable": true,
+   "name_cn": "硅胶按键（导电胶）",
+   "material": "双色硅胶 · 底面导电碳粒",
+   "desc": "按下去时，按键底面的黑色碳粒压到主板的金色梳状焊盘上，把两组梳齿短接，主控就知道哪个键被按了；松手后硅胶自己弹回。黄键开关机；SEL 切换功能（长按开背光）；HOLD 锁住读数；NCV/LIVE 非接触测电 / 火线判断。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P07_LCD",
+   "grabbable": true,
+   "name_cn": "LCD 液晶屏",
+   "material": "TN 段码液晶 · 两片玻璃 + 上下偏光片",
+   "desc": "每一笔（段）都是一块透明电极。主控在某段上加交流方波，那里的液晶分子转向、挡住反射光，这一笔就变黑。下片玻璃比上片宽一圈，露出来的边上是一排引脚，靠斑马条连到主板。",
+   "grab": {
+    "type": "box",
+    "center": [
+     0.0,
+     -2.9,
+     3.05
+    ],
+    "extent": [
+     2.9,
+     2.5,
+     0.15
+    ]
+   }
+  },
+  {
+   "id": "P08_Zebra_1",
+   "grabbable": true,
+   "name_cn": "斑马条（导电胶条）",
+   "material": "硅胶 · 导电层 / 绝缘层交替（约 0.1 mm 一层）",
+   "desc": "黑的是导电层、白的是绝缘层。夹在液晶屏引脚和主板焊盘中间：上下导通、左右绝缘，不用焊接就把几十个引脚一起接通。",
+   "grab": {
+    "type": "box",
+    "center": [
+     0.0,
+     -0.34,
+     2.3
+    ],
+    "extent": [
+     2.4,
+     0.12,
+     0.6
+    ]
+   }
+  },
+  {
+   "id": "P08_Zebra_2",
+   "grabbable": true,
+   "name_cn": "斑马条（导电胶条）",
+   "material": "硅胶 · 导电层 / 绝缘层交替（约 0.1 mm 一层）",
+   "desc": "黑的是导电层、白的是绝缘层。夹在液晶屏引脚和主板焊盘中间：上下导通、左右绝缘，不用焊接就把几十个引脚一起接通。",
+   "grab": {
+    "type": "box",
+    "center": [
+     0.0,
+     -5.46,
+     2.3
+    ],
+    "extent": [
+     2.4,
+     0.12,
+     0.6
+    ]
+   }
+  },
+  {
+   "id": "P09_LightGuide",
+   "grabbable": true,
+   "name_cn": "背光导光板",
+   "material": "PMMA 亚克力 · 底面印网点",
+   "desc": "两颗 LED 从侧面把光打进板里，光在板里全反射来回走，碰到网点就散射出来，整块屏幕均匀发亮。长按 SEL 开背光，暗处也能读数。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P10_LCDHolder",
+   "grabbable": true,
+   "name_cn": "LCD 支架",
+   "material": "黑色 ABS",
+   "desc": "把液晶屏、导光板、斑马条摞在一起定位。面壳从上往下一压，屏幕压紧斑马条、斑马条压紧主板焊盘，全部接通。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P11_PCB",
+   "grabbable": true,
+   "name_cn": "主板（PCB）",
+   "material": "FR-4 双面板 · 绿油 · 沉金焊盘",
+   "desc": "浅绿色的线是铜箔走线，按信号走向排的：V 插孔 → PTC → 分压电阻 → 模拟开关 → 主控；A 插孔 → 保险丝 → 锰铜分流器 → COM。金色圆盘是按键的梳状焊盘，上下两排金色细条是斑马条的焊盘，两个黄铜夹子是保险丝座。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P12_SoC",
+   "grabbable": true,
+   "name_cn": "主控芯片 SoC",
+   "material": "QFP-48 · 单片机 + 高精度 ADC + LCD 驱动",
+   "desc": "整块表的大脑。不管测什么，最后都变成一个很小的电压交给里面的 ADC（模数转换器）去数：电压先分压；电流变成分流器上的压降；电阻是送一个已知电流再量压降。自动识别、自动换量程、驱动液晶、15 分钟自动关机也都是它管。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P13_AnalogSwitch",
+   "grabbable": true,
+   "name_cn": "自动量程模拟开关",
+   "material": "SOIC-16 · CMOS 模拟开关",
+   "desc": "代替老式万用表的旋钮。主控先在最大量程试测，读数太小就让它换到下一个分压抽头，直到读数落在最准的那一段，这就是\"自动量程\"。自动识别也是这样：先看 V 插孔上有没有交 / 直流电压，有就测电压，没有就送小电流测电阻 / 通断。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P14_EEPROM",
+   "grabbable": true,
+   "name_cn": "EEPROM（校准数据）",
+   "material": "SOP-8 · 24C02 串行存储器",
+   "desc": "出厂校准时用标准源把各档测一遍，每档的误差系数写在这里。开机时主控读出来，算读数时修正掉，所以每块表都准。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P15_Crystal",
+   "grabbable": true,
+   "name_cn": "晶振",
+   "material": "32.768 kHz 石英晶体",
+   "desc": "主控的\"秒表\"。测频率（Hz）就是数一秒钟里信号翻转了多少次；15 分钟自动关机也靠它计时。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P16_VoltageRef",
+   "grabbable": true,
+   "name_cn": "基准电压源",
+   "material": "SOT-23 · 1.2 V 带隙基准",
+   "desc": "ADC 的尺子：ADC 测出来的是\"输入是基准的几倍\"。基准差 0.1 %，读数就差 0.1 %，所以要求温漂很小。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P17_PowerSwitch",
+   "grabbable": true,
+   "name_cn": "电源开关 MOS 管 + 稳压芯片",
+   "material": "2 × SOT-23 · P 沟道 MOS + 3.0 V LDO",
+   "desc": "按黄键时 MOS 管导通给全板上电，之后主控自己\"拉住\"它保持开机；15 分钟没操作，主控松手，整块表断电（自动关机）。稳压芯片把电池电压稳成 3.0 V，电池电压往下掉读数也不受影响。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P18_DividerResistors",
+   "grabbable": true,
+   "name_cn": "分压电阻（精密）",
+   "material": "4 × 0.1 % 金属膜电阻（蓝色）",
+   "desc": "一串电阻总共 10 MΩ（就是表的输入电阻），按 10 : 1 一级级分出抽头：600 V 进来，最后一级只剩零点几伏，ADC 才吃得下。输入电阻很大，接上去几乎不分走电流，不影响被测电路。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P19_PTC",
+   "grabbable": true,
+   "name_cn": "PTC 热敏电阻（错档防烧）",
+   "material": "陶瓷 PTC 正温度系数热敏电阻",
+   "desc": "\"错档防烧\"的关键。平时只有几百欧；要是在电阻 / 通断状态误碰 220 V，大电流让它发热，几毫秒内电阻涨到几十千欧，把电流卡住，后面的芯片就不会烧。冷下来自动恢复，不用换。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P20_Varistor",
+   "grabbable": true,
+   "name_cn": "压敏电阻",
+   "material": "金属氧化物压敏电阻（MOV）",
+   "desc": "并在 V 插孔和 COM 之间。正常电压下几乎不导电；遇到雷击、开关浪涌这种几千伏的尖峰，瞬间导通把尖峰泄放掉。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P21_Fuse",
+   "grabbable": true,
+   "name_cn": "保险丝 4A",
+   "material": "陶瓷管快熔保险丝 5 × 20 mm · F4A 250V",
+   "desc": "A 插孔进来的电流先过它。超过 4 A（或者表笔插在 A 孔去测电压，等于短路），几毫秒内熔断，保护分流器和人。陶瓷管比玻璃管分断能力大，熔断时不会炸。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P22_Shunt",
+   "grabbable": true,
+   "name_cn": "锰铜分流器",
+   "material": "锰铜合金丝 · 约 0.05 Ω",
+   "desc": "测电流的\"秤\"：电流流过它产生压降 U = I × R，4 A 时约 0.2 V，主控量这个电压就知道电流。锰铜的电阻几乎不随温度变，电流大发热了读数也不漂。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P23_Buzzer",
+   "grabbable": true,
+   "name_cn": "蜂鸣器",
+   "material": "电磁式蜂鸣器 Φ12",
+   "desc": "通断档：两表笔之间小于约 50 Ω 就\"嘀\"，不看屏幕也知道线通不通。NCV 测到电、按键、自动关机前也会叫。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P24_Jack_V",
+   "grabbable": true,
+   "name_cn": "V 插孔（红表笔）",
+   "material": "黄铜镀镍插座 · Φ4 mm",
+   "desc": "红表笔插这里。测电压、电阻、通断、频率、火线判断都走它，信号进来先过 PTC 和分压电阻。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P25_Jack_COM",
+   "grabbable": true,
+   "name_cn": "COM 公共插孔（黑表笔）",
+   "material": "黄铜镀镍插座 · Φ4 mm",
+   "desc": "黑表笔永远插这里。所有测量都以它为\"零点\"（参考地），电流也从这里流回去。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P26_Jack_A",
+   "grabbable": true,
+   "name_cn": "A 电流插孔",
+   "material": "黄铜镀镍插座 · Φ4 mm",
+   "desc": "测电流时红表笔改插这里（最大 4 A）。后面是保险丝和锰铜分流器，内阻只有零点几欧，所以千万别插在这里去测电压。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P27_BacklightLED_1",
+   "grabbable": true,
+   "name_cn": "背光 LED",
+   "material": "侧发光白光 SMD LED",
+   "desc": "贴在导光板两侧下面，从侧边把光打进导光板。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P27_BacklightLED_2",
+   "grabbable": true,
+   "name_cn": "背光 LED",
+   "material": "侧发光白光 SMD LED",
+   "desc": "贴在导光板两侧下面，从侧边把光打进导光板。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P28_NCVCoil",
+   "grabbable": true,
+   "name_cn": "NCV 感应线圈",
+   "material": "FR-4 小板 + 铜箔螺旋线",
+   "desc": "装在表的顶端。靠近带电的电线时，电线周围的交流电场通过几皮法的电容耦合到这片铜箔上，感应出极小的电流，放大后点亮顶上的灯、让蜂鸣器叫，不用接触就知道有没有电。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P29_NCV_LED",
+   "grabbable": true,
+   "name_cn": "NCV 指示灯",
+   "material": "Φ3 红绿双色 LED（面壳上有导光柱）",
+   "desc": "测到电亮红灯，没电亮绿灯。LIVE 火线判断：只用红表笔碰电线，人手通过表壳和人体的电容当\"地\"，火线对地 220 V 会被测到，零线对地接近 0 V 就不亮。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P30_Battery_1",
+   "grabbable": true,
+   "name_cn": "电池",
+   "material": "1.5 V AAA 碱性电池",
+   "desc": "两节串联 3 V，给整块表供电。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     0.05,
+     2.45,
+     0.99
+    ],
+    "segments": [
+     [
+      -2.28,
+      2.28,
+      0.53
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P30_Battery_2",
+   "grabbable": true,
+   "name_cn": "电池",
+   "material": "1.5 V AAA 碱性电池",
+   "desc": "两节串联 3 V，给整块表供电。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     -0.05,
+     3.55,
+     0.99
+    ],
+    "segments": [
+     [
+      -2.28,
+      2.28,
+      0.53
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P31_ProbeRed",
+   "grabbable": true,
+   "name_cn": "红表笔",
+   "material": "PVC 笔杆 + 硅胶线 + 护套香蕉插头 · CAT III 600 V",
+   "desc": "插 V 插孔（测电流时改插 A 孔）。护指挡圈挡住手指别滑到金属针上；插头带护套，插拔时手碰不到金属。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "center": [
+     5.5,
+     0.1,
+     0.75
+    ],
+    "segments": [
+     [
+      -3.9,
+      3.9,
+      0.5
+     ]
+    ],
+    "override": "P31_ProbeRed"
+   }
+  },
+  {
+   "id": "P32_ProbeBlack",
+   "grabbable": true,
+   "name_cn": "黑表笔",
+   "material": "PVC 笔杆 + 硅胶线 + 护套香蕉插头 · CAT III 600 V",
+   "desc": "插 COM 孔，当测量的参考点。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "center": [
+     -5.5,
+     0.1,
+     0.75
+    ],
+    "segments": [
+     [
+      -3.9,
+      3.9,
+      0.5
+     ]
+    ],
+    "override": "P32_ProbeBlack"
+   }
+  }
+ ],
+ "parts": [
+  {
+   "name": "P01_BackCase",
+   "name_cn": "底壳",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P01_BackCase.P01_BackCase",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "P02_BatteryContacts",
+   "name_cn": "电池弹片（含引线）",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P02_BatteryContacts.P02_BatteryContacts",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "P03_Holster",
+   "name_cn": "橡胶护套",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P03_Holster.P03_Holster",
+   "spin": 0,
+   "unit": "P03_Holster",
+   "ex": [
+    [
+     0.0,
+     -8.0,
+     11.0,
+     0.1
+    ]
+   ]
+  },
+  {
+   "name": "P04_FrontShell",
+   "name_cn": "面壳（含面板印刷）",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P04_FrontShell.P04_FrontShell",
+   "spin": 0,
+   "unit": "P04_FrontShell",
+   "ex": [
+    [
+     11.0,
+     -2.5,
+     8.0,
+     0.22
+    ]
+   ]
+  },
+  {
+   "name": "P05_Screw_1",
+   "name_cn": "面壳螺丝",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P05_Screw_1.P05_Screw_1",
+   "spin": 0,
+   "unit": "P05_Screw_1",
+   "ex": [
+    [
+     11.0,
+     -2.5,
+     11.200000000000001,
+     0.16
+    ]
+   ]
+  },
+  {
+   "name": "P05_Screw_2",
+   "name_cn": "面壳螺丝",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P05_Screw_2.P05_Screw_2",
+   "spin": 0,
+   "unit": "P05_Screw_2",
+   "ex": [
+    [
+     11.0,
+     -2.5,
+     11.200000000000001,
+     0.16
+    ]
+   ]
+  },
+  {
+   "name": "P05_Screw_3",
+   "name_cn": "面壳螺丝",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P05_Screw_3.P05_Screw_3",
+   "spin": 0,
+   "unit": "P05_Screw_3",
+   "ex": [
+    [
+     11.0,
+     -2.5,
+     11.200000000000001,
+     0.16
+    ]
+   ]
+  },
+  {
+   "name": "P05_Screw_4",
+   "name_cn": "面壳螺丝",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P05_Screw_4.P05_Screw_4",
+   "spin": 0,
+   "unit": "P05_Screw_4",
+   "ex": [
+    [
+     11.0,
+     -2.5,
+     11.200000000000001,
+     0.16
+    ]
+   ]
+  },
+  {
+   "name": "P06_Keypad",
+   "name_cn": "硅胶按键（导电胶）",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P06_Keypad.P06_Keypad",
+   "spin": 0,
+   "unit": "P06_Keypad",
+   "ex": [
+    [
+     11.0,
+     4.0,
+     3.0,
+     0.3
+    ]
+   ]
+  },
+  {
+   "name": "P07_LCD",
+   "name_cn": "LCD 液晶屏",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P07_LCD.P07_LCD",
+   "spin": 0,
+   "unit": "P07_LCD",
+   "ex": [
+    [
+     -11.0,
+     -1.6,
+     7.2,
+     0.34
+    ]
+   ]
+  },
+  {
+   "name": "P08_Zebra_1",
+   "name_cn": "斑马条（导电胶条）",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P08_Zebra_1.P08_Zebra_1",
+   "spin": 0,
+   "unit": "P08_Zebra_1",
+   "ex": [
+    [
+     -11.0,
+     -0.8,
+     5.6000000000000005,
+     0.4
+    ]
+   ]
+  },
+  {
+   "name": "P08_Zebra_2",
+   "name_cn": "斑马条（导电胶条）",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P08_Zebra_2.P08_Zebra_2",
+   "spin": 0,
+   "unit": "P08_Zebra_2",
+   "ex": [
+    [
+     -11.0,
+     -0.8,
+     5.6000000000000005,
+     0.4
+    ]
+   ]
+  },
+  {
+   "name": "P09_LightGuide",
+   "name_cn": "背光导光板",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P09_LightGuide.P09_LightGuide",
+   "spin": 0,
+   "unit": "P09_LightGuide",
+   "ex": [
+    [
+     -11.0,
+     -1.2000000000000002,
+     6.2,
+     0.44
+    ]
+   ]
+  },
+  {
+   "name": "P10_LCDHolder",
+   "name_cn": "LCD 支架",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P10_LCDHolder.P10_LCDHolder",
+   "spin": 0,
+   "unit": "P10_LCDHolder",
+   "ex": [
+    [
+     -11.0,
+     0.0,
+     3.6,
+     0.48
+    ]
+   ]
+  },
+  {
+   "name": "P11_PCB",
+   "name_cn": "主板（PCB）",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P11_PCB.P11_PCB",
+   "spin": 0,
+   "unit": "P11_PCB",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ]
+   ]
+  },
+  {
+   "name": "P12_SoC",
+   "name_cn": "主控芯片 SoC",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P12_SoC.P12_SoC",
+   "spin": 0,
+   "unit": "P12_SoC",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.648
+    ]
+   ]
+  },
+  {
+   "name": "P13_AnalogSwitch",
+   "name_cn": "自动量程模拟开关",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P13_AnalogSwitch.P13_AnalogSwitch",
+   "spin": 0,
+   "unit": "P13_AnalogSwitch",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.656
+    ]
+   ]
+  },
+  {
+   "name": "P14_EEPROM",
+   "name_cn": "EEPROM（校准数据）",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P14_EEPROM.P14_EEPROM",
+   "spin": 0,
+   "unit": "P14_EEPROM",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.664
+    ]
+   ]
+  },
+  {
+   "name": "P15_Crystal",
+   "name_cn": "晶振",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P15_Crystal.P15_Crystal",
+   "spin": 0,
+   "unit": "P15_Crystal",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.672
+    ]
+   ]
+  },
+  {
+   "name": "P16_VoltageRef",
+   "name_cn": "基准电压源",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P16_VoltageRef.P16_VoltageRef",
+   "spin": 0,
+   "unit": "P16_VoltageRef",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.68
+    ]
+   ]
+  },
+  {
+   "name": "P17_PowerSwitch",
+   "name_cn": "电源开关 MOS 管 + 稳压芯片",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P17_PowerSwitch.P17_PowerSwitch",
+   "spin": 0,
+   "unit": "P17_PowerSwitch",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.6880000000000001
+    ]
+   ]
+  },
+  {
+   "name": "P18_DividerResistors",
+   "name_cn": "分压电阻（精密）",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P18_DividerResistors.P18_DividerResistors",
+   "spin": 0,
+   "unit": "P18_DividerResistors",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.6960000000000001
+    ]
+   ]
+  },
+  {
+   "name": "P19_PTC",
+   "name_cn": "PTC 热敏电阻（错档防烧）",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P19_PTC.P19_PTC",
+   "spin": 0,
+   "unit": "P19_PTC",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.704
+    ]
+   ]
+  },
+  {
+   "name": "P20_Varistor",
+   "name_cn": "压敏电阻",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P20_Varistor.P20_Varistor",
+   "spin": 0,
+   "unit": "P20_Varistor",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.712
+    ]
+   ]
+  },
+  {
+   "name": "P21_Fuse",
+   "name_cn": "保险丝 4A",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P21_Fuse.P21_Fuse",
+   "spin": 0,
+   "unit": "P21_Fuse",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     4.3,
+     0.52
+    ]
+   ]
+  },
+  {
+   "name": "P22_Shunt",
+   "name_cn": "锰铜分流器",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P22_Shunt.P22_Shunt",
+   "spin": 0,
+   "unit": "P22_Shunt",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.72
+    ]
+   ]
+  },
+  {
+   "name": "P23_Buzzer",
+   "name_cn": "蜂鸣器",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P23_Buzzer.P23_Buzzer",
+   "spin": 0,
+   "unit": "P23_Buzzer",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.728
+    ]
+   ]
+  },
+  {
+   "name": "P24_Jack_V",
+   "name_cn": "V 插孔（红表笔）",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P24_Jack_V.P24_Jack_V",
+   "spin": 0,
+   "unit": "P24_Jack_V",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.736
+    ]
+   ]
+  },
+  {
+   "name": "P25_Jack_COM",
+   "name_cn": "COM 公共插孔（黑表笔）",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P25_Jack_COM.P25_Jack_COM",
+   "spin": 0,
+   "unit": "P25_Jack_COM",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.744
+    ]
+   ]
+  },
+  {
+   "name": "P26_Jack_A",
+   "name_cn": "A 电流插孔",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P26_Jack_A.P26_Jack_A",
+   "spin": 0,
+   "unit": "P26_Jack_A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.752
+    ]
+   ]
+  },
+  {
+   "name": "P27_BacklightLED_1",
+   "name_cn": "背光 LED",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P27_BacklightLED_1.P27_BacklightLED_1",
+   "spin": 0,
+   "unit": "P27_BacklightLED_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "P27_BacklightLED_2",
+   "name_cn": "背光 LED",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P27_BacklightLED_2.P27_BacklightLED_2",
+   "spin": 0,
+   "unit": "P27_BacklightLED_2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.768
+    ]
+   ]
+  },
+  {
+   "name": "P28_NCVCoil",
+   "name_cn": "NCV 感应线圈",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P28_NCVCoil.P28_NCVCoil",
+   "spin": 0,
+   "unit": "P28_NCVCoil",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.776
+    ]
+   ]
+  },
+  {
+   "name": "P29_NCV_LED",
+   "name_cn": "NCV 指示灯",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P29_NCV_LED.P29_NCV_LED",
+   "spin": 0,
+   "unit": "P29_NCV_LED",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.58
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.784
+    ]
+   ]
+  },
+  {
+   "name": "P30_Battery_1",
+   "name_cn": "电池",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P30_Battery_1.P30_Battery_1",
+   "spin": 0,
+   "unit": "P30_Battery_1",
+   "ex": [
+    [
+     -11.0,
+     6.0,
+     2.0,
+     0.8
+    ]
+   ]
+  },
+  {
+   "name": "P30_Battery_2",
+   "name_cn": "电池",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P30_Battery_2.P30_Battery_2",
+   "spin": 0,
+   "unit": "P30_Battery_2",
+   "ex": [
+    [
+     -11.0,
+     6.0,
+     2.0,
+     0.8
+    ]
+   ]
+  },
+  {
+   "name": "P31_ProbeRed",
+   "name_cn": "红表笔",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P31_ProbeRed.P31_ProbeRed",
+   "spin": 0,
+   "unit": "P31_ProbeRed",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.2,
+     0.0
+    ],
+    [
+     1.0,
+     5.0,
+     0.0,
+     0.05
+    ]
+   ]
+  },
+  {
+   "name": "P32_ProbeBlack",
+   "name_cn": "黑表笔",
+   "mesh": "/Game/Models/Multimeter/multimeter/StaticMeshes/P32_ProbeBlack.P32_ProbeBlack",
+   "spin": 0,
+   "unit": "P32_ProbeBlack",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     3.2,
+     0.0
+    ],
+    [
+     -1.0,
+     5.0,
+     0.0,
+     0.05
+    ]
+   ]
+  }
+ ]
+}

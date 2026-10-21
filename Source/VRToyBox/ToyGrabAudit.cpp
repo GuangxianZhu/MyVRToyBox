@@ -34,11 +34,13 @@ namespace
 			else if (Arg.Equals(TEXT("Valve"), ESearchCase::IgnoreCase)) Kinds.Add(EToyModelKind::Valve);
 			else if (Arg.Equals(TEXT("Drone"), ESearchCase::IgnoreCase)) Kinds.Add(EToyModelKind::Drone);
 			else if (Arg.Equals(TEXT("Lathe"), ESearchCase::IgnoreCase)) Kinds.Add(EToyModelKind::Lathe);
+			else if (Arg.Equals(TEXT("Multimeter"), ESearchCase::IgnoreCase) || Arg.Equals(TEXT("Meter"), ESearchCase::IgnoreCase))
+				Kinds.Add(EToyModelKind::Multimeter);
 			else if (Arg.Equals(TEXT("quit"), ESearchCase::IgnoreCase)) bQuit = true;
 		}
 		if (Kinds.Num() == 0)
 		{
-			Kinds = { EToyModelKind::Motor, EToyModelKind::Valve, EToyModelKind::Drone, EToyModelKind::Lathe };
+			Kinds = { EToyModelKind::Motor, EToyModelKind::Valve, EToyModelKind::Drone, EToyModelKind::Lathe, EToyModelKind::Multimeter };
 		}
 		FActorSpawnParameters Params;
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -50,7 +52,7 @@ namespace
 
 	FAutoConsoleCommandWithWorldAndArgs GrabAuditCommand(
 		TEXT("toy.GrabAudit"),
-		TEXT("自动把爆炸图的每个抓取单元抓一遍并截图到 Saved/GrabAudit/。参数：Motor / Valve / Drone / Lathe（不写 = 全部），quit = 跑完退出"),
+		TEXT("自动把爆炸图的每个抓取单元抓一遍并截图到 Saved/GrabAudit/。参数：Motor / Valve / Drone / Lathe / Multimeter（不写 = 全部），quit = 跑完退出"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&StartAudit));
 
 	FString CsvField(const FString& Text)

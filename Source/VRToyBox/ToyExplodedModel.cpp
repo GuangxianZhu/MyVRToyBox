@@ -86,6 +86,12 @@ bool AToyExplodedModel::LoadManifest(const FString& ManifestPath)
 		ModelTitle = FText::FromString((*ModelInfo)->GetStringField(TEXT("title")));
 		ModelBody = FText::FromString((*ModelInfo)->GetStringField(TEXT("body")));
 		(*ModelInfo)->TryGetNumberField(TEXT("explode_scale"), ExplodeScale);
+		// length_cm：这个模型自己要的展示尺寸（万用表 40cm），没写就用工作室给的 TargetLengthCm
+		double LengthCm = 0.0;
+		if ((*ModelInfo)->TryGetNumberField(TEXT("length_cm"), LengthCm) && LengthCm > 1.0)
+		{
+			TargetLengthCm = static_cast<float>(LengthCm);
+		}
 	}
 
 	// 1) 抓取单元。单元 Actor 以单位变换挂在 ModelRoot 上，继承它的缩放

@@ -3,7 +3,7 @@
 在编辑器里跑（命令行由 scripts/import_motor.bat、scripts/import_valve.bat 调用）：
     UnrealEditor-Cmd.exe VRToyBox.uproject -run=pythonscript -script=...
 环境变量：
-    MODEL_NAME           模型名，决定资产目录 /Game/Models/<名字> 和下面 MODELS 里的配置（Motor / Valve / Drone / Lathe）
+    MODEL_NAME           模型名，决定资产目录 /Game/Models/<名字> 和下面 MODELS 里的配置（Motor / Valve / Drone / Lathe / Multimeter）
     MODEL_GLB            glb 路径（电机兼容旧的 MOTOR_GLB）
     MODEL_MANIFEST_ONLY  =1 时不重新导入资产，只重写 parts.json（兼容旧的 MOTOR_MANIFEST_ONLY）
 
@@ -34,7 +34,8 @@ MODEL = os.environ.get('MODEL_NAME', 'Motor')
 DEST = f'/Game/Models/{MODEL}'
 MANIFEST = os.path.join(unreal.Paths.project_content_dir(), 'Models', MODEL, 'parts.json')
 
-# 和 AToyStudio 里给模型的大小一致：装配状态最长边缩放到这么长。小件用"捏"的判断按缩放后的尺寸算
+# 和 AToyStudio 里给模型的大小一致：装配状态最长边缩放到这么长（模型配置里写了 length_cm 的按它，比如万用表 40）。
+# 小件用"捏"的判断按缩放后的尺寸算
 TARGET_LENGTH_CM = 50.0
 PINCH_MAX_CM = 7.0
 
@@ -114,6 +115,24 @@ MODELS = {
         },
         rotor=None,
         check={'P07_Headstock': (1, 0, 0), 'P27_Motor': (0, 1, 0), 'P18_Tailstock': (-1, 0, 0)},
+    ),
+    'Multimeter': dict(
+        info=dict(
+            title='数字万用表 · 原理爆炸图（外观参考 SATA 世达 DO5054）',
+            body='自动识别 · 零火线判断 · NCV 非接触测电 · 错档防烧 · 背光 LCD · 2 节 AAA\n'
+                 '装配状态：抓任意位置拿起整台表看。点 EXPLODE 拆开后每个零件都能单独抓，信息牌讲它在电路里干什么。',
+        ),
+        named={},
+        units={
+            'base': dict(name_cn='底壳与电池弹片', material='黑色 ABS 注塑 + 镀镍弹簧钢片',
+                         desc='底壳、电池弹簧和引线。拆表时它不动，其他零件都从它上面拿走。'
+                              '两节 AAA 电池在这里串联成 3 V，经红黑引线送到主板。'),
+        },
+        rotor=None,
+        # 产品要求桌上展示 40cm（其他模型 50cm）；C++ 读 parts.json 里的 length_cm
+        length_cm=40.0,
+        # 屏幕在模型 -Y（Blender +Y），表笔：红的在右（+X）
+        check={'P07_LCD': (0, -1, 1), 'P31_ProbeRed': (1, 0, 0), 'P32_ProbeBlack': (-1, 0, 0)},
     ),
 }
 CONFIG = MODELS.get(MODEL, dict(info=dict(title=MODEL, body=''), named={}, units={}, rotor=None, check={}))
@@ -385,7 +404,7 @@ def build_units(gltf, binary, part_nodes):
         t = n.get('translation', [0.0, 0.0, 0.0])
         NODE_ORIGIN[n['name']] = (t[0] * 100.0, t[2] * 100.0, t[1] * 100.0)
     lo, hi = merge(list(bounds.values()))
-    scale = TARGET_LENGTH_CM / max(h - l for l, h in zip(lo, hi))
+    scale = CONFIG.get('length_cm', TARGET_LENGTH_CM) / max(h - l for l, h in zip(lo, hi))
     instances = Counter(part_no(n) for n in part_nodes)
 
     groups = {}
@@ -480,7 +499,10 @@ def main():
 
     os.makedirs(os.path.dirname(MANIFEST), exist_ok=True)
     with open(MANIFEST, 'w', encoding='utf-8') as f:
-        json.dump(dict(source=os.path.basename(glb), model=dict(CONFIG['info'], explode_scale=CONFIG.get('explode_scale', 1.0)),
+        model = dict(CONFIG['info'], explode_scale=CONFIG.get('explode_scale', 1.0))
+        if 'length_cm' in CONFIG:
+            model['length_cm'] = CONFIG['length_cm']
+        json.dump(dict(source=os.path.basename(glb), model=model,
                        units=units, parts=parts),
                   f, ensure_ascii=False, indent=1)
     kinds = Counter(u['grab']['type'] if u['grab'] else 'base' for u in units)
