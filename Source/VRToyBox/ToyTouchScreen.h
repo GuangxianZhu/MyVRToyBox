@@ -20,6 +20,7 @@ enum class EToyScreenAction : uint8
 	ToggleValve,
 	ToggleDrone,
 	ToggleLathe,
+	ToggleMultimeter,
 	ToggleExplode,
 	ResetParts,
 	MoveNear,
@@ -53,7 +54,7 @@ struct FToyScreenButton
 };
 
 /**
- * 桌上的支架触屏：底座 + 立杆 + 倾斜 30° 的屏幕，屏幕上 4 排按钮：方块；四个模型；爆炸 / 复位；挪模型（左、近、远、右）。
+ * 桌上的支架触屏：底座 + 立杆 + 倾斜 30° 的屏幕，屏幕上 4 排按钮：方块；五个模型；爆炸 / 复位；挪模型（左、近、远、右）。
  * 右上角还有一个小 MENU 按钮，叫出主菜单（AToyMenuPanel）。
  *
  * 食指指尖（AToyHand::PokeTip）进入某个按钮触发盒的那一帧算一次点击；桌面模式下鼠标射线打到触发盒也算。

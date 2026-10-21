@@ -16,7 +16,8 @@ enum class EToyModelKind : uint8
 	Motor,
 	Valve,
 	Drone,
-	Lathe
+	Lathe,
+	Multimeter
 };
 
 /**
@@ -83,7 +84,7 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<UChildActorComponent> ScreenChild;
 
-	/** 四个模型支架的共同父节点，触屏的挪动按钮挪它。 */
+	/** 所有模型支架的共同父节点，触屏的挪动按钮挪它。 */
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<USceneComponent> ModelAnchor;
 
@@ -124,7 +125,15 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	FString LatheManifest = TEXT("Models/Lathe/parts.json");
 
-	/** 模型装配状态下最长边的长度（厘米）。 */
+	/** 万用表也放在同一个位置，面朝上平放，转 90°：屏幕那头朝远处、表笔插孔朝着玩家，红表笔在右手边。
+	 *  展示尺寸 40cm（写在它的 parts.json 里，不用 ModelLengthCm）。 */
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<USceneComponent> MultimeterMount;
+
+	UPROPERTY(EditAnywhere, Category = "ToyBox")
+	FString MultimeterManifest = TEXT("Models/Multimeter/parts.json");
+
+	/** 模型装配状态下最长边的长度（厘米）。模型清单里写了 length_cm 的以清单为准（万用表 40）。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float ModelLengthCm = 50.f;
 

@@ -35,7 +35,7 @@ namespace
 	const FLinearColor LegColor(0.1f, 0.1f, 0.1f);
 	const FLinearColor ShelfColor(0.3f, 0.2f, 0.12f);
 
-	// 调试命令 toy.Screen <按钮名>：和戳触屏上那个按钮一样（Spawn / Clear / Motor / Valve / Drone / Lathe / Explode / Reset /
+	// 调试命令 toy.Screen <按钮名>：和戳触屏上那个按钮一样（Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Explode / Reset /
 	// MoveNear / MoveFar / MoveLeft / MoveRight），可以在 -ExecCmds 里连着写，不用鼠标点
 	void ScreenCommand(const TArray<FString>& Args, UWorld* World)
 	{
@@ -43,6 +43,7 @@ namespace
 			{ TEXT("spawn"), EToyScreenAction::SpawnCube }, { TEXT("clear"), EToyScreenAction::ClearCubes },
 			{ TEXT("motor"), EToyScreenAction::ToggleMotor }, { TEXT("valve"), EToyScreenAction::ToggleValve },
 			{ TEXT("drone"), EToyScreenAction::ToggleDrone }, { TEXT("lathe"), EToyScreenAction::ToggleLathe },
+			{ TEXT("meter"), EToyScreenAction::ToggleMultimeter }, { TEXT("multimeter"), EToyScreenAction::ToggleMultimeter },
 			{ TEXT("explode"), EToyScreenAction::ToggleExplode }, { TEXT("reset"), EToyScreenAction::ResetParts },
 			{ TEXT("movenear"), EToyScreenAction::MoveNear }, { TEXT("movefar"), EToyScreenAction::MoveFar },
 			{ TEXT("moveleft"), EToyScreenAction::MoveLeft }, { TEXT("moveright"), EToyScreenAction::MoveRight },
@@ -135,7 +136,7 @@ AToyStudio::AToyStudio()
 	SpawnPoint->SetupAttachment(Root);
 	SpawnPoint->SetRelativeLocation(FVector(TableX - 20.f, -60.f, TableHeight + 15.f));
 
-	// 四个模型的支架都挂在 ModelAnchor 下面：触屏的 NEAR / FAR / LEFT / RIGHT 挪的就是它，换模型也保持挪过的位置。
+	// 所有模型的支架都挂在 ModelAnchor 下面：触屏的 NEAR / FAR / LEFT / RIGHT 挪的就是它，换模型也保持挪过的位置。
 	// 默认放在离站立点 70cm（桌子中间偏近），以前放在 90cm，伸手够不着
 	ModelAnchor = CreateDefaultSubobject<USceneComponent>(TEXT("ModelAnchor"));
 	ModelAnchor->SetupAttachment(Root);
@@ -163,6 +164,12 @@ AToyStudio::AToyStudio()
 	LatheMount = CreateDefaultSubobject<USceneComponent>(TEXT("LatheMount"));
 	LatheMount->SetupAttachment(ModelAnchor);
 	LatheMount->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
+
+	// 万用表：同一个位置，面朝上平放。模型 -Y 是屏幕那头（Blender 里的 +Y），+X 是红表笔那边。
+	// Yaw 90 让屏幕那头朝远处、插孔和表笔插头朝着玩家，红表笔在右手边；拆开后屏幕叠层在左、面壳在右
+	MultimeterMount = CreateDefaultSubobject<USceneComponent>(TEXT("MultimeterMount"));
+	MultimeterMount->SetupAttachment(ModelAnchor);
+	MultimeterMount->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
 
 	// 触屏：桌面右手边靠前，转过来正对玩家站立点
 	const FVector ScreenLocation(TableX - 20.f, 60.f, TableHeight);
@@ -243,6 +250,7 @@ FString AToyStudio::KindName(EToyModelKind Kind)
 	case EToyModelKind::Motor: return TEXT("MOTOR");
 	case EToyModelKind::Valve: return TEXT("VALVE");
 	case EToyModelKind::Lathe: return TEXT("LATHE");
+	case EToyModelKind::Multimeter: return TEXT("METER");
 	default:                   return TEXT("DRONE");
 	}
 }
@@ -257,6 +265,7 @@ void AToyStudio::HandleScreenAction(EToyScreenAction Action)
 	case EToyScreenAction::ToggleValve:   ToggleModel(EToyModelKind::Valve); break;
 	case EToyScreenAction::ToggleDrone:   ToggleModel(EToyModelKind::Drone); break;
 	case EToyScreenAction::ToggleLathe:   ToggleModel(EToyModelKind::Lathe); break;
+	case EToyScreenAction::ToggleMultimeter: ToggleModel(EToyModelKind::Multimeter); break;
 	case EToyScreenAction::ToggleExplode: ToggleModelExploded(); break;
 	case EToyScreenAction::ResetParts:    ResetModel(); break;
 	case EToyScreenAction::MoveNear:      MoveModel(FVector(-MoveStepCm, 0.f, 0.f)); break;
@@ -308,6 +317,7 @@ bool AToyStudio::ToggleModel(EToyModelKind Kind)
 	case EToyModelKind::Motor: Mount = MotorMount; Manifest = &MotorManifest; break;
 	case EToyModelKind::Valve: Mount = ValveMount; Manifest = &ValveManifest; break;
 	case EToyModelKind::Lathe: Mount = LatheMount; Manifest = &LatheManifest; break;
+	case EToyModelKind::Multimeter: Mount = MultimeterMount; Manifest = &MultimeterManifest; break;
 	default: break;
 	}
 	FActorSpawnParameters Params;
