@@ -10,7 +10,7 @@ class AToyExplodedModel;
 class AToyPartUnit;
 
 /**
- * 调试命令 toy.GrabAudit [Motor|Valve|Drone|All] [quit]：桌面模式下自动把每个抓取单元抓一遍并截图。
+ * 调试命令 toy.GrabAudit [Motor|Valve|Drone|Lathe|All] [quit]：桌面模式下自动把每个抓取单元抓一遍并截图。
  *
  * 每个模型：摆出来 → 等着色器编译完 → 爆炸 → 对每个能抓的单元：
  *   右手从镜头方向伸过去，捏合点放在零件上离镜头最近的表面点（和桌面模式鼠标点中零件一样），扣扳机 → 走正常的捏取流程；
@@ -57,6 +57,7 @@ private:
 	void NextModel();
 	void Finish();
 	void WriteSummary();
+	void AimOverview();
 	float SurfaceGap(const FVector& From) const;
 
 	TArray<EToyModelKind> Kinds;
@@ -76,6 +77,10 @@ private:
 	/** 镜头原来的相对变换（跑完恢复）和每个模型对准后的相对变换（每次特写完回到这里再伸手）。 */
 	FTransform CameraOriginal;
 	FTransform CameraHome;
+
+	/** 每个模型先拍一张装配、一张爆炸的全景（00_assembled.png / 00_exploded.png），再开始逐个抓。 */
+	bool bShotAssembled = false;
+	bool bShotExploded = false;
 
 	FString OutDir;
 	TArray<FString> Rows;

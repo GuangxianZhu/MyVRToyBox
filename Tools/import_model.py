@@ -3,7 +3,7 @@
 在编辑器里跑（命令行由 scripts/import_motor.bat、scripts/import_valve.bat 调用）：
     UnrealEditor-Cmd.exe VRToyBox.uproject -run=pythonscript -script=...
 环境变量：
-    MODEL_NAME           模型名，决定资产目录 /Game/Models/<名字> 和下面 MODELS 里的配置（Motor / Valve）
+    MODEL_NAME           模型名，决定资产目录 /Game/Models/<名字> 和下面 MODELS 里的配置（Motor / Valve / Drone / Lathe）
     MODEL_GLB            glb 路径（电机兼容旧的 MOTOR_GLB）
     MODEL_MANIFEST_ONLY  =1 时不重新导入资产，只重写 parts.json（兼容旧的 MOTOR_MANIFEST_ONLY）
 
@@ -94,6 +94,26 @@ MODELS = {
         # 实物约 19cm，放大 2.6 倍后原来的爆炸距离（绑带往上 16.5cm）会冲到 43cm 高，缩到 0.8
         explode_scale=0.8,
         check={'P13_Battery': (0, 0, 1)},
+    ),
+    'Lathe': dict(
+        info=dict(
+            title='迷你桌面金属车床（8 合 1 小车床，按产品图估算尺寸建模）',
+            body='24 V 直流电机 · 皮带减速约 2.7 : 1 · Φ64 三爪卡盘 · 中心高 87 mm · 整机长约 37 cm\n装配状态：抓任意位置拿起整台车床看。点 EXPLODE 拆开后，每个零件都能单独抓。',
+        ),
+        named={'P07_Headstock': 'headstock', 'P27_Motor': 'motor'},
+        units={
+            'base': dict(name_cn='底板与床身', material='6061 铝合金底板 + 铝型材床身 + GCr15 直线导轨 + 电机座',
+                         desc='底板、4 个脚垫、床身、直线导轨、电机座。拆车床时它不动，其他零件都从它上面拆下来。'
+                              '导轨的直度决定车刀走得直不直。'),
+            'headstock': dict(name_cn='主轴箱与主轴', material='6061 铝合金箱体 + 40Cr 主轴 + 一对深沟球轴承',
+                              desc='主轴由箱体里的两个轴承撑住，只能转不能晃。左端装卡盘、右端装皮带轮，'
+                                   '电机经皮带带它转，工件跟着转。'),
+            'motor': dict(name_cn='直流电机（含电源线）', material='775 有刷直流电机 24 V · 铝端盖 · DC 5.5 × 2.1 插头',
+                          desc='电压越高转得越快，调速器改电压就能无级调速。电机轴上的小皮带轮经皮带带动主轴上的大皮带轮，'
+                               '转速降到约 1/2.7、扭矩放大约 2.7 倍。'),
+        },
+        rotor=None,
+        check={'P07_Headstock': (1, 0, 0), 'P27_Motor': (0, 1, 0), 'P18_Tailstock': (-1, 0, 0)},
     ),
 }
 CONFIG = MODELS.get(MODEL, dict(info=dict(title=MODEL, body=''), named={}, units={}, rotor=None, check={}))
@@ -411,6 +431,10 @@ def main():
     manifest_only = '1' in (os.environ.get('MODEL_MANIFEST_ONLY'), os.environ.get('MOTOR_MANIFEST_ONLY'))
     if not manifest_only:
         import_glb(glb)
+        # glTF 导入默认给每个网格开 Nanite；前向渲染 + SM5 不支持，关掉（原因见 disable_nanite.py）
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from disable_nanite import disable_nanite
+        disable_nanite(DEST)
     meshes = static_meshes()
     unreal.log(f'ToyBox: {MODEL} 导入了 {len(meshes)} 个静态网格')
 

@@ -32,11 +32,12 @@ namespace
 			if (Arg.Equals(TEXT("Motor"), ESearchCase::IgnoreCase)) Kinds.Add(EToyModelKind::Motor);
 			else if (Arg.Equals(TEXT("Valve"), ESearchCase::IgnoreCase)) Kinds.Add(EToyModelKind::Valve);
 			else if (Arg.Equals(TEXT("Drone"), ESearchCase::IgnoreCase)) Kinds.Add(EToyModelKind::Drone);
+			else if (Arg.Equals(TEXT("Lathe"), ESearchCase::IgnoreCase)) Kinds.Add(EToyModelKind::Lathe);
 			else if (Arg.Equals(TEXT("quit"), ESearchCase::IgnoreCase)) bQuit = true;
 		}
 		if (Kinds.Num() == 0)
 		{
-			Kinds = { EToyModelKind::Motor, EToyModelKind::Valve, EToyModelKind::Drone };
+			Kinds = { EToyModelKind::Motor, EToyModelKind::Valve, EToyModelKind::Drone, EToyModelKind::Lathe };
 		}
 		FActorSpawnParameters Params;
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -48,7 +49,7 @@ namespace
 
 	FAutoConsoleCommandWithWorldAndArgs GrabAuditCommand(
 		TEXT("toy.GrabAudit"),
-		TEXT("自动把爆炸图的每个抓取单元抓一遍并截图到 Saved/GrabAudit/。参数：Motor / Valve / Drone（不写 = 全部），quit = 跑完退出"),
+		TEXT("自动把爆炸图的每个抓取单元抓一遍并截图到 Saved/GrabAudit/。参数：Motor / Valve / Drone / Lathe（不写 = 全部），quit = 跑完退出"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&StartAudit));
 
 	FString CsvField(const FString& Text)
@@ -153,6 +154,7 @@ void AToyGrabAudit::Tick(float DeltaSeconds)
 		P->Camera->SetRelativeTransform(CameraOriginal);
 		P->Camera->SetWorldRotation((Target - P->Camera->GetComponentLocation()).Rotation());
 		CameraHome = P->Camera->GetRelativeTransform();
+		bShotAssembled = bShotExploded = false;
 		Goto(EStep::WaitModel, 1.f);
 		break;
 	}
@@ -170,6 +172,15 @@ void AToyGrabAudit::Tick(float DeltaSeconds)
 			NextModel();
 			break;
 		}
+		if (!bShotAssembled)
+		{
+			AimOverview();
+			// 装配状态的全景：玩家视角看桌上的模型
+			FScreenshotRequest::RequestScreenshot(FPaths::ConvertRelativePathToFull(OutDir / TEXT("00_assembled.png")), true, false);
+			bShotAssembled = true;
+			Goto(EStep::WaitModel, 0.4f);
+			break;
+		}
 		if (!M->IsExploded())
 		{
 			M->SetExploded(true);
@@ -179,6 +190,19 @@ void AToyGrabAudit::Tick(float DeltaSeconds)
 	}
 	case EStep::WaitExplode:
 	{
+		if (!bShotExploded)
+		{
+			AimOverview();
+			// 爆炸状态的全景
+			FScreenshotRequest::RequestScreenshot(FPaths::ConvertRelativePathToFull(OutDir / TEXT("00_exploded.png")), true, false);
+			bShotExploded = true;
+			Goto(EStep::WaitExplode, 0.4f);
+			break;
+		}
+		if (P)
+		{
+			P->Camera->SetRelativeTransform(CameraHome);
+		}
 		Queue.Reset();
 		if (AToyExplodedModel* M = Model.Get())
 		{
@@ -315,6 +339,20 @@ void AToyGrabAudit::BeginUnit()
 		return;
 	}
 	Goto(EStep::Approach);
+}
+
+void AToyGrabAudit::AimOverview()
+{
+	// 全景镜头：站在桌前偏左一点、比眼睛低一些，斜着看桌上的模型（桌面模式的镜头在开局时还没抬到眼睛高度，不能直接用）
+	AToyBoxPawn* P = Pawn.Get();
+	const AToyExplodedModel* M = Model.Get();
+	if (!P || !M)
+	{
+		return;
+	}
+	const FVector Target = M->GetActorLocation() + FVector(0.f, 0.f, 12.f);
+	const FVector Eye = Target + FVector(-62.f, -34.f, 40.f);
+	P->Camera->SetWorldLocationAndRotation(Eye, (Target - Eye).Rotation());
 }
 
 void AToyGrabAudit::PresentHeld()
