@@ -2,6 +2,8 @@
 
 #include "ToyCube.h"
 #include "ToyHand.h"
+#include "ToyMenuPanel.h"
+#include "ToySettings.h"
 #include "ToyTouchScreen.h"
 #include "ToyStudio.h"
 #include "Camera/CameraComponent.h"
@@ -13,6 +15,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
 #include "GameFramework/PlayerController.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "MotionControllerComponent.h"
@@ -133,6 +136,7 @@ void AToyBoxPawn::BeginPlay()
 {
 	Super::BeginPlay();
 	ToyHandCalib::Load();
+	ToySettings::Load();
 	LeftHand = SpawnHand(EControllerHand::Left, LeftController);
 	RightHand = SpawnHand(EControllerHand::Right, RightController);
 	LogHandSelfCheck();
@@ -317,7 +321,8 @@ void AToyBoxPawn::TickVR()
 	SmoothMove(FVector2D(ReadAxis(MoveXKeys), ReadAxis(MoveYKeys)), GetWorld()->GetDeltaSeconds());
 
 	// 右摇杆往前推：从右手打抛物线瞄准，摇杆回中时传送（UE VR 模板的做法）
-	const float Aim = ReadAxis(TeleportKeys);
+	// 设置里关了传送：右摇杆往前推不再瞄准
+	const float Aim = ToySettings::Get().bTeleport ? ReadAxis(TeleportKeys) : 0.f;
 	const float Turn = ReadAxis(TurnKeys);
 	if (Aim > 0.6f && FMath::Abs(Turn) < 0.6f)
 	{
@@ -342,10 +347,22 @@ void AToyBoxPawn::TickVR()
 		return;
 	}
 
-	// 快速转身：摇杆推过 0.7 转一次，回到 0.3 以内才能再转
+	// 平滑转身（设置里选 SMOOTH）：死区 0.2 以外按推的多少连续转
+	if (ToySettings::Get().Turn == ToySettings::ETurn::Smooth)
+	{
+		if (FMath::Abs(Turn) > 0.2f)
+		{
+			const float Amount = FMath::Sign(Turn) * (FMath::Abs(Turn) - 0.2f) / 0.8f;
+			SnapTurn(Amount * SmoothTurnSpeed * GetWorld()->GetDeltaSeconds());
+		}
+		return;
+	}
+
+	// 分段转身：摇杆推过 0.7 转一次（45° 或 30°，设置里选），回到 0.3 以内才能再转
+	const float SnapDegrees = ToySettings::SnapTurnDegrees();
 	if (bSnapTurnArmed && FMath::Abs(Turn) > 0.7f)
 	{
-		SnapTurn(Turn > 0.f ? SnapTurnDegrees : -SnapTurnDegrees);
+		SnapTurn(Turn > 0.f ? SnapDegrees : -SnapDegrees);
 		bSnapTurnArmed = false;
 	}
 	else if (FMath::Abs(Turn) < 0.3f)
@@ -431,6 +448,16 @@ void AToyBoxPawn::LogPoseDiagnostics()
 				*Relative.GetLocation().ToCompactString(), Set[Index]->IsTracked() ? TEXT("") : TEXT("（没在追踪）"));
 		}
 	}
+}
+
+bool AToyBoxPawn::EnterHandCalibMode()
+{
+	if (!bVR || bCalibMode)
+	{
+		return false;
+	}
+	ToggleHandCalibMode();
+	return true;
 }
 
 void AToyBoxPawn::ToggleHandCalibMode()
@@ -538,7 +565,7 @@ void AToyBoxPawn::SmoothMove(FVector2D Input, float DeltaSeconds)
 	Input *= FMath::Min(1.f, (Size - MoveDeadZone) / (1.f - MoveDeadZone)) / Size;
 	const FRotator Yaw(0.f, Camera->GetComponentRotation().Yaw, 0.f);
 	const FVector Delta = (Yaw.RotateVector(FVector::ForwardVector) * Input.Y + Yaw.RotateVector(FVector::RightVector) * Input.X)
-		* MoveSpeed * DeltaSeconds;
+		* ToySettings::MoveSpeedCm() * DeltaSeconds;
 
 	// 胶囊体立在头的正下方，从现在的位置扫到目标位置；碰到墙 / 桌子就停在碰撞点前，再沿墙面滑一下
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyMove), false, this);
@@ -738,10 +765,15 @@ void AToyBoxPawn::TickDesktop()
 	if (PC->WasInputKeyJustPressed(EKeys::LeftMouseButton))
 	{
 		AToyTouchScreen* Screen = bHit ? Cast<AToyTouchScreen>(Hit.GetActor()) : nullptr;
-		bDesktopClickIsPoke = Screen != nullptr;
+		AToyMenuPanel* Menu = bHit ? Cast<AToyMenuPanel>(Hit.GetActor()) : nullptr;
+		bDesktopClickIsPoke = Screen != nullptr || Menu != nullptr;
 		if (Screen)
 		{
 			Screen->Poke(Hit.GetComponent());
+		}
+		if (Menu)
+		{
+			Menu->Poke(Hit.GetComponent());
 		}
 	}
 	const bool bLeftDown = PC->IsInputKeyDown(EKeys::LeftMouseButton);
@@ -764,11 +796,21 @@ void AToyBoxPawn::TickDesktop()
 	RightHand->SetDesktopPose(GripTarget, FRotator(0.f, Direction.Rotation().Yaw, -90.f));
 	RightHand->SetInputs(0.f, bLeftDown && !bDesktopClickIsPoke ? 1.f : 0.f);
 
+	// M = 叫出 / 收起主菜单（VR 里戳触屏右上角的 MENU）
+	if (PC->WasInputKeyJustPressed(EKeys::M))
+	{
+		for (TActorIterator<AToyMenuPanel> It(GetWorld()); It; ++It)
+		{
+			It->Toggle();
+			break;
+		}
+	}
+
 	// WASD 平滑移动（和 VR 左摇杆同一套），按住 T 从镜头沿鼠标方向瞄准传送，松开 T 传送
 	const FVector2D Keys((PC->IsInputKeyDown(EKeys::D) ? 1.f : 0.f) - (PC->IsInputKeyDown(EKeys::A) ? 1.f : 0.f),
 		(PC->IsInputKeyDown(EKeys::W) ? 1.f : 0.f) - (PC->IsInputKeyDown(EKeys::S) ? 1.f : 0.f));
 	SmoothMove(Keys, GetWorld()->GetDeltaSeconds());
-	if (PC->IsInputKeyDown(EKeys::T))
+	if (PC->IsInputKeyDown(EKeys::T) && ToySettings::Get().bTeleport)
 	{
 		bTeleportAiming = true;
 		bTeleportValid = UpdateTeleportAim(Origin + Direction * 30.f, (Direction + FVector(0.f, 0.f, 0.25f)).GetSafeNormal());

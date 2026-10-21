@@ -109,7 +109,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float PinchThumbCurl = 0.55f;
 
-	/** 抓取判定半径：捏合点到物体碰撞表面的距离不超过这么多（厘米）才算碰到。 */
+	/** 抓取判定半径：捏合点到物体碰撞表面的距离不超过这么多（厘米）才算碰到。每帧按设置（ToySettings::GrabRadiusCm）覆盖。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float GrabRadius = 2.f;
 

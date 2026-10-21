@@ -41,6 +41,9 @@ public:
 
 	AToyHand* GetRightHand() const { return RightHand; }
 
+	/** 菜单的 CALIBRATE HANDS：进手部校准模式（和长按左摇杆一样）。不在 VR 里或已经在校准时返回 false。 */
+	bool EnterHandCalibMode();
+
 	/** 调试命令（toy.GrabAudit）接管右手时打开：桌面模式不再读鼠标、不再摆手。 */
 	void SetExternalControl(bool bEnabled) { bExternalControl = bEnabled; }
 
@@ -69,16 +72,14 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<UMotionControllerComponent> RightPalm;
 
+	/** 平滑转身的速度（度 / 秒，设置里选了 SMOOTH 时用）。分段转身的角度、移动速度见 ToySettings。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
-	float SnapTurnDegrees = 45.f;
+	float SmoothTurnSpeed = 90.f;
 
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float DesktopEyeHeight = 165.f;
 
-	/** 左摇杆平滑移动的速度（厘米 / 秒）和死区。 */
-	UPROPERTY(EditAnywhere, Category = "ToyBox")
-	float MoveSpeed = 150.f;
-
+	/** 左摇杆平滑移动的死区（速度在设置里选）。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float MoveDeadZone = 0.2f;
 
