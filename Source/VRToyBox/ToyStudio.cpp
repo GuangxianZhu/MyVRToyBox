@@ -113,7 +113,7 @@ AToyStudio::AToyStudio()
 			FVector(5.f, 5.f, LegHeight), FVector(LegX, LegY, LegHeight * 0.5f), LegColor, FRotator::ZeroRotator);
 	}
 
-	// 灯：全部可移动光源，不需要烘焙。只有主灯投影，省性能
+	// 灯：全部可移动光源，不需要烘焙。三盏都投影：主灯给清楚的影子，补光和背光给淡一点的第二、三道影子，看起来更立体
 	auto Light = [this](FName Name, const FVector& Location, float Lumens, bool bShadows)
 	{
 		UPointLightComponent* PointLight = CreateDefaultSubobject<UPointLightComponent>(Name);
@@ -127,8 +127,8 @@ AToyStudio::AToyStudio()
 		return PointLight;
 	};
 	Light(TEXT("MainLight"), FVector(TableX, 0.f, 250.f), 6000.f, true);
-	Light(TEXT("FillLight"), FVector(-150.f, 150.f, 230.f), 2500.f, false);
-	Light(TEXT("BackLight"), FVector(200.f, -180.f, 220.f), 2000.f, false);
+	Light(TEXT("FillLight"), FVector(-150.f, 150.f, 230.f), 2500.f, true);
+	Light(TEXT("BackLight"), FVector(200.f, -180.f, 220.f), 2000.f, true);
 	UToyShapeComponent* Bulb = UToyShapeComponent::Create(this, TEXT("LampShade"), Root, EToyShape::Cylinder,
 		FVector(40.f, 40.f, 4.f), FVector(TableX, 0.f, RoomHeight - 2.f), FLinearColor(1.f, 0.95f, 0.85f), FRotator::ZeroRotator);
 	Bulb->SetCastShadow(false);
