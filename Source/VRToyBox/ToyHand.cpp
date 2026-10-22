@@ -497,6 +497,11 @@ void AToyHand::SetPokeEnabled(bool bEnabled)
 	if (!bEnabled)
 	{
 		Touching.Reset();
+		if (AToyTouchScreen* Screen = TouchingScreen.Get())
+		{
+			Screen->ReleaseFinger(this);
+		}
+		TouchingScreen.Reset();
 	}
 }
 
@@ -777,25 +782,41 @@ void AToyHand::TickPoke()
 	GetWorld()->OverlapMultiByObjectType(Overlaps, PokeTip->GetComponentLocation(), FQuat::Identity,
 		FCollisionObjectQueryParams(ECC_WorldDynamic), FCollisionShape::MakeSphere(1.f), Params);
 
-	// 只在"刚碰到"的那一帧触发，手指停在按钮里不会连发
+	// 触屏（GUI）：指尖在它的感应区里就每帧交给它，由它按离屏幕的距离判断悬停 / 按下 / 松开。
+	// 主菜单面板（3D 按钮）：只在"刚碰到"按钮触发盒的那一帧触发，手指停在按钮里不会连发
+	AToyTouchScreen* ScreenNow = nullptr;
 	TArray<TWeakObjectPtr<UPrimitiveComponent>> NowTouching;
 	for (const FOverlapResult& Overlap : Overlaps)
 	{
 		UPrimitiveComponent* Component = Overlap.GetComponent();
 		AToyTouchScreen* Screen = Cast<AToyTouchScreen>(Overlap.GetActor());
+		if (Screen && Component == Screen->TouchZone.Get() && !ScreenNow)
+		{
+			ScreenNow = Screen;
+			if (Screen->TouchFinger(this, PokeTip->GetComponentLocation()))
+			{
+				Pulse(0.5f, 0.05f);
+			}
+			continue;
+		}
 		AToyMenuPanel* Menu = Cast<AToyMenuPanel>(Overlap.GetActor());
-		if (!Component || (!Screen && !Menu))
+		if (!Component || !Menu)
 		{
 			continue;
 		}
 		const TWeakObjectPtr<UPrimitiveComponent> WeakComponent(Component);
 		NowTouching.Add(WeakComponent);
-		if (!Touching.Contains(WeakComponent) && (Screen ? Screen->Poke(Component) : Menu->Poke(Component)))
+		if (!Touching.Contains(WeakComponent) && Menu->Poke(Component))
 		{
 			Pulse(0.5f, 0.05f);
 		}
 	}
 	Touching = MoveTemp(NowTouching);
+	if (AToyTouchScreen* Previous = TouchingScreen.Get(); Previous && Previous != ScreenNow)
+	{
+		Previous->ReleaseFinger(this);
+	}
+	TouchingScreen = ScreenNow;
 }
 
 void AToyHand::RecordMotion()

@@ -35,7 +35,7 @@ namespace
 	const FLinearColor LegColor(0.1f, 0.1f, 0.1f);
 	const FLinearColor ShelfColor(0.3f, 0.2f, 0.12f);
 
-	// 调试命令 toy.Screen <按钮名>：和戳触屏上那个按钮一样（Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Server / Robot / Explode / Reset /
+	// 调试命令 toy.Screen <按钮名>：和戳触屏上那个按钮一样（Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Server / Robot / Hide / Explode / Reset /
 	// MoveNear / MoveFar / MoveLeft / MoveRight），可以在 -ExecCmds 里连着写，不用鼠标点
 	void ScreenCommand(const TArray<FString>& Args, UWorld* World)
 	{
@@ -49,7 +49,7 @@ namespace
 			{ TEXT("explode"), EToyScreenAction::ToggleExplode }, { TEXT("reset"), EToyScreenAction::ResetParts },
 			{ TEXT("movenear"), EToyScreenAction::MoveNear }, { TEXT("movefar"), EToyScreenAction::MoveFar },
 			{ TEXT("moveleft"), EToyScreenAction::MoveLeft }, { TEXT("moveright"), EToyScreenAction::MoveRight },
-			{ TEXT("menu"), EToyScreenAction::OpenMenu },
+			{ TEXT("menu"), EToyScreenAction::OpenMenu }, { TEXT("hide"), EToyScreenAction::HideModel },
 		};
 		AToyStudio* Studio = nullptr;
 		for (TActorIterator<AToyStudio> It(World); It && !Studio; ++It)
@@ -303,12 +303,12 @@ void AToyStudio::HandleScreenAction(EToyScreenAction Action)
 	case EToyScreenAction::MoveLeft:      MoveModel(FVector(0.f, -MoveStepCm, 0.f)); break;
 	case EToyScreenAction::MoveRight:     MoveModel(FVector(0.f, MoveStepCm, 0.f)); break;
 	case EToyScreenAction::OpenMenu:      if (Menu) { Menu->Open(); } break;
+	case EToyScreenAction::HideModel:     if (Model) { ToggleModel(ModelKind); } break;
+	// 翻页只是触屏自己的事，不会传到这里
+	case EToyScreenAction::PrevPage:
+	case EToyScreenAction::NextPage:      break;
 	}
-	// 戳按钮时触屏自己也会刷新；调试命令 toy.Screen 不经过触屏，这里统一刷新一次按钮上的字和状态栏
-	if (Screen)
-	{
-		Screen->RefreshStatus();
-	}
+	// 触屏界面每帧从工作室读状态，不用在这里刷新
 }
 
 void AToyStudio::MoveModel(const FVector& DeltaCm)
@@ -365,13 +365,13 @@ bool AToyStudio::ToggleModel(EToyModelKind Kind)
 	if (!Spawned->LoadManifest(FPaths::ProjectContentDir() / *Manifest))
 	{
 		Spawned->Destroy();
-		MissingModel = KindName(Kind);
+		MissingKind = Kind;
 		return false;
 	}
 	Spawned->AttachToComponent(Mount, FAttachmentTransformRules::KeepWorldTransform);
 	Model = Spawned;
 	ModelKind = Kind;
-	MissingModel.Reset();
+	MissingKind.Reset();
 	return true;
 }
 
@@ -405,9 +405,9 @@ bool AToyStudio::IsModelExploded() const
 
 FString AToyStudio::GetStatusText() const
 {
-	if (!MissingModel.IsEmpty())
+	if (MissingKind)
 	{
-		return FString::Printf(TEXT("%s NOT IMPORTED - RUN scripts/import_%s.bat"), *MissingModel, *MissingModel.ToLower());
+		return FString::Printf(TEXT("%s NOT IMPORTED"), *KindName(*MissingKind));
 	}
 	const FString Name = !Model ? TEXT("MODEL") : KindName(ModelKind);
 	const FString State = !Model ? TEXT("OFF") : (Model->IsExploded() ? TEXT("EXPLODED") : TEXT("ASSEMBLED"));

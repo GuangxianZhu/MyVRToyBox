@@ -762,15 +762,22 @@ void AToyBoxPawn::TickDesktop()
 	FHitResult Hit;
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Origin, Origin + Direction * 500.f, ECC_Visibility, Params);
 
-	if (PC->WasInputKeyJustPressed(EKeys::LeftMouseButton))
+	// 触屏是 GUI：鼠标指着它时每帧把打到的点交给它（按钮悬停变亮），按下左键就点那个按钮
+	const bool bClick = PC->WasInputKeyJustPressed(EKeys::LeftMouseButton);
+	AToyTouchScreen* Screen = bHit ? Cast<AToyTouchScreen>(Hit.GetActor()) : nullptr;
+	if (AToyTouchScreen* Previous = HoverScreen.Get(); Previous && Previous != Screen)
 	{
-		AToyTouchScreen* Screen = bHit ? Cast<AToyTouchScreen>(Hit.GetActor()) : nullptr;
+		Previous->MouseLeave();
+	}
+	HoverScreen = Screen;
+	if (Screen)
+	{
+		Screen->MouseAt(Hit.ImpactPoint, bClick);
+	}
+	if (bClick)
+	{
 		AToyMenuPanel* Menu = bHit ? Cast<AToyMenuPanel>(Hit.GetActor()) : nullptr;
 		bDesktopClickIsPoke = Screen != nullptr || Menu != nullptr;
-		if (Screen)
-		{
-			Screen->Poke(Hit.GetComponent());
-		}
 		if (Menu)
 		{
 			Menu->Poke(Hit.GetComponent());

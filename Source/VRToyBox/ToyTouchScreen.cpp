@@ -2,33 +2,113 @@
 
 #include "ToyShapeComponent.h"
 #include "ToyStudio.h"
+#include "Brushes/SlateColorBrush.h"
+#include "Brushes/SlateRoundedBoxBrush.h"
 #include "Components/BoxComponent.h"
-#include "Components/TextRenderComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Engine/CollisionProfile.h"
-#include "Engine/World.h"
-#include "TimerManager.h"
+#include "HAL/PlatformTime.h"
+#include "Styling/CoreStyle.h"
+#include "Widgets/Layout/SBorder.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/SBoxPanel.h"
+#include "Widgets/SCanvas.h"
+#include "Widgets/Text/STextBlock.h"
+
+/** 界面用到的画刷。Slate 控件只存画刷的指针，所以画刷要比界面活得久：跟着触屏 Actor 走。 */
+struct FToyScreenBrushes
+{
+	FSlateColorBrush Flat = FSlateColorBrush(FLinearColor::White);
+	FSlateRoundedBoxBrush Panel = FSlateRoundedBoxBrush(FLinearColor::White, 22.f);
+	FSlateRoundedBoxBrush Card = FSlateRoundedBoxBrush(FLinearColor::White, 18.f);
+	FSlateRoundedBoxBrush Swatch = FSlateRoundedBoxBrush(FLinearColor::White, 12.f);
+	FSlateRoundedBoxBrush Dot = FSlateRoundedBoxBrush(FLinearColor::White, 100.f);
+};
 
 namespace
 {
 	const FLinearColor StandColor(0.03f, 0.03f, 0.035f);
 	const FLinearColor DisplayColor(0.02f, 0.05f, 0.12f);
-	// 按钮面的中心在屏幕坐标 X = FaceX 处，按下时往里缩 0.5cm
-	constexpr float FaceX = 1.8f;
-	// 屏幕 32 × 22 cm。宽按钮两个一排，窄按钮四个一排（指尖大约 1.5cm 宽，7cm 的按钮在 VR 里也好戳），
-	// 模型按钮七个一排（4.1cm 宽、间隔 0.4cm，比窄按钮窄，字也小一号；指尖 1.5cm，还是戳得准）
-	constexpr float WideWidth = 14.f;
-	constexpr float NarrowWidth = 7.f;
-	constexpr float ModelWidth = 4.1f;
-	constexpr float ModelText = 0.75f;
-	constexpr float LineOffset = 0.8f;    // 按钮上两行字离按钮中心的高度
-	constexpr float WideText = 1.5f;
-	constexpr float NarrowText = 1.15f;
-	// 窄按钮的四列、宽按钮的两列（屏幕坐标 Y，站在屏幕前看 +Y 在左手边）
-	constexpr float Col4[4] = { 11.4f, 3.8f, -3.8f, -11.4f };
-	constexpr float Col2[2] = { 7.6f, -7.6f };
-	constexpr float Col7[7] = { 13.5f, 9.f, 4.5f, 0.f, -4.5f, -9.f, -13.5f };
-	// 四排按钮的高度（标题在 9、状态栏在 -9.8）
-	constexpr float Row[4] = { 5.5f, 1.6f, -2.3f, -6.2f };
+
+	// 屏幕 32 × 22 cm，界面按每厘米 40 像素渲染（1280 × 880）。头显在 50cm 外每厘米只有约 29 个像素，再高也看不出区别
+	constexpr float ScreenW = 32.f;
+	constexpr float ScreenH = 22.f;
+	constexpr float PxPerCm = 40.f;
+	const FVector2D DrawSize(ScreenW * PxPerCm, ScreenH * PxPerCm);
+	// 界面面板贴在显示屏表面前 0.05cm（显示屏前表面在屏幕坐标 X = 1.4）
+	constexpr float SurfaceX = 1.45f;
+
+	// 界面颜色按"看起来的样子"写（0~1），整体再乘 Brightness。字是白的，按钮在 0.3 上下，背景接近黑
+	const FLinearColor BackColor(0.02f, 0.03f, 0.06f);
+	const FLinearColor PanelColor(0.045f, 0.06f, 0.1f);
+	const FLinearColor TextColor(1.f, 1.f, 1.f);
+	const FLinearColor DimTextColor(0.55f, 0.65f, 0.8f);
+	const FLinearColor WarnColor(1.f, 0.55f, 0.15f);
+	const FLinearColor SelectColor(1.f, 0.8f, 0.3f);
+	const FLinearColor DisabledColor(0.07f, 0.075f, 0.085f);
+	const FLinearColor GreyButton(0.16f, 0.17f, 0.2f);
+	const FLinearColor MoveButton(0.08f, 0.13f, 0.2f);
+
+	/** 七个模型卡片：模型、按钮动作、中文名、英文代号、导入脚本名（scripts/import_*.bat）、颜色。 */
+	struct FToyModelEntry
+	{
+		EToyModelKind Kind;
+		EToyScreenAction Action;
+		const TCHAR* Title;
+		const TCHAR* Code;
+		const TCHAR* Script;
+		FLinearColor Color;
+	};
+
+	const FToyModelEntry ModelTable[] = {
+		{ EToyModelKind::Motor, EToyScreenAction::ToggleMotor, TEXT("三相电机"), TEXT("MOTOR"), TEXT("motor"), FLinearColor(0.15f, 0.35f, 0.85f) },
+		{ EToyModelKind::Valve, EToyScreenAction::ToggleValve, TEXT("气动阀门"), TEXT("VALVE"), TEXT("valve"), FLinearColor(0.1f, 0.55f, 0.6f) },
+		{ EToyModelKind::Drone, EToyScreenAction::ToggleDrone, TEXT("涵道无人机"), TEXT("DRONE"), TEXT("drone"), FLinearColor(0.45f, 0.3f, 0.75f) },
+		{ EToyModelKind::Lathe, EToyScreenAction::ToggleLathe, TEXT("迷你车床"), TEXT("LATHE"), TEXT("lathe"), FLinearColor(0.7f, 0.25f, 0.45f) },
+		{ EToyModelKind::Multimeter, EToyScreenAction::ToggleMultimeter, TEXT("数字万用表"), TEXT("METER"), TEXT("meter"), FLinearColor(0.85f, 0.65f, 0.05f) },
+		{ EToyModelKind::Server, EToyScreenAction::ToggleServer, TEXT("AI 服务器"), TEXT("SERVER"), TEXT("server"), FLinearColor(0.3f, 0.6f, 0.1f) },
+		{ EToyModelKind::Orb, EToyScreenAction::ToggleOrb, TEXT("漂浮机器人"), TEXT("ORB-1"), TEXT("orb"), FLinearColor(0.95f, 0.4f, 0.05f) },
+	};
+	constexpr int32 ModelCount = UE_ARRAY_COUNT(ModelTable);
+
+	// 模型卡片 4 × 2，每页 7 个模型 + 最后一格"收起模型"。卡片 190 × 220 像素 ≈ 4.8 × 5.5cm
+	constexpr int32 ModelsPerPage = 7;
+	const FVector2D CardOrigin(30.f, 150.f);
+	const FVector2D CardSize(190.f, 220.f);
+	constexpr float CardGap = 20.f;
+
+	FBox2D PixelRect(double X, double Y, double W, double H)
+	{
+		return FBox2D(FVector2D(X, Y), FVector2D(X + W, Y + H));
+	}
+
+	FBox2D CardRect(int32 Slot)
+	{
+		const FVector2D Min = CardOrigin + FVector2D((Slot % 4) * (CardSize.X + CardGap), (Slot / 4) * (CardSize.Y + CardGap));
+		return FBox2D(Min, Min + CardSize);
+	}
+
+	FLinearColor Scaled(const FLinearColor& Color, float Scale)
+	{
+		return FLinearColor(Color.R * Scale, Color.G * Scale, Color.B * Scale, Color.A);
+	}
+
+	FSlateFontInfo Font(int32 Size, bool bBold = true)
+	{
+		// 引擎默认字体带中文后备字形（信息牌也是用它）
+		return FCoreStyle::GetDefaultFontStyle(bBold ? "Bold" : "Regular", Size);
+	}
+
+	/** 把触屏的一个 const 成员函数包成 Slate 每帧读值的 lambda；触屏没了就返回 Fallback。 */
+	template <typename R, typename... TParams, typename... TArgs>
+	auto Live(TWeakObjectPtr<AToyTouchScreen> Weak, R (AToyTouchScreen::*Getter)(TParams...) const, R Fallback, TArgs... Args)
+	{
+		return [Weak, Getter, Fallback, Args...]() -> R
+		{
+			const AToyTouchScreen* Screen = Weak.Get();
+			return Screen ? (Screen->*Getter)(Args...) : Fallback;
+		};
+	}
 }
 
 AToyTouchScreen::AToyTouchScreen()
@@ -46,169 +126,574 @@ AToyTouchScreen::AToyTouchScreen()
 	Pivot->SetupAttachment(Root);
 	Pivot->SetRelativeLocationAndRotation(FVector(-2.f, 0.f, 28.f), FRotator(30.f, 0.f, 0.f));
 
-	UToyShapeComponent::Create(this, TEXT("Bezel"), Pivot, EToyShape::Box, FVector(2.f, 34.f, 24.f),
+	UToyShapeComponent::Create(this, TEXT("Bezel"), Pivot, EToyShape::Box, FVector(2.f, ScreenW + 2.f, ScreenH + 2.f),
 		FVector::ZeroVector, StandColor, FRotator::ZeroRotator);
-	UToyShapeComponent::Create(this, TEXT("Display"), Pivot, EToyShape::Box, FVector(0.4f, 32.f, 22.f),
+	// 显示屏底板：编辑器视口里（界面还没生成）看到的就是它
+	UToyShapeComponent::Create(this, TEXT("Display"), Pivot, EToyShape::Box, FVector(0.4f, ScreenW, ScreenH),
 		FVector(1.2f, 0.f, 0.f), DisplayColor, FRotator::ZeroRotator);
 
-	// TextRender 自带字体没有中文字形，所以屏幕上用英文
-	MakeText(TEXT("Title"), FVector(1.5f, 0.f, 9.f), TEXT("TOY BOX"), 2.f, FColor::White);
-	Status = MakeText(TEXT("Status"), FVector(1.5f, 0.f, -9.8f), TEXT(""), 1.0f, FColor(150, 200, 255));
+	// 界面面板：WidgetComponent 的本地单位是像素，缩放 1/40 → 1 像素 = 0.025cm，正好铺满 32 × 22cm。面朝 +X
+	Gui = CreateDefaultSubobject<UWidgetComponent>(TEXT("Gui"));
+	Gui->SetupAttachment(Pivot);
+	Gui->SetRelativeLocation(FVector(SurfaceX, 0.f, 0.f));
+	Gui->SetRelativeScale3D(FVector(1.f / PxPerCm));
+	Gui->SetWidgetSpace(EWidgetSpace::World);
+	Gui->SetDrawSize(DrawSize);
+	Gui->SetDrawAtDesiredSize(false);
+	Gui->SetPivot(FVector2D(0.5f, 0.5f));
+	Gui->SetTwoSided(false);
+	Gui->SetBlendMode(EWidgetBlendMode::Opaque);
+	Gui->SetWindowFocusable(false);
+	Gui->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
+	Gui->SetCastShadow(false);
 
-	// 第一排：方块（宽）。第二排：七个模型。第三排：爆炸 / 复位（宽）。
-	// 第四排：挪模型（窄，灰蓝色），左 / 拉近 / 推远 / 右
-	MakeButton(TEXT("Spawn"), EToyScreenAction::SpawnCube, Col2[0], Row[0], TEXT("SPAWN"), TEXT("CUBE"), FLinearColor(0.1f, 0.7f, 0.25f), WideWidth, WideText);
-	MakeButton(TEXT("Clear"), EToyScreenAction::ClearCubes, Col2[1], Row[0], TEXT("CLEAR"), TEXT("CUBES"), FLinearColor(0.8f, 0.15f, 0.12f), WideWidth, WideText);
-	MakeButton(TEXT("Motor"), EToyScreenAction::ToggleMotor, Col7[0], Row[1], TEXT("SHOW"), TEXT("MOTOR"), FLinearColor(0.15f, 0.35f, 0.85f), ModelWidth, ModelText);
-	MakeButton(TEXT("Valve"), EToyScreenAction::ToggleValve, Col7[1], Row[1], TEXT("SHOW"), TEXT("VALVE"), FLinearColor(0.1f, 0.55f, 0.6f), ModelWidth, ModelText);
-	MakeButton(TEXT("Drone"), EToyScreenAction::ToggleDrone, Col7[2], Row[1], TEXT("SHOW"), TEXT("DRONE"), FLinearColor(0.45f, 0.3f, 0.75f), ModelWidth, ModelText);
-	MakeButton(TEXT("Lathe"), EToyScreenAction::ToggleLathe, Col7[3], Row[1], TEXT("SHOW"), TEXT("LATHE"), FLinearColor(0.7f, 0.25f, 0.45f), ModelWidth, ModelText);
-	MakeButton(TEXT("Meter"), EToyScreenAction::ToggleMultimeter, Col7[4], Row[1], TEXT("SHOW"), TEXT("METER"), FLinearColor(0.85f, 0.65f, 0.05f), ModelWidth, ModelText);
-	MakeButton(TEXT("Server"), EToyScreenAction::ToggleServer, Col7[5], Row[1], TEXT("SHOW"), TEXT("SERVER"), FLinearColor(0.3f, 0.6f, 0.1f), ModelWidth, ModelText);
-	MakeButton(TEXT("Robot"), EToyScreenAction::ToggleOrb, Col7[6], Row[1], TEXT("SHOW"), TEXT("ROBOT"), FLinearColor(0.95f, 0.4f, 0.05f), ModelWidth, ModelText);
-	MakeButton(TEXT("Explode"), EToyScreenAction::ToggleExplode, Col2[0], Row[2], TEXT("EXPLODE"), TEXT("VIEW"), FLinearColor(0.85f, 0.5f, 0.05f), WideWidth, WideText);
-	MakeButton(TEXT("Reset"), EToyScreenAction::ResetParts, Col2[1], Row[2], TEXT("RESET"), TEXT("PARTS"), FLinearColor(0.45f, 0.45f, 0.5f), WideWidth, WideText);
-	const FLinearColor MoveColor(0.2f, 0.32f, 0.45f);
-	MakeButton(TEXT("MoveLeft"), EToyScreenAction::MoveLeft, Col4[0], Row[3], TEXT("<<"), TEXT("LEFT"), MoveColor, NarrowWidth, NarrowText);
-	MakeButton(TEXT("MoveNear"), EToyScreenAction::MoveNear, Col4[1], Row[3], TEXT("MOVE"), TEXT("NEAR"), MoveColor, NarrowWidth, NarrowText);
-	MakeButton(TEXT("MoveFar"), EToyScreenAction::MoveFar, Col4[2], Row[3], TEXT("MOVE"), TEXT("FAR"), MoveColor, NarrowWidth, NarrowText);
-	MakeButton(TEXT("MoveRight"), EToyScreenAction::MoveRight, Col4[3], Row[3], TEXT(">>"), TEXT("RIGHT"), MoveColor, NarrowWidth, NarrowText);
-	// 右上角、标题右边：矮一点的 MENU，叫出主菜单（开始 / 设置）
-	MakeButton(TEXT("Menu"), EToyScreenAction::OpenMenu, Col4[3], 9.4f, TEXT("MENU"), TEXT(""), FLinearColor(0.45f, 0.45f, 0.5f),
-		NarrowWidth, NarrowText, 2.6f);
+	// 感应区：屏幕表面后 1.5cm 到前 3.5cm。手每帧在指尖做小球重叠查询（AToyHand::TickPoke），查到它才把指尖交给 TouchFinger
+	TouchZone = CreateDefaultSubobject<UBoxComponent>(TEXT("TouchZone"));
+	TouchZone->SetupAttachment(Pivot);
+	TouchZone->SetRelativeLocation(FVector(SurfaceX + 1.f, 0.f, 0.f));
+	TouchZone->InitBoxExtent(FVector(2.5f, ScreenW * 0.5f, ScreenH * 0.5f));
+	TouchZone->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	TouchZone->SetCollisionObjectType(ECC_WorldDynamic);
+	TouchZone->SetCollisionResponseToAllChannels(ECR_Overlap);
+	TouchZone->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+	TouchZone->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+	// 鼠标点击用的薄片：就在屏幕表面，射线打到的点几乎没有视差
+	ClickPlane = CreateDefaultSubobject<UBoxComponent>(TEXT("ClickPlane"));
+	ClickPlane->SetupAttachment(Pivot);
+	ClickPlane->SetRelativeLocation(FVector(SurfaceX, 0.f, 0.f));
+	ClickPlane->InitBoxExtent(FVector(0.05f, ScreenW * 0.5f, ScreenH * 0.5f));
+	ClickPlane->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	ClickPlane->SetCollisionObjectType(ECC_WorldStatic);
+	ClickPlane->SetCollisionResponseToAllChannels(ECR_Ignore);
+	ClickPlane->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+
+	BuildItems();
 }
 
-UTextRenderComponent* AToyTouchScreen::MakeText(FName Name, const FVector& Location, const FString& Text, float Size, const FColor& Color)
+void AToyTouchScreen::BeginPlay()
 {
-	UTextRenderComponent* Label = CreateDefaultSubobject<UTextRenderComponent>(Name);
-	Label->SetupAttachment(Pivot);
-	Label->SetRelativeLocation(Location);
-	Label->SetHorizontalAlignment(EHTA_Center);
-	Label->SetVerticalAlignment(EVRTA_TextCenter);
-	Label->SetWorldSize(Size);
-	Label->SetTextRenderColor(Color);
-	Label->SetText(FText::FromString(Text));
-	Label->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
-	return Label;
-}
-
-void AToyTouchScreen::MakeButton(const FString& Id, EToyScreenAction Action, float Y, float Z, const FString& Line1,
-	const FString& Line2, const FLinearColor& Color, float Width, float TextSize, float ButtonHeight)
-{
-	FToyScreenButton& Button = Buttons.AddDefaulted_GetRef();
-	Button.Action = Action;
-	// 按钮面压暗到 45%：灯就在桌子正上方，原来的颜色在画面里接近粉色，白字几乎看不清
-	Button.Color = FLinearColor(Color.R * 0.45f, Color.G * 0.45f, Color.B * 0.45f);
-	Button.RestLocation = FVector(FaceX, Y, Z);
-	Button.Face = UToyShapeComponent::Create(this, *(Id + TEXT("Face")), Pivot, EToyShape::Box,
-		FVector(0.8f, Width, ButtonHeight), Button.RestLocation, Button.Color, FRotator::ZeroRotator);
-	const float Offset = Line2.IsEmpty() ? 0.f : LineOffset;
-	Button.Line1 = MakeText(*(Id + TEXT("Line1")), FVector(FaceX + 0.5f, Y, Z + Offset), Line1, TextSize, FColor::White);
-	Button.Line2 = MakeText(*(Id + TEXT("Line2")), FVector(FaceX + 0.5f, Y, Z - Offset), Line2, TextSize, FColor::White);
-
-	// 触发盒从按钮面里 0.8cm 一直延伸到面前 1.6cm：指尖快碰到就算按下，戳穿了也还在盒子里
-	UBoxComponent* Zone = CreateDefaultSubobject<UBoxComponent>(*(Id + TEXT("Zone")));
-	Zone->SetupAttachment(Pivot);
-	Zone->SetRelativeLocation(FVector(FaceX + 0.8f, Y, Z));
-	Zone->InitBoxExtent(FVector(1.2f, Width * 0.5f, ButtonHeight * 0.5f));
-	Zone->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	Zone->SetCollisionObjectType(ECC_WorldDynamic);
-	Zone->SetCollisionResponseToAllChannels(ECR_Overlap);
-	// 桌面模式用 Visibility 射线点按钮
-	Zone->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
-	Button.Zone = Zone;
-}
-
-FToyScreenButton* AToyTouchScreen::FindButton(EToyScreenAction Action)
-{
-	return Buttons.FindByPredicate([Action](const FToyScreenButton& Button) { return Button.Action == Action; });
+	Super::BeginPlay();
+	Brushes = MakeShared<FToyScreenBrushes>();
+	Gui->SetTintColorAndOpacity(FLinearColor(Brightness, Brightness, Brightness, 1.f));
+	Gui->SetSlateWidget(BuildGui());
 }
 
 void AToyTouchScreen::SetStudio(AToyStudio* InStudio)
 {
 	Studio = InStudio;
-	RefreshStatus();
 }
 
-bool AToyTouchScreen::Poke(UPrimitiveComponent* Touched)
+void AToyTouchScreen::BuildItems()
 {
-	const int32 Index = Buttons.IndexOfByPredicate([Touched](const FToyScreenButton& Button) { return Button.Zone.Get() == Touched; });
-	if (Index == INDEX_NONE)
+	// 布局（像素，界面 1280 × 880，左上角为原点）：
+	//   顶栏 0~90：标题、提示、右上角菜单
+	//   左 30~850：模型卡片 4 × 2（150~630），方块两个大按钮（700~840）
+	//   右 870~1260：当前模型（爆炸 / 复位）和挪动方向键
+	Items.Reset();
+	auto Add = [this](EToyScreenAction Action, const FBox2D& Rect, const FLinearColor& Color, int32 InPage = INDEX_NONE, int32 InModel = INDEX_NONE)
+	{
+		FToyScreenItem& Item = Items.AddDefaulted_GetRef();
+		Item.Action = Action;
+		Item.Rect = Rect;
+		Item.Color = Color;
+		Item.Page = InPage;
+		Item.Model = InModel;
+	};
+
+	Add(EToyScreenAction::OpenMenu, PixelRect(1090.f, 18.f, 170.f, 60.f), GreyButton);
+
+	for (int32 Index = 0; Index < ModelCount; ++Index)
+	{
+		Add(ModelTable[Index].Action, CardRect(Index % ModelsPerPage), Scaled(ModelTable[Index].Color, 0.22f), Index / ModelsPerPage, Index);
+	}
+	Add(EToyScreenAction::HideModel, CardRect(ModelsPerPage), GreyButton);
+	// 翻页箭头：模型超过 7 个才出现（IsItemVisible）
+	Add(EToyScreenAction::PrevPage, PixelRect(690.f, 96.f, 74.f, 46.f), GreyButton);
+	Add(EToyScreenAction::NextPage, PixelRect(776.f, 96.f, 74.f, 46.f), GreyButton);
+
+	Add(EToyScreenAction::SpawnCube, PixelRect(30.f, 700.f, 400.f, 140.f), FLinearColor(0.04f, 0.25f, 0.1f));
+	Add(EToyScreenAction::ClearCubes, PixelRect(450.f, 700.f, 400.f, 140.f), FLinearColor(0.3f, 0.06f, 0.05f));
+
+	Add(EToyScreenAction::ToggleExplode, PixelRect(890.f, 236.f, 350.f, 120.f), FLinearColor(0.34f, 0.2f, 0.02f));
+	Add(EToyScreenAction::ResetParts, PixelRect(890.f, 372.f, 350.f, 96.f), GreyButton);
+
+	// 方向键 110 × 100（≈ 2.8 × 2.5cm），中间一格显示距离
+	Add(EToyScreenAction::MoveFar, PixelRect(1010.f, 530.f, 110.f, 100.f), MoveButton);
+	Add(EToyScreenAction::MoveLeft, PixelRect(890.f, 640.f, 110.f, 100.f), MoveButton);
+	Add(EToyScreenAction::MoveRight, PixelRect(1130.f, 640.f, 110.f, 100.f), MoveButton);
+	Add(EToyScreenAction::MoveNear, PixelRect(1010.f, 750.f, 110.f, 100.f), MoveButton);
+}
+
+TSharedRef<SWidget> AToyTouchScreen::BuildGui()
+{
+	const TWeakObjectPtr<AToyTouchScreen> Weak(this);
+	const FToyScreenBrushes& B = *Brushes;
+	TSharedRef<SCanvas> Canvas = SNew(SCanvas);
+
+	auto AddBox = [&Canvas](const FBox2D& Rect, const FSlateBrush* Brush, const FLinearColor& Color)
+	{
+		Canvas->AddSlot().Position(Rect.Min).Size(Rect.GetSize())
+		[
+			SNew(SBorder).BorderImage(Brush).BorderBackgroundColor(Color)
+		];
+	};
+	auto AddText = [&Canvas](const FBox2D& Rect, TAttribute<FText> Text, int32 Size, const FLinearColor& Color, EHorizontalAlignment HAlign)
+	{
+		Canvas->AddSlot().Position(Rect.Min).Size(Rect.GetSize()).HAlign(HAlign).VAlign(VAlign_Center)
+		[
+			SNew(STextBlock).Text(Text).Font(Font(Size)).ColorAndOpacity(Color)
+		];
+	};
+
+	// 背景和两块面板
+	AddBox(PixelRect(0.f, 0.f, DrawSize.X, DrawSize.Y), &B.Flat, BackColor);
+	AddBox(PixelRect(870.f, 96.f, 390.f, 764.f), &B.Panel, PanelColor);
+
+	// 顶栏
+	AddText(PixelRect(30.f, 18.f, 300.f, 60.f), FText::FromString(TEXT("VR 玩具箱")), 30, TextColor, HAlign_Left);
+	Canvas->AddSlot().Position(FVector2D(330.f, 18.f)).Size(FVector2D(740.f, 60.f)).HAlign(HAlign_Center).VAlign(VAlign_Center)
+	[
+		SNew(STextBlock)
+		.Text_Lambda(Live(Weak, &AToyTouchScreen::StatusText, FText()))
+		.Font(Font(16, false))
+		.ColorAndOpacity_Lambda([Weak]()
+		{
+			const AToyStudio* StudioActor = Weak.IsValid() ? Weak->Studio.Get() : nullptr;
+			return FSlateColor(StudioActor && StudioActor->GetMissingKind() ? WarnColor : DimTextColor);
+		})
+	];
+
+	// 左边的小标题
+	AddText(PixelRect(30.f, 96.f, 300.f, 46.f), FText::FromString(TEXT("模型")), 20, DimTextColor, HAlign_Left);
+	Canvas->AddSlot().Position(FVector2D(30.f, 650.f)).Size(FVector2D(820.f, 46.f)).HAlign(HAlign_Left).VAlign(VAlign_Center)
+	[
+		SNew(STextBlock).Text_Lambda(Live(Weak, &AToyTouchScreen::CubeText, FText())).Font(Font(20)).ColorAndOpacity(DimTextColor)
+	];
+
+	// 右边：当前模型的名字和状态、挪动标题、方向键中间的距离
+	AddText(PixelRect(890.f, 104.f, 350.f, 34.f), FText::FromString(TEXT("当前模型")), 16, DimTextColor, HAlign_Left);
+	Canvas->AddSlot().Position(FVector2D(890.f, 136.f)).Size(FVector2D(350.f, 50.f)).VAlign(VAlign_Center)
+	[
+		SNew(STextBlock).Text_Lambda(Live(Weak, &AToyTouchScreen::ModelTitle, FText())).Font(Font(28)).ColorAndOpacity(TextColor)
+	];
+	Canvas->AddSlot().Position(FVector2D(890.f, 186.f)).Size(FVector2D(350.f, 40.f)).VAlign(VAlign_Center)
+	[
+		SNew(STextBlock).Text_Lambda(Live(Weak, &AToyTouchScreen::ModelState, FText())).Font(Font(18, false)).ColorAndOpacity(DimTextColor)
+	];
+	AddText(PixelRect(890.f, 482.f, 350.f, 40.f), FText::FromString(TEXT("挪动模型")), 18, DimTextColor, HAlign_Left);
+	Canvas->AddSlot().Position(FVector2D(1010.f, 640.f)).Size(FVector2D(110.f, 100.f)).HAlign(HAlign_Center).VAlign(VAlign_Center)
+	[
+		SNew(STextBlock).Text_Lambda(Live(Weak, &AToyTouchScreen::DistanceText, FText())).Font(Font(18)).ColorAndOpacity(DimTextColor)
+		.Justification(ETextJustify::Center)
+	];
+
+	// 按钮和卡片：外层是选中描边（不选中时透明），内层是按钮底色；按下的一瞬间缩小 5%
+	for (int32 Index = 0; Index < Items.Num(); ++Index)
+	{
+		const FToyScreenItem& Item = Items[Index];
+		const bool bCard = Item.Model != INDEX_NONE || Item.Action == EToyScreenAction::HideModel;
+		Canvas->AddSlot().Position(Item.Rect.Min).Size(Item.Rect.GetSize())
+		[
+			SNew(SBorder)
+			.BorderImage(bCard ? &B.Card : &B.Swatch)
+			.Padding(4.f)
+			.BorderBackgroundColor_Lambda([Weak, Index]()
+			{
+				return FSlateColor(Weak.IsValid() && Weak->IsItemSelected(Index) ? SelectColor : FLinearColor::Transparent);
+			})
+			.Visibility_Lambda([Weak, Index]()
+			{
+				return Weak.IsValid() && Weak->IsItemVisible(Index) ? EVisibility::HitTestInvisible : EVisibility::Collapsed;
+			})
+			.RenderTransformPivot(FVector2D(0.5f, 0.5f))
+			.RenderTransform_Lambda([Weak, Index]()
+			{
+				const bool bFlash = Weak.IsValid() && Weak->IsItemFlashing(Index);
+				return TOptional<FSlateRenderTransform>(FSlateRenderTransform(FScale2f(bFlash ? 0.95f : 1.f)));
+			})
+			[
+				SNew(SBorder)
+				.BorderImage(bCard ? &B.Card : &B.Swatch)
+				.BorderBackgroundColor_Lambda(Live(Weak, &AToyTouchScreen::ItemColor, FSlateColor(DisabledColor), Index))
+				.Padding(FMargin(10.f))
+				.HAlign(HAlign_Center)
+				.VAlign(VAlign_Center)
+				[
+					BuildItemContent(Index)
+				]
+			]
+		];
+	}
+
+	// 手指光标：指尖投影的位置画一个圆点，越靠近屏幕越小，按下时变成橙色
+	for (int32 Slot = 0; Slot < static_cast<int32>(UE_ARRAY_COUNT(Fingers)); ++Slot)
+	{
+		auto Radius = [Weak, Slot]()
+		{
+			const float Distance = Weak.IsValid() ? Weak->Fingers[Slot].Distance : 0.f;
+			const float Hover = Weak.IsValid() ? Weak->HoverCm : 1.f;
+			return FMath::Lerp(9.f, 24.f, FMath::Clamp(Distance / Hover, 0.f, 1.f));
+		};
+		Canvas->AddSlot()
+		.Position(TAttribute<FVector2D>::CreateLambda([Weak, Slot, Radius]()
+		{
+			const FVector2D Pixel = Weak.IsValid() ? Weak->Fingers[Slot].Pixel : FVector2D::ZeroVector;
+			return Pixel - FVector2D(Radius());
+		}))
+		.Size(TAttribute<FVector2D>::CreateLambda([Radius]() { return FVector2D(Radius() * 2.f); }))
+		[
+			SNew(SBorder)
+			.BorderImage(&B.Dot)
+			.BorderBackgroundColor_Lambda([Weak, Slot]()
+			{
+				const bool bPressed = Weak.IsValid() && Weak->Fingers[Slot].bPressed;
+				return FSlateColor(bPressed ? FLinearColor(1.f, 0.5f, 0.1f, 0.9f) : FLinearColor(1.f, 1.f, 1.f, 0.55f));
+			})
+			.Visibility_Lambda([Weak, Slot]()
+			{
+				if (!Weak.IsValid())
+				{
+					return EVisibility::Collapsed;
+				}
+				const FToyScreenFinger& Finger = Weak->Fingers[Slot];
+				const bool bShow = Finger.bActive && !Finger.bMouse && Finger.Distance < Weak->HoverCm && Finger.Distance > -1.f;
+				return bShow ? EVisibility::HitTestInvisible : EVisibility::Collapsed;
+			})
+		];
+	}
+
+	return Canvas;
+}
+
+TSharedRef<SWidget> AToyTouchScreen::BuildItemContent(int32 Index)
+{
+	const TWeakObjectPtr<AToyTouchScreen> Weak(this);
+	const FToyScreenItem& Item = Items[Index];
+	auto TextColorOf = [Weak, Index]()
+	{
+		return FSlateColor(Weak.IsValid() && !Weak->IsItemEnabled(Index) ? FLinearColor(0.4f, 0.42f, 0.46f) : TextColor);
+	};
+
+	if (Item.Model != INDEX_NONE)
+	{
+		// 模型卡片：上面一块模型颜色的色块（以后换成缩略图），下面中文名和状态
+		const FToyModelEntry& Entry = ModelTable[Item.Model];
+		return SNew(SVerticalBox)
+			+ SVerticalBox::Slot().AutoHeight()
+			[
+				SNew(SBox).WidthOverride(166.f).HeightOverride(100.f)
+				[
+					SNew(SBorder)
+					.BorderImage(&Brushes->Swatch)
+					.BorderBackgroundColor(Scaled(Entry.Color, 0.6f))
+					.HAlign(HAlign_Center)
+					.VAlign(VAlign_Center)
+					[
+						SNew(STextBlock).Text(FText::FromString(Entry.Code)).Font(Font(20)).ColorAndOpacity(FLinearColor(1.f, 1.f, 1.f, 0.85f))
+					]
+				]
+			]
+			+ SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center).Padding(0.f, 12.f, 0.f, 0.f)
+			[
+				SNew(STextBlock).Text(FText::FromString(Entry.Title)).Font(Font(22)).ColorAndOpacity(TextColor)
+			]
+			+ SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center).Padding(0.f, 4.f, 0.f, 0.f)
+			[
+				SNew(STextBlock).Text_Lambda(Live(Weak, &AToyTouchScreen::ItemLabel, FText(), Index)).Font(Font(14, false)).ColorAndOpacity(DimTextColor)
+			];
+	}
+
+	const int32 Size = Item.Rect.GetSize().Y >= 110.f ? 28 : 22;
+	return SNew(STextBlock)
+		.Text_Lambda(Live(Weak, &AToyTouchScreen::ItemLabel, FText(), Index))
+		.Font(Font(Size))
+		.Justification(ETextJustify::Center)
+		.ColorAndOpacity_Lambda(TextColorOf);
+}
+
+int32 AToyTouchScreen::PageCount() const
+{
+	return FMath::Max(1, FMath::DivideAndRoundUp(ModelCount, ModelsPerPage));
+}
+
+bool AToyTouchScreen::IsItemVisible(int32 Index) const
+{
+	const FToyScreenItem& Item = Items[Index];
+	if (Item.Action == EToyScreenAction::PrevPage || Item.Action == EToyScreenAction::NextPage)
+	{
+		return PageCount() > 1;
+	}
+	return Item.Page == INDEX_NONE || Item.Page == Page;
+}
+
+bool AToyTouchScreen::IsItemEnabled(int32 Index) const
+{
+	const AToyStudio* StudioActor = Studio.Get();
+	switch (Items[Index].Action)
+	{
+	case EToyScreenAction::HideModel:
+	case EToyScreenAction::ResetParts:
+		return StudioActor && StudioActor->HasModel();
+	case EToyScreenAction::PrevPage:
+		return Page > 0;
+	case EToyScreenAction::NextPage:
+		return Page < PageCount() - 1;
+	default:
+		return true;
+	}
+}
+
+bool AToyTouchScreen::IsItemHovered(int32 Index) const
+{
+	for (const FToyScreenFinger& Finger : Fingers)
+	{
+		if (Finger.bActive && Finger.Hover == Index)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool AToyTouchScreen::IsItemSelected(int32 Index) const
+{
+	const AToyStudio* StudioActor = Studio.Get();
+	const int32 Model = Items[Index].Model;
+	return StudioActor && Model != INDEX_NONE && StudioActor->IsModelShown(ModelTable[Model].Kind);
+}
+
+bool AToyTouchScreen::IsItemFlashing(int32 Index) const
+{
+	return Index == FlashIndex && FPlatformTime::Seconds() < FlashUntil;
+}
+
+FSlateColor AToyTouchScreen::ItemColor(int32 Index) const
+{
+	if (!IsItemEnabled(Index))
+	{
+		return FSlateColor(DisabledColor);
+	}
+	const FLinearColor Base = Items[Index].Color;
+	if (IsItemFlashing(Index))
+	{
+		return FSlateColor(FMath::Lerp(Base, FLinearColor::White, 0.6f));
+	}
+	// 悬停：亮一截，告诉你手指正对着它
+	return FSlateColor(IsItemHovered(Index) ? Scaled(Base, 1.8f) + FLinearColor(0.04f, 0.04f, 0.04f, 0.f) : Base);
+}
+
+int32 AToyTouchScreen::HitTest(const FVector2D& Pixel) const
+{
+	for (int32 Index = 0; Index < Items.Num(); ++Index)
+	{
+		if (IsItemVisible(Index) && Items[Index].Rect.IsInside(Pixel))
+		{
+			return Index;
+		}
+	}
+	return INDEX_NONE;
+}
+
+FToyScreenFinger* AToyTouchScreen::FindFinger(const UObject* Owner, bool bCreate)
+{
+	for (FToyScreenFinger& Finger : Fingers)
+	{
+		if (Finger.Owner == Owner)
+		{
+			return &Finger;
+		}
+	}
+	if (!bCreate)
+	{
+		return nullptr;
+	}
+	for (FToyScreenFinger& Finger : Fingers)
+	{
+		if (!Finger.bActive)
+		{
+			Finger = FToyScreenFinger();
+			Finger.Owner = Owner;
+			return &Finger;
+		}
+	}
+	return nullptr;
+}
+
+void AToyTouchScreen::UpdateFinger(FToyScreenFinger& Finger, const FVector& WorldPoint)
+{
+	// 离屏幕多远：在屏幕自己的坐标系（Pivot，没有缩放）里量 X；投影到界面像素交给 WidgetComponent 算，保证和画面一致
+	const FVector Local = Pivot->GetComponentTransform().InverseTransformPosition(WorldPoint);
+	// 刚进感应区的第一帧没有"上一帧"：当它是贴着屏幕进来的，不算按下
+	Finger.LastDistance = Finger.bActive ? Finger.Distance : -100.f;
+	Finger.Distance = static_cast<float>(Local.X) - SurfaceX;
+	FVector2D Pixel;
+	Gui->GetLocalHitLocation(WorldPoint, Pixel);
+	Finger.Pixel = Pixel;
+	Finger.bActive = true;
+}
+
+bool AToyTouchScreen::TouchFinger(const UObject* Finger, const FVector& TipWorld)
+{
+	FToyScreenFinger* State = FindFinger(Finger, true);
+	if (!State)
 	{
 		return false;
 	}
+	UpdateFinger(*State, TipWorld);
+	State->Hover = State->Distance < HoverCm ? HitTest(State->Pixel) : INDEX_NONE;
 
-	const double Now = GetWorld()->GetTimeSeconds();
+	if (State->bPressed)
+	{
+		// 按下以后要退回 ReleaseCm 以外才算松开，手指在 0.6cm 附近抖也不会连点
+		if (State->Distance > ReleaseCm)
+		{
+			State->bPressed = false;
+		}
+		return false;
+	}
+	// 只认从前面戳进来的：上一帧还在 PressCm 外面。手从侧面或屏幕后面滑进来、一开始就贴着屏幕，都不算
+	if (State->Distance <= PressCm && State->LastDistance > PressCm)
+	{
+		State->bPressed = true;
+		return State->Hover != INDEX_NONE && Press(State->Hover);
+	}
+	return false;
+}
+
+void AToyTouchScreen::ReleaseFinger(const UObject* Finger)
+{
+	if (FToyScreenFinger* State = FindFinger(Finger, false))
+	{
+		*State = FToyScreenFinger();
+	}
+}
+
+bool AToyTouchScreen::MouseAt(const FVector& WorldPoint, bool bClick)
+{
+	FToyScreenFinger* State = FindFinger(this, true);
+	if (!State)
+	{
+		return false;
+	}
+	UpdateFinger(*State, WorldPoint);
+	State->bMouse = true;
+	State->Hover = HitTest(State->Pixel);
+	return bClick && State->Hover != INDEX_NONE && Press(State->Hover);
+}
+
+void AToyTouchScreen::MouseLeave()
+{
+	ReleaseFinger(this);
+}
+
+bool AToyTouchScreen::Press(int32 Index)
+{
+	if (!IsItemVisible(Index) || !IsItemEnabled(Index))
+	{
+		return false;
+	}
+	const double Now = FPlatformTime::Seconds();
 	if (Now - LastPressTime < PressCooldown)
 	{
 		return false;
 	}
 	LastPressTime = Now;
+	FlashIndex = Index;
+	FlashUntil = Now + 0.15;
 
-	Flash(Index);
-	if (AToyStudio* StudioActor = Studio.Get())
+	const EToyScreenAction Action = Items[Index].Action;
+	if (Action == EToyScreenAction::PrevPage || Action == EToyScreenAction::NextPage)
 	{
-		StudioActor->HandleScreenAction(Buttons[Index].Action);
+		Page = FMath::Clamp(Page + (Action == EToyScreenAction::NextPage ? 1 : -1), 0, PageCount() - 1);
 	}
-	RefreshStatus();
+	else if (AToyStudio* StudioActor = Studio.Get())
+	{
+		StudioActor->HandleScreenAction(Action);
+	}
 	return true;
 }
 
-void AToyTouchScreen::RefreshStatus()
+FText AToyTouchScreen::StatusText() const
 {
 	const AToyStudio* StudioActor = Studio.Get();
-	if (!StudioActor)
+	if (StudioActor && StudioActor->GetMissingKind())
 	{
-		return;
+		const EToyModelKind Missing = *StudioActor->GetMissingKind();
+		for (const FToyModelEntry& Entry : ModelTable)
+		{
+			if (Entry.Kind == Missing)
+			{
+				return FText::FromString(FString::Printf(TEXT("%s 还没导入：先运行 scripts/import_%s.bat"), Entry.Title, Entry.Script));
+			}
+		}
 	}
-	Status->SetText(FText::FromString(StudioActor->GetStatusText()));
-
-	// 按钮上的字跟着状态变：显示/隐藏电机、爆炸/还原
-	if (FToyScreenButton* MotorButton = FindButton(EToyScreenAction::ToggleMotor))
-	{
-		MotorButton->Line1->SetText(FText::FromString(StudioActor->IsModelShown(EToyModelKind::Motor) ? TEXT("HIDE") : TEXT("SHOW")));
-	}
-	if (FToyScreenButton* ValveButton = FindButton(EToyScreenAction::ToggleValve))
-	{
-		ValveButton->Line1->SetText(FText::FromString(StudioActor->IsModelShown(EToyModelKind::Valve) ? TEXT("HIDE") : TEXT("SHOW")));
-	}
-	if (FToyScreenButton* DroneButton = FindButton(EToyScreenAction::ToggleDrone))
-	{
-		DroneButton->Line1->SetText(FText::FromString(StudioActor->IsModelShown(EToyModelKind::Drone) ? TEXT("HIDE") : TEXT("SHOW")));
-	}
-	if (FToyScreenButton* LatheButton = FindButton(EToyScreenAction::ToggleLathe))
-	{
-		LatheButton->Line1->SetText(FText::FromString(StudioActor->IsModelShown(EToyModelKind::Lathe) ? TEXT("HIDE") : TEXT("SHOW")));
-	}
-	if (FToyScreenButton* MeterButton = FindButton(EToyScreenAction::ToggleMultimeter))
-	{
-		MeterButton->Line1->SetText(FText::FromString(StudioActor->IsModelShown(EToyModelKind::Multimeter) ? TEXT("HIDE") : TEXT("SHOW")));
-	}
-	if (FToyScreenButton* ServerButton = FindButton(EToyScreenAction::ToggleServer))
-	{
-		ServerButton->Line1->SetText(FText::FromString(StudioActor->IsModelShown(EToyModelKind::Server) ? TEXT("HIDE") : TEXT("SHOW")));
-	}
-	if (FToyScreenButton* OrbButton = FindButton(EToyScreenAction::ToggleOrb))
-	{
-		OrbButton->Line1->SetText(FText::FromString(StudioActor->IsModelShown(EToyModelKind::Orb) ? TEXT("HIDE") : TEXT("SHOW")));
-	}
-	if (FToyScreenButton* ExplodeButton = FindButton(EToyScreenAction::ToggleExplode))
-	{
-		ExplodeButton->Line1->SetText(FText::FromString(StudioActor->IsModelExploded() ? TEXT("ASSEMBLE") : TEXT("EXPLODE")));
-	}
+	return FText::FromString(TEXT("伸出食指，轻点按钮"));
 }
 
-void AToyTouchScreen::Flash(int32 ButtonIndex)
+FText AToyTouchScreen::ModelTitle() const
 {
-	// 按下反馈：变白 + 往里缩一点，0.15 秒后恢复（冷却 0.35 秒，所以不会叠加）
-	const FToyScreenButton& Button = Buttons[ButtonIndex];
-	Button.Face->SetColor(FLinearColor::White);
-	Button.Face->SetRelativeLocation(Button.RestLocation - FVector(0.5f, 0.f, 0.f));
-
-	GetWorldTimerManager().SetTimer(FlashTimer, FTimerDelegate::CreateWeakLambda(this, [this, ButtonIndex]()
+	const AToyStudio* StudioActor = Studio.Get();
+	if (StudioActor && StudioActor->HasModel())
 	{
-		const FToyScreenButton& Pressed = Buttons[ButtonIndex];
-		Pressed.Face->SetColor(Pressed.Color);
-		Pressed.Face->SetRelativeLocation(Pressed.RestLocation);
-	}), 0.15f, false);
+		for (const FToyModelEntry& Entry : ModelTable)
+		{
+			if (StudioActor->IsModelShown(Entry.Kind))
+			{
+				return FText::FromString(Entry.Title);
+			}
+		}
+	}
+	return FText::FromString(TEXT("桌上没有模型"));
+}
+
+FText AToyTouchScreen::ModelState() const
+{
+	const AToyStudio* StudioActor = Studio.Get();
+	if (!StudioActor || !StudioActor->HasModel())
+	{
+		return FText::FromString(TEXT("点左边的卡片摆一个出来"));
+	}
+	return FText::FromString(StudioActor->IsModelExploded() ? TEXT("爆炸图 · 零件可以拿起来看") : TEXT("装配状态"));
+}
+
+FText AToyTouchScreen::CubeText() const
+{
+	const AToyStudio* StudioActor = Studio.Get();
+	return FText::FromString(StudioActor
+		? FString::Printf(TEXT("方块  %d / %d"), StudioActor->GetCubeCount(), StudioActor->MaxCubes)
+		: FString(TEXT("方块")));
+}
+
+FText AToyTouchScreen::DistanceText() const
+{
+	const AToyStudio* StudioActor = Studio.Get();
+	return FText::FromString(StudioActor ? FString::Printf(TEXT("离你\n%.0f cm"), StudioActor->GetModelDistanceCm()) : FString());
+}
+
+FText AToyTouchScreen::ItemLabel(int32 Index) const
+{
+	const AToyStudio* StudioActor = Studio.Get();
+	const FToyScreenItem& Item = Items[Index];
+	if (Item.Model != INDEX_NONE)
+	{
+		const bool bShown = StudioActor && StudioActor->IsModelShown(ModelTable[Item.Model].Kind);
+		return FText::FromString(bShown ? TEXT("● 在桌上（再点收起）") : TEXT("点一下摆出来"));
+	}
+	switch (Item.Action)
+	{
+	case EToyScreenAction::OpenMenu:      return FText::FromString(TEXT("菜单"));
+	case EToyScreenAction::HideModel:     return FText::FromString(TEXT("收起模型"));
+	case EToyScreenAction::PrevPage:      return FText::FromString(TEXT("上页"));
+	case EToyScreenAction::NextPage:      return FText::FromString(TEXT("下页"));
+	case EToyScreenAction::SpawnCube:     return FText::FromString(TEXT("生成方块"));
+	case EToyScreenAction::ClearCubes:    return FText::FromString(TEXT("清空方块"));
+	case EToyScreenAction::ToggleExplode: return FText::FromString(StudioActor && StudioActor->IsModelExploded() ? TEXT("组装回去") : TEXT("爆炸拆开"));
+	case EToyScreenAction::ResetParts:    return FText::FromString(TEXT("零件复位"));
+	case EToyScreenAction::MoveFar:       return FText::FromString(TEXT("推远"));
+	case EToyScreenAction::MoveNear:      return FText::FromString(TEXT("拉近"));
+	case EToyScreenAction::MoveLeft:      return FText::FromString(TEXT("左移"));
+	case EToyScreenAction::MoveRight:     return FText::FromString(TEXT("右移"));
+	default:                              return FText();
+	}
 }

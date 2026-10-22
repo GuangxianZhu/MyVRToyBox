@@ -8,6 +8,7 @@
 #include "ToyBoxPawn.generated.h"
 
 class AToyHand;
+class AToyTouchScreen;
 class UCameraComponent;
 class UInstancedStaticMeshComponent;
 class UMaterialInstanceDynamic;
@@ -187,6 +188,9 @@ private:
 	bool bSnapTurnArmed = true;
 
 	bool bDesktopClickIsPoke = false;
+
+	/** 桌面模式下鼠标正指着的触屏（移开时告诉它，按钮不再悬停高亮）。 */
+	TWeakObjectPtr<AToyTouchScreen> HoverScreen;
 	bool bHadMousePosition = false;
 	FVector2D LastMousePosition = FVector2D::ZeroVector;
 	float DesktopHoldDistance = 60.f;
