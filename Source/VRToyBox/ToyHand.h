@@ -6,6 +6,7 @@
 #include "ToyHand.generated.h"
 
 class AToyBoxPawn;
+class AToyTouchScreen;
 class IToyGrabbable;
 class STextBlock;
 class UAnimSequence;
@@ -198,6 +199,9 @@ private:
 	float SnapAlpha = 1.f;
 
 	TArray<TWeakObjectPtr<UPrimitiveComponent>> Touching;
+
+	/** 指尖现在在哪块触屏的感应区里（离开时要告诉它松开）。 */
+	TWeakObjectPtr<AToyTouchScreen> TouchingScreen;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> RangeMaterial;

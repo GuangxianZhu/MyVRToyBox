@@ -67,6 +67,11 @@ public:
 
 	static FString KindName(EToyModelKind Kind);
 
+	bool HasModel() const { return Model != nullptr; }
+
+	/** 上次想摆出来但资产还没导入的模型（触屏顶栏提示要跑哪个导入脚本），摆成功一个就清掉。 */
+	TOptional<EToyModelKind> GetMissingKind() const { return MissingKind; }
+
 	/** 桌上现在摆着的模型，没有就是空（调试命令 toy.GrabAudit 用）。 */
 	AToyExplodedModel* GetModel() const { return Model; }
 
@@ -174,6 +179,5 @@ private:
 
 	TArray<TWeakObjectPtr<AToyCube>> Cubes;
 
-	/** 上次想摆出来但资产没导入的模型名，状态栏提示用。 */
-	FString MissingModel;
+	TOptional<EToyModelKind> MissingKind;
 };
