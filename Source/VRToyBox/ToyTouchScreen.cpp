@@ -255,22 +255,30 @@ TSharedRef<SWidget> AToyTouchScreen::BuildGui()
 			SNew(SBorder).BorderImage(Brush).BorderBackgroundColor(Color)
 		];
 	};
-	auto AddText = [&Canvas](const FBox2D& Rect, TAttribute<FText> Text, int32 Size, const FLinearColor& Color, EHorizontalAlignment HAlign)
+	// SCanvas 槽的 HAlign / VAlign 是"控件相对 Position 这个点怎么对齐"（Center = 以 Position 为中心），不是在 Size 里居中。
+	// 槽一律左上对齐，在 Rect 里的对齐交给里面的 SBox
+	auto AddWidget = [&Canvas](const FBox2D& Rect, EHorizontalAlignment HAlign, const TSharedRef<SWidget>& Widget)
 	{
-		Canvas->AddSlot().Position(Rect.Min).Size(Rect.GetSize()).HAlign(HAlign).VAlign(VAlign_Center)
+		Canvas->AddSlot().Position(Rect.Min).Size(Rect.GetSize())
 		[
-			SNew(STextBlock).Text(Text).Font(Font(Size)).ColorAndOpacity(Color)
+			SNew(SBox).HAlign(HAlign).VAlign(VAlign_Center)
+			[
+				Widget
+			]
 		];
+	};
+	auto AddText = [&AddWidget](const FBox2D& Rect, TAttribute<FText> Text, int32 Size, const FLinearColor& Color, EHorizontalAlignment HAlign)
+	{
+		AddWidget(Rect, HAlign, SNew(STextBlock).Text(Text).Font(Font(Size)).ColorAndOpacity(Color));
 	};
 
 	// 背景和两块面板
 	AddBox(PixelRect(0.f, 0.f, DrawSize.X, DrawSize.Y), &B.Flat, BackColor);
 	AddBox(PixelRect(870.f, 96.f, 390.f, 764.f), &B.Panel, PanelColor);
 
-	// 顶栏
+	// 顶栏：标题，右边跟一行提示（缺模型时变成橙色的导入提示）
 	AddText(PixelRect(30.f, 18.f, 300.f, 60.f), FText::FromString(TEXT("VR 玩具箱")), 30, TextColor, HAlign_Left);
-	Canvas->AddSlot().Position(FVector2D(330.f, 18.f)).Size(FVector2D(740.f, 60.f)).HAlign(HAlign_Center).VAlign(VAlign_Center)
-	[
+	AddWidget(PixelRect(260.f, 18.f, 810.f, 60.f), HAlign_Left,
 		SNew(STextBlock)
 		.Text_Lambda(Live(Weak, &AToyTouchScreen::StatusText, FText()))
 		.Font(Font(16, false))
@@ -278,32 +286,21 @@ TSharedRef<SWidget> AToyTouchScreen::BuildGui()
 		{
 			const AToyStudio* StudioActor = Weak.IsValid() ? Weak->Studio.Get() : nullptr;
 			return FSlateColor(StudioActor && StudioActor->GetMissingKind() ? WarnColor : DimTextColor);
-		})
-	];
+		}));
 
 	// 左边的小标题
 	AddText(PixelRect(30.f, 96.f, 300.f, 46.f), FText::FromString(TEXT("模型")), 20, DimTextColor, HAlign_Left);
-	Canvas->AddSlot().Position(FVector2D(30.f, 650.f)).Size(FVector2D(820.f, 46.f)).HAlign(HAlign_Left).VAlign(VAlign_Center)
-	[
-		SNew(STextBlock).Text_Lambda(Live(Weak, &AToyTouchScreen::CubeText, FText())).Font(Font(20)).ColorAndOpacity(DimTextColor)
-	];
+	AddText(PixelRect(30.f, 646.f, 820.f, 46.f), TAttribute<FText>::CreateLambda(Live(Weak, &AToyTouchScreen::CubeText, FText())), 20, DimTextColor, HAlign_Left);
 
 	// 右边：当前模型的名字和状态、挪动标题、方向键中间的距离
 	AddText(PixelRect(890.f, 104.f, 350.f, 34.f), FText::FromString(TEXT("当前模型")), 16, DimTextColor, HAlign_Left);
-	Canvas->AddSlot().Position(FVector2D(890.f, 136.f)).Size(FVector2D(350.f, 50.f)).VAlign(VAlign_Center)
-	[
-		SNew(STextBlock).Text_Lambda(Live(Weak, &AToyTouchScreen::ModelTitle, FText())).Font(Font(28)).ColorAndOpacity(TextColor)
-	];
-	Canvas->AddSlot().Position(FVector2D(890.f, 186.f)).Size(FVector2D(350.f, 40.f)).VAlign(VAlign_Center)
-	[
-		SNew(STextBlock).Text_Lambda(Live(Weak, &AToyTouchScreen::ModelState, FText())).Font(Font(18, false)).ColorAndOpacity(DimTextColor)
-	];
+	AddText(PixelRect(890.f, 136.f, 350.f, 50.f), TAttribute<FText>::CreateLambda(Live(Weak, &AToyTouchScreen::ModelTitle, FText())), 28, TextColor, HAlign_Left);
+	AddWidget(PixelRect(890.f, 186.f, 350.f, 40.f), HAlign_Left,
+		SNew(STextBlock).Text_Lambda(Live(Weak, &AToyTouchScreen::ModelState, FText())).Font(Font(18, false)).ColorAndOpacity(DimTextColor));
 	AddText(PixelRect(890.f, 482.f, 350.f, 40.f), FText::FromString(TEXT("挪动模型")), 18, DimTextColor, HAlign_Left);
-	Canvas->AddSlot().Position(FVector2D(1010.f, 640.f)).Size(FVector2D(110.f, 100.f)).HAlign(HAlign_Center).VAlign(VAlign_Center)
-	[
+	AddWidget(PixelRect(1010.f, 640.f, 110.f, 100.f), HAlign_Center,
 		SNew(STextBlock).Text_Lambda(Live(Weak, &AToyTouchScreen::DistanceText, FText())).Font(Font(18)).ColorAndOpacity(DimTextColor)
-		.Justification(ETextJustify::Center)
-	];
+		.Justification(ETextJustify::Center));
 
 	// 按钮和卡片：外层是选中描边（不选中时透明），内层是按钮底色；按下的一瞬间缩小 5%
 	for (int32 Index = 0; Index < Items.Num(); ++Index)
@@ -695,7 +692,7 @@ FText AToyTouchScreen::ItemLabel(int32 Index) const
 	if (Item.Model != INDEX_NONE)
 	{
 		const bool bShown = StudioActor && StudioActor->IsModelShown(ModelTable[Item.Model].Kind);
-		return FText::FromString(bShown ? TEXT("● 在桌上（再点收起）") : TEXT("点一下摆出来"));
+		return FText::FromString(bShown ? TEXT("● 在桌上") : TEXT("点一下摆出来"));
 	}
 	switch (Item.Action)
 	{
