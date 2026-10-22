@@ -10,7 +10,7 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 - **挪模型**：触屏最下面一排 **<< LEFT / MOVE NEAR / MOVE FAR / >> RIGHT**，每按一下把桌上的模型整体挪 10cm（离站立点 55~95cm、左右 -40~+20cm，不会挪出桌面或撞上触屏），状态栏显示现在离你多远。所有模型共用这个位置，换模型也不会弹回去。默认放在 70cm（以前是 90cm，站着伸手够不着）。
 - **零件抓取查看**：装配状态下抓电机任意位置 = 拿起整台电机；爆炸后每个零件（转子总成、端盖、风扇、螺钉……共 27 个抓取单元）都能单独抓起来看，手边浮出中文信息牌（名字、材料、作用）。松手零件自己飞回原位，拿着靠近原位 5cm 会出现半透明虚影、松手吸回去；触屏 **RESET PARTS** 一键全部复位。
 
-房间、桌子、触屏、方块都是 C++ 用引擎自带的基础形状拼出来的（默认关卡 `L_Studio` 只是放了一个工作室的壳），每一处改动都能在 PR 里看 diff。二进制资产只有：电机、阀门、无人机、车床、万用表、AI 服务器模型（`Content/Models/Motor`、`Valve`、`Drone`、`Lathe`、`Multimeter`、`AIServer`）和虚影 / 高亮用的半透明材质（`Content/Materials/M_ToyGhost`），由脚本生成，见下面「电机模型从哪来」「阀门模型从哪来」「无人机模型从哪来」「车床模型从哪来」「万用表模型从哪来」「AI 服务器模型从哪来」；手模型（`Content/XRMannequins`），是从 UE 自带的 VR 模板拷来的，见「手的模型」。
+房间、桌子、触屏、方块都是 C++ 用引擎自带的基础形状拼出来的（默认关卡 `L_Studio` 只是放了一个工作室的壳），每一处改动都能在 PR 里看 diff。二进制资产只有：电机、阀门、无人机、车床、万用表、AI 服务器、球形漂浮机器人模型（`Content/Models/Motor`、`Valve`、`Drone`、`Lathe`、`Multimeter`、`AIServer`、`OrbBot`）和虚影 / 高亮用的半透明材质（`Content/Materials/M_ToyGhost`），由脚本生成，见下面「电机模型从哪来」「阀门模型从哪来」「无人机模型从哪来」「车床模型从哪来」「万用表模型从哪来」「AI 服务器模型从哪来」「球形漂浮机器人模型从哪来」；手模型（`Content/XRMannequins`），是从 UE 自带的 VR 模板拷来的，见「手的模型」。
 
 ## 演示
 
@@ -63,7 +63,7 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 | --- | --- | --- |
 | ![](docs/screenshots/move_back.jpg) | ![](docs/screenshots/teleport_valid.jpg) | ![](docs/screenshots/teleport_invalid.jpg) |
 
-控制台输入 `toy.Screen <按钮>` 等于戳触屏上那个按钮，可以连着写：`toy.Screen Lathe MoveNear MoveNear Explode`（按钮名：Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Server / Explode / Reset / MoveNear / MoveFar / MoveLeft / MoveRight），命令行里用 `-ExecCmds=` 也行。`toy.ShowGrabPoints 1` 可以在游戏里看到手和方块的抓点箭头（之后生成的方块生效）。`toy.PalmSnap 1` 切回旧的"手掌贴合"抓法（见「零件抓取」）。`toy.HandPreview 1 / 2 / 3` 在桌面模式下把左手侧着摆到镜头前（张开 / 握拳 / 来回握），用来检查手模型。
+控制台输入 `toy.Screen <按钮>` 等于戳触屏上那个按钮，可以连着写：`toy.Screen Lathe MoveNear MoveNear Explode`（按钮名：Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Server / Robot / Explode / Reset / MoveNear / MoveFar / MoveLeft / MoveRight），命令行里用 `-ExecCmds=` 也行。`toy.ShowGrabPoints 1` 可以在游戏里看到手和方块的抓点箭头（之后生成的方块生效）。`toy.PalmSnap 1` 切回旧的"手掌贴合"抓法（见「零件抓取」）。`toy.HandPreview 1 / 2 / 3` 在桌面模式下把左手侧着摆到镜头前（张开 / 握拳 / 来回握），用来检查手模型。
 
 ## 手的模型
 
@@ -211,6 +211,25 @@ ITBasics/AI服务器爆炸图/build_ai_server.py ──Blender──▶ ai_serve
 - **抓取单元**：112 个（机箱是基座），111 个能抓：贴表面 47、捏 54、方块 10。同一种零件超过 8 个的按路线分组：每块 GPU 的 6 颗 HBM 一组、每排 8 根内存一组；其他零件都单独抓。没有手写覆盖。
 - **体量**：180 个静态网格、约 32 万三角面，`Content/Models/AIServer` 24MB。
 
+## 球形漂浮机器人模型从哪来
+
+| 装配（Blender 预览图） | 爆炸 |
+| --- | --- |
+| ![](docs/screenshots/orb_assembled.jpg) | ![](docs/screenshots/orb_exploded.jpg) |
+
+```
+ITBasics/球形漂浮机器人爆炸图/build_orb_bot.py ──Blender──▶ orb_bot.glb ──Tools/import_model.py（MODEL_NAME=OrbBot）──▶ Content/Models/OrbBot/*.uasset + parts.json
+```
+
+双击 `导入漂浮机器人模型.bat`（只有模型改了才需要跑）。
+
+- **模型**：科幻原创的球形浮游机器人 ORB-1（白 + 橙），悬在自带的停机加注坪上方。设定是"真实骨架 + 科幻外皮"：航空煤油 → 微型燃气涡轮发电机 → 球心竖直涵道里的共轴反转风扇往下吹气；6 片导流舵片管俯仰 / 横滚，赤道 4 个小喷口管偏航。58 种零件 96 个实例：12 片装甲瓣、顶 / 底格栅、激光雷达环、浮游光环、3 段灯带；3 段环形燃料舱 + 加注管 / 口盖 / 液位传感器、滤清器、燃油泵、电磁截止阀、调压阀、7 根油管；涡轮发电机拆成发电机定子 / 转子、进气口、压气机叶轮、燃烧室、喷油嘴组、点火器、涡轮转子、排气管、主轴、2 个轴承、支架；缓冲电池、电子舱（支架、电源板、2 块电调、散热片、飞控、IMU、线束）；上 / 下风扇和电机、电机支架、6 片舵片 + 6 个舵机、4 个偏航喷口；主眼（3 片镜片、光圈、图像传感器、遮光罩、眼圈光环）、2 个立体相机、2 个测高雷达、2 根天线。信息牌都标了【真实原理】或【科幻设定】，原理速记见 ITBasics 的 `球形漂浮机器人爆炸图/README.md`。
+- **展示尺寸 50cm**：`MODELS['OrbBot']` 里 `length_cm=50`，按含停机坪的总高（56cm）缩放，球体约 32cm、离坪面约 15cm。
+- **拆机顺序**：光环上浮 → 口盖、天线、相机、喷口、灯带往外拔 → 顶 / 底格栅、雷达环 → 12 片装甲瓣像花一样打开 → 主眼镜片沿视线朝玩家排开（约 20cm）→ 下半球油路往外 → 电池往后、涡轮发电机往右手边拉出再沿轴线拆成一串、电子舱往左手边拉出再一层层叠开 → 舵机、舵片、风扇、电机沿涵道上下抽出 → 燃料舱最后往上提（它和赤道承力带同高，只能往上走）。停机坪 + 赤道承力带 + 涵道 + 主眼镜筒是基座。
+- **桌上的位置**：`OrbMount` Yaw 90，主眼朝着玩家，涡轮在右手边、电子舱在左手边。第一次体检时往上炸得太高（顶部零件出画面）、涡轮组贴着右手边的触屏，已把往上的距离压低约 25%、涡轮组改成往右后方拉出，复查后离触屏约 20cm；最顶上一两个小件仍贴着体检截图的上沿。
+- **抓取单元**：93 个（停机坪 + 赤道承力带 + 涵道 + 主眼镜筒是基座），92 个能抓：捏 61、贴表面 19、圆柱 7、方块 5。`toy.GrabAudit Robot` 全部捏到，导入方向检查 3 项 OK。没有手写覆盖。
+- **体量**：96 个静态网格、约 21 万三角面，`Content/Models/OrbBot` 13MB。⚠️ 还没在头显里看过：7 个模型按钮缩到 4.1cm 后的字能不能看清、下半球朝下处在阴影里显得偏灰（材质是白的，工作室没有反射捕获）。
+
 ## 原理
 
 ### 先猜一下
@@ -294,13 +313,13 @@ ITBasics/AI服务器爆炸图/build_ai_server.py ──Blender──▶ ai_serve
 | 车床 | 67 | 捏 50、圆柱 5、方块 5、贴表面 7（手写 5） |
 | 万用表 | 36 | 捏 22、圆柱 4、方块 3、贴表面 7（手写 2） |
 
-**抓取体检 `toy.GrabAudit`。** 控制台输入 `toy.GrabAudit`（或 `Motor` / `Valve` / `Drone` / `Lathe` / `Multimeter` / `Server`，加 `quit` 跑完退出），会依次摆出模型（先拍一张装配全景 `00_assembled.png`）、爆炸（再拍一张 `00_exploded.png`），用右手按桌面模式的方式（捏合点放在零件上离镜头最近的表面点、扣扳机）把每个单元捏一遍，捏住后手往上提、镜头给一个特写，截图到 `Saved/GrabAudit/<模型>/<序号>_<单元>.png`，并写 `Saved/GrabAudit/summary.csv`。五个模型 180 个单元约 6 分钟跑完（只跑车床或万用表约 1 分钟）。命令行批量跑：
+**抓取体检 `toy.GrabAudit`。** 控制台输入 `toy.GrabAudit`（或 `Motor` / `Valve` / `Drone` / `Lathe` / `Multimeter` / `Server` / `Robot`，加 `quit` 跑完退出），会依次摆出模型（先拍一张装配全景 `00_assembled.png`）、爆炸（再拍一张 `00_exploded.png`），用右手按桌面模式的方式（捏合点放在零件上离镜头最近的表面点、扣扳机）把每个单元捏一遍，捏住后手往上提、镜头给一个特写，截图到 `Saved/GrabAudit/<模型>/<序号>_<单元>.png`，并写 `Saved/GrabAudit/summary.csv`。五个模型 180 个单元约 6 分钟跑完（只跑车床或万用表约 1 分钟）。命令行批量跑：
 
 ```
 UnrealEditor.exe VRToyBox.uproject -game -windowed -ResX=1280 -ResY=720 "-ExecCmds=toy.GrabAudit All quit"
 ```
 
-**录演示动图 `toy.Demo`。** 控制台输入 `toy.Demo`（或 `Motor` / `Valve` / `Drone` / `Lathe` / `Multimeter` / `Server`，加 `quit` 录完退出），每个模型先爆炸一次再装回去、量出两种状态的包围盒，然后逐帧截图到 `Saved/Demo/<模型>/f_0000.png …`：装配停 1 秒 → 爆炸 → 右手从镜头右下方伸过去捏起第二大的零件（最大的一般是机壳）、往上提 → 松手 → 装配回去，镜头按包围盒自动拉远拉近、绕模型慢慢转 24°。要带 `-benchmark -fps=15`（固定步长，截图慢也不掉帧）。README 上面那 6 张 GIF 就是这样录的（10 帧/秒、480 宽、96 色，每张约 3MB）：
+**录演示动图 `toy.Demo`。** 控制台输入 `toy.Demo`（或 `Motor` / `Valve` / `Drone` / `Lathe` / `Multimeter` / `Server` / `Robot`，加 `quit` 录完退出），每个模型先爆炸一次再装回去、量出两种状态的包围盒，然后逐帧截图到 `Saved/Demo/<模型>/f_0000.png …`：装配停 1 秒 → 爆炸 → 右手从镜头右下方伸过去捏起第二大的零件（最大的一般是机壳）、往上提 → 松手 → 装配回去，镜头按包围盒自动拉远拉近、绕模型慢慢转 24°。要带 `-benchmark -fps=15`（固定步长，截图慢也不掉帧）。README 上面那 6 张 GIF 就是这样录的（10 帧/秒、480 宽、96 色，每张约 3MB）：
 
 ```
 UnrealEditor.exe VRToyBox.uproject -game -windowed -ResX=960 -ResY=540 -benchmark -fps=15 -nosound "-ExecCmds=r.MotionBlurQuality 0,toy.Demo quit"
@@ -323,7 +342,7 @@ ffmpeg 要用带 `palettegen` 滤镜的版本（2014 年以后的都行；pip �
 
 ![触屏](docs/screenshots/touchscreen.jpg)
 
-四排按钮：方块（生成 / 清空）；六个模型（SHOW / HIDE，一次只摆一个）；爆炸 / 复位；挪模型（左 / 近 / 远 / 右）。常用的宽按钮 14cm，一排四个的窄按钮 7cm（指尖约 1.5cm 宽，7cm 在 VR 里也好戳），一排六个的模型按钮 4.8cm（加了 AI 服务器以后从 5.8cm 缩窄，字也小一号）。按钮面的颜色压暗到 45%，灯就在桌子正上方，原来的颜色在画面里发白，白字看不清。
+四排按钮：方块（生成 / 清空）；七个模型（SHOW / HIDE，一次只摆一个）；爆炸 / 复位；挪模型（左 / 近 / 远 / 右）。常用的宽按钮 14cm，一排四个的窄按钮 7cm（指尖约 1.5cm 宽，7cm 在 VR 里也好戳），一排七个的模型按钮 4.1cm（加了 AI 服务器以后从 5.8cm 缩到 4.8cm，加了漂浮机器人再缩到 4.1cm，字也小一号）。按钮面的颜色压暗到 45%，灯就在桌子正上方，原来的颜色在画面里发白，白字看不清。
 
 
 每个按钮前面有一个看不见的触发盒（`AToyTouchScreen::MakeButton`）。手每帧在食指指尖做一次小球重叠查询，**刚进入**触发盒的那一帧算一次点击，再加 0.35 秒冷却，防止手指抖一下触发两次。按钮按下时变白、往里缩 0.5cm，控制器震一下。
