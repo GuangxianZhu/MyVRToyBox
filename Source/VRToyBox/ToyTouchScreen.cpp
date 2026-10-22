@@ -495,11 +495,11 @@ int32 AToyTouchScreen::HitTest(const FVector2D& Pixel) const
 	return INDEX_NONE;
 }
 
-FToyScreenFinger* AToyTouchScreen::FindFinger(const UObject* Owner, bool bCreate)
+FToyScreenFinger* AToyTouchScreen::FindFinger(const UObject* FingerOwner, bool bCreate)
 {
 	for (FToyScreenFinger& Finger : Fingers)
 	{
-		if (Finger.Owner == Owner)
+		if (Finger.Owner == FingerOwner)
 		{
 			return &Finger;
 		}
@@ -513,7 +513,7 @@ FToyScreenFinger* AToyTouchScreen::FindFinger(const UObject* Owner, bool bCreate
 		if (!Finger.bActive)
 		{
 			Finger = FToyScreenFinger();
-			Finger.Owner = Owner;
+			Finger.Owner = FingerOwner;
 			return &Finger;
 		}
 	}

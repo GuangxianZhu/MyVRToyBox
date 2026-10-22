@@ -10,6 +10,7 @@
 #include "Camera/PlayerCameraManager.h"
 #include "Animation/AnimSequence.h"
 #include "Components/ArrowComponent.h"
+#include "Components/BoxComponent.h"
 #include "Components/PoseableMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"

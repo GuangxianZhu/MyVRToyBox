@@ -153,7 +153,7 @@ private:
 	/** 执行一个按钮。冷却中或按钮不可用时返回 false。 */
 	bool Press(int32 Index);
 
-	FToyScreenFinger* FindFinger(const UObject* Owner, bool bCreate);
+	FToyScreenFinger* FindFinger(const UObject* FingerOwner, bool bCreate);
 	void UpdateFinger(FToyScreenFinger& Finger, const FVector& WorldPoint);
 
 	FText StatusText() const;
