@@ -2,6 +2,7 @@
 
 #include "ToyShapeComponent.h"
 #include "ToyStudio.h"
+#include "Algo/Find.h"
 #include "Brushes/SlateColorBrush.h"
 #include "Brushes/SlateRoundedBoxBrush.h"
 #include "Components/BoxComponent.h"
@@ -174,6 +175,22 @@ AToyTouchScreen::AToyTouchScreen()
 void AToyTouchScreen::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// L_Studio 是旧版触屏（3D 按钮）时存的：子 Actor 模板里还带着旧的 *Face / *Line / *Zone / Status 组件，
+	// 读回来缩放都是 1 —— *Face 变成 1m 的白板挡在桌子右边，*Zone 挡住鼠标射线。构造函数没建的组件一律删掉
+	static const FName KeepShapes[] = { TEXT("Base"), TEXT("Pole"), TEXT("Bezel"), TEXT("Display") };
+	TInlineComponentArray<UPrimitiveComponent*> Primitives(this);
+	for (UPrimitiveComponent* Primitive : Primitives)
+	{
+		const bool bKeep = Primitive == Gui || Primitive == TouchZone || Primitive == ClickPlane
+			|| Algo::Find(KeepShapes, Primitive->GetFName()) != nullptr;
+		if (!bKeep)
+		{
+			UE_LOG(LogTemp, Log, TEXT("ToyBox: 触屏删掉关卡里存的旧组件 %s"), *Primitive->GetName());
+			Primitive->DestroyComponent();
+		}
+	}
+
 	Brushes = MakeShared<FToyScreenBrushes>();
 	Gui->SetTintColorAndOpacity(FLinearColor(Brightness, Brightness, Brightness, 1.f));
 	Gui->SetSlateWidget(BuildGui());
