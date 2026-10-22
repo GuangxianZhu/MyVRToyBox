@@ -1,0 +1,6096 @@
+{
+ "source": "ai_server.glb",
+ "model": {
+  "title": "AI 训练服务器 · 8U 八卡 HGX H100 平台（按公开图片原创简化）",
+  "body": "8 × H100 SXM5 · 4 × NVSwitch · 双路 56 核 CPU · 2 TB DDR5 · 8 × 400G 网卡 · 6 × 3000 W 电源（满载约 10 kW）\n装配状态：抓任意位置拿起整台机器看。点 EXPLODE 拆开：GPU 托盘往左上抽出、主板托盘往右抽出，每个零件都能单独抓。",
+  "explode_scale": 1.0,
+  "length_cm": 55.0
+ },
+ "units": [
+  {
+   "id": "base",
+   "grabbable": false,
+   "name_cn": "机箱",
+   "material": "镀锌钢板冲压 · 8U（355.6 mm 高）· 19 英寸机架挂耳",
+   "desc": "整台服务器的骨架：前面是风扇墙和硬盘笼，后面上方是电源插槽和出风网孔，两侧有托盘导轨。拆机时它不动，其他零件都从它上面拿走。",
+   "grab": null
+  },
+  {
+   "id": "P02_Lid",
+   "grabbable": true,
+   "name_cn": "顶盖",
+   "material": "镀锌钢板 · 顶面贴维修示意图",
+   "desc": "盖住整个机箱，除了防尘，更重要的是把风\"关\"在里面：风扇吸进来的冷风必须穿过散热片才能从后面出去，开着盖子跑，风会从上面漏掉，GPU 几分钟就过热降频。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P03_GpuFan_1",
+   "grabbable": true,
+   "name_cn": "GPU 区风扇（热插拔）",
+   "material": "80 mm 双转子对旋风扇 · 12 V · 约 16000 rpm",
+   "desc": "十个风扇排成两排，把冷风从前面吸进来、压过 8 块 GPU 的散热片。8 块 GPU 满载约 5.6 kW，热量几乎全靠这面风扇墙带走。前后两个转子反着转，风压更大；坏一个其他风扇自动提速，绿色把手一拉就能带电更换。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P03_GpuFan_2",
+   "grabbable": true,
+   "name_cn": "GPU 区风扇（热插拔）",
+   "material": "80 mm 双转子对旋风扇 · 12 V · 约 16000 rpm",
+   "desc": "十个风扇排成两排，把冷风从前面吸进来、压过 8 块 GPU 的散热片。8 块 GPU 满载约 5.6 kW，热量几乎全靠这面风扇墙带走。前后两个转子反着转，风压更大；坏一个其他风扇自动提速，绿色把手一拉就能带电更换。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P03_GpuFan_3",
+   "grabbable": true,
+   "name_cn": "GPU 区风扇（热插拔）",
+   "material": "80 mm 双转子对旋风扇 · 12 V · 约 16000 rpm",
+   "desc": "十个风扇排成两排，把冷风从前面吸进来、压过 8 块 GPU 的散热片。8 块 GPU 满载约 5.6 kW，热量几乎全靠这面风扇墙带走。前后两个转子反着转，风压更大；坏一个其他风扇自动提速，绿色把手一拉就能带电更换。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P03_GpuFan_4",
+   "grabbable": true,
+   "name_cn": "GPU 区风扇（热插拔）",
+   "material": "80 mm 双转子对旋风扇 · 12 V · 约 16000 rpm",
+   "desc": "十个风扇排成两排，把冷风从前面吸进来、压过 8 块 GPU 的散热片。8 块 GPU 满载约 5.6 kW，热量几乎全靠这面风扇墙带走。前后两个转子反着转，风压更大；坏一个其他风扇自动提速，绿色把手一拉就能带电更换。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P03_GpuFan_5",
+   "grabbable": true,
+   "name_cn": "GPU 区风扇（热插拔）",
+   "material": "80 mm 双转子对旋风扇 · 12 V · 约 16000 rpm",
+   "desc": "十个风扇排成两排，把冷风从前面吸进来、压过 8 块 GPU 的散热片。8 块 GPU 满载约 5.6 kW，热量几乎全靠这面风扇墙带走。前后两个转子反着转，风压更大；坏一个其他风扇自动提速，绿色把手一拉就能带电更换。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P03_GpuFan_6",
+   "grabbable": true,
+   "name_cn": "GPU 区风扇（热插拔）",
+   "material": "80 mm 双转子对旋风扇 · 12 V · 约 16000 rpm",
+   "desc": "十个风扇排成两排，把冷风从前面吸进来、压过 8 块 GPU 的散热片。8 块 GPU 满载约 5.6 kW，热量几乎全靠这面风扇墙带走。前后两个转子反着转，风压更大；坏一个其他风扇自动提速，绿色把手一拉就能带电更换。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P03_GpuFan_7",
+   "grabbable": true,
+   "name_cn": "GPU 区风扇（热插拔）",
+   "material": "80 mm 双转子对旋风扇 · 12 V · 约 16000 rpm",
+   "desc": "十个风扇排成两排，把冷风从前面吸进来、压过 8 块 GPU 的散热片。8 块 GPU 满载约 5.6 kW，热量几乎全靠这面风扇墙带走。前后两个转子反着转，风压更大；坏一个其他风扇自动提速，绿色把手一拉就能带电更换。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P03_GpuFan_8",
+   "grabbable": true,
+   "name_cn": "GPU 区风扇（热插拔）",
+   "material": "80 mm 双转子对旋风扇 · 12 V · 约 16000 rpm",
+   "desc": "十个风扇排成两排，把冷风从前面吸进来、压过 8 块 GPU 的散热片。8 块 GPU 满载约 5.6 kW，热量几乎全靠这面风扇墙带走。前后两个转子反着转，风压更大；坏一个其他风扇自动提速，绿色把手一拉就能带电更换。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P03_GpuFan_9",
+   "grabbable": true,
+   "name_cn": "GPU 区风扇（热插拔）",
+   "material": "80 mm 双转子对旋风扇 · 12 V · 约 16000 rpm",
+   "desc": "十个风扇排成两排，把冷风从前面吸进来、压过 8 块 GPU 的散热片。8 块 GPU 满载约 5.6 kW，热量几乎全靠这面风扇墙带走。前后两个转子反着转，风压更大；坏一个其他风扇自动提速，绿色把手一拉就能带电更换。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P03_GpuFan_10",
+   "grabbable": true,
+   "name_cn": "GPU 区风扇（热插拔）",
+   "material": "80 mm 双转子对旋风扇 · 12 V · 约 16000 rpm",
+   "desc": "十个风扇排成两排，把冷风从前面吸进来、压过 8 块 GPU 的散热片。8 块 GPU 满载约 5.6 kW，热量几乎全靠这面风扇墙带走。前后两个转子反着转，风压更大；坏一个其他风扇自动提速，绿色把手一拉就能带电更换。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P04_CpuFan_1",
+   "grabbable": true,
+   "name_cn": "CPU 区风扇（热插拔）",
+   "material": "80 mm 风扇 · 12 V",
+   "desc": "给下层的 CPU、内存和网卡吹风。和 GPU 区是两个风道，互不抢风。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P04_CpuFan_2",
+   "grabbable": true,
+   "name_cn": "CPU 区风扇（热插拔）",
+   "material": "80 mm 风扇 · 12 V",
+   "desc": "给下层的 CPU、内存和网卡吹风。和 GPU 区是两个风道，互不抢风。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P04_CpuFan_3",
+   "grabbable": true,
+   "name_cn": "CPU 区风扇（热插拔）",
+   "material": "80 mm 风扇 · 12 V",
+   "desc": "给下层的 CPU、内存和网卡吹风。和 GPU 区是两个风道，互不抢风。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P04_CpuFan_4",
+   "grabbable": true,
+   "name_cn": "CPU 区风扇（热插拔）",
+   "material": "80 mm 风扇 · 12 V",
+   "desc": "给下层的 CPU、内存和网卡吹风。和 GPU 区是两个风道，互不抢风。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P05_Drive_1",
+   "grabbable": true,
+   "name_cn": "NVMe 固态硬盘",
+   "material": "U.2 2.5 英寸 · 7.68 TB · PCIe 5.0 ×4",
+   "desc": "放训练数据和模型检查点（checkpoint）。训练时每隔一段时间把几百 GB 的模型状态存一份，断电或出错能从这里接着训。NVMe 直接走 PCIe 通道，一块盘就有约 10 GB/s 读速，8 块加起来喂数据才跟得上 GPU。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P05_Drive_2",
+   "grabbable": true,
+   "name_cn": "NVMe 固态硬盘",
+   "material": "U.2 2.5 英寸 · 7.68 TB · PCIe 5.0 ×4",
+   "desc": "放训练数据和模型检查点（checkpoint）。训练时每隔一段时间把几百 GB 的模型状态存一份，断电或出错能从这里接着训。NVMe 直接走 PCIe 通道，一块盘就有约 10 GB/s 读速，8 块加起来喂数据才跟得上 GPU。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P05_Drive_3",
+   "grabbable": true,
+   "name_cn": "NVMe 固态硬盘",
+   "material": "U.2 2.5 英寸 · 7.68 TB · PCIe 5.0 ×4",
+   "desc": "放训练数据和模型检查点（checkpoint）。训练时每隔一段时间把几百 GB 的模型状态存一份，断电或出错能从这里接着训。NVMe 直接走 PCIe 通道，一块盘就有约 10 GB/s 读速，8 块加起来喂数据才跟得上 GPU。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P05_Drive_4",
+   "grabbable": true,
+   "name_cn": "NVMe 固态硬盘",
+   "material": "U.2 2.5 英寸 · 7.68 TB · PCIe 5.0 ×4",
+   "desc": "放训练数据和模型检查点（checkpoint）。训练时每隔一段时间把几百 GB 的模型状态存一份，断电或出错能从这里接着训。NVMe 直接走 PCIe 通道，一块盘就有约 10 GB/s 读速，8 块加起来喂数据才跟得上 GPU。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P05_Drive_5",
+   "grabbable": true,
+   "name_cn": "NVMe 固态硬盘",
+   "material": "U.2 2.5 英寸 · 7.68 TB · PCIe 5.0 ×4",
+   "desc": "放训练数据和模型检查点（checkpoint）。训练时每隔一段时间把几百 GB 的模型状态存一份，断电或出错能从这里接着训。NVMe 直接走 PCIe 通道，一块盘就有约 10 GB/s 读速，8 块加起来喂数据才跟得上 GPU。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P05_Drive_6",
+   "grabbable": true,
+   "name_cn": "NVMe 固态硬盘",
+   "material": "U.2 2.5 英寸 · 7.68 TB · PCIe 5.0 ×4",
+   "desc": "放训练数据和模型检查点（checkpoint）。训练时每隔一段时间把几百 GB 的模型状态存一份，断电或出错能从这里接着训。NVMe 直接走 PCIe 通道，一块盘就有约 10 GB/s 读速，8 块加起来喂数据才跟得上 GPU。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P05_Drive_7",
+   "grabbable": true,
+   "name_cn": "NVMe 固态硬盘",
+   "material": "U.2 2.5 英寸 · 7.68 TB · PCIe 5.0 ×4",
+   "desc": "放训练数据和模型检查点（checkpoint）。训练时每隔一段时间把几百 GB 的模型状态存一份，断电或出错能从这里接着训。NVMe 直接走 PCIe 通道，一块盘就有约 10 GB/s 读速，8 块加起来喂数据才跟得上 GPU。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P05_Drive_8",
+   "grabbable": true,
+   "name_cn": "NVMe 固态硬盘",
+   "material": "U.2 2.5 英寸 · 7.68 TB · PCIe 5.0 ×4",
+   "desc": "放训练数据和模型检查点（checkpoint）。训练时每隔一段时间把几百 GB 的模型状态存一份，断电或出错能从这里接着训。NVMe 直接走 PCIe 通道，一块盘就有约 10 GB/s 读速，8 块加起来喂数据才跟得上 GPU。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P06_FrontPanel",
+   "grabbable": true,
+   "name_cn": "前控制面板",
+   "material": "ABS 面板 + 小 PCB · 电源键 / ID 灯 / USB",
+   "desc": "电源键、状态灯（绿 = 正常、橙 = 告警）、定位灯（机房里按一下远程就能找到是哪台机器）、USB 口。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P07_PSU_1",
+   "grabbable": true,
+   "name_cn": "电源模块（热插拔）",
+   "material": "CRPS 3000 W · 钛金级效率 96 % · 54 V / 12 V 输出",
+   "desc": "6 个电源，平时 4 个就够、2 个冗余（4+2）：任何两个坏了机器照常跑。整机满载约 10 kW，相当于 5 台家用空调同时开。每个电源自带风扇，把手一拉就能带电更换。",
+   "grab": {
+    "type": "box",
+    "center": [
+     -7.55,
+     -33.55,
+     20.98
+    ],
+    "extent": [
+     3.65,
+     8.95,
+     1.98
+    ]
+   }
+  },
+  {
+   "id": "P07_PSU_2",
+   "grabbable": true,
+   "name_cn": "电源模块（热插拔）",
+   "material": "CRPS 3000 W · 钛金级效率 96 % · 54 V / 12 V 输出",
+   "desc": "6 个电源，平时 4 个就够、2 个冗余（4+2）：任何两个坏了机器照常跑。整机满载约 10 kW，相当于 5 台家用空调同时开。每个电源自带风扇，把手一拉就能带电更换。",
+   "grab": {
+    "type": "box",
+    "center": [
+     0.0,
+     -33.55,
+     20.98
+    ],
+    "extent": [
+     3.65,
+     8.95,
+     1.98
+    ]
+   }
+  },
+  {
+   "id": "P07_PSU_3",
+   "grabbable": true,
+   "name_cn": "电源模块（热插拔）",
+   "material": "CRPS 3000 W · 钛金级效率 96 % · 54 V / 12 V 输出",
+   "desc": "6 个电源，平时 4 个就够、2 个冗余（4+2）：任何两个坏了机器照常跑。整机满载约 10 kW，相当于 5 台家用空调同时开。每个电源自带风扇，把手一拉就能带电更换。",
+   "grab": {
+    "type": "box",
+    "center": [
+     7.55,
+     -33.55,
+     20.98
+    ],
+    "extent": [
+     3.65,
+     8.95,
+     1.98
+    ]
+   }
+  },
+  {
+   "id": "P07_PSU_4",
+   "grabbable": true,
+   "name_cn": "电源模块（热插拔）",
+   "material": "CRPS 3000 W · 钛金级效率 96 % · 54 V / 12 V 输出",
+   "desc": "6 个电源，平时 4 个就够、2 个冗余（4+2）：任何两个坏了机器照常跑。整机满载约 10 kW，相当于 5 台家用空调同时开。每个电源自带风扇，把手一拉就能带电更换。",
+   "grab": {
+    "type": "box",
+    "center": [
+     -7.55,
+     -33.55,
+     25.08
+    ],
+    "extent": [
+     3.65,
+     8.95,
+     1.98
+    ]
+   }
+  },
+  {
+   "id": "P07_PSU_5",
+   "grabbable": true,
+   "name_cn": "电源模块（热插拔）",
+   "material": "CRPS 3000 W · 钛金级效率 96 % · 54 V / 12 V 输出",
+   "desc": "6 个电源，平时 4 个就够、2 个冗余（4+2）：任何两个坏了机器照常跑。整机满载约 10 kW，相当于 5 台家用空调同时开。每个电源自带风扇，把手一拉就能带电更换。",
+   "grab": {
+    "type": "box",
+    "center": [
+     -0.0,
+     -33.55,
+     25.08
+    ],
+    "extent": [
+     3.65,
+     8.95,
+     1.98
+    ]
+   }
+  },
+  {
+   "id": "P07_PSU_6",
+   "grabbable": true,
+   "name_cn": "电源模块（热插拔）",
+   "material": "CRPS 3000 W · 钛金级效率 96 % · 54 V / 12 V 输出",
+   "desc": "6 个电源，平时 4 个就够、2 个冗余（4+2）：任何两个坏了机器照常跑。整机满载约 10 kW，相当于 5 台家用空调同时开。每个电源自带风扇，把手一拉就能带电更换。",
+   "grab": {
+    "type": "box",
+    "center": [
+     7.55,
+     -33.55,
+     25.08
+    ],
+    "extent": [
+     3.65,
+     8.95,
+     1.98
+    ]
+   }
+  },
+  {
+   "id": "P08_PDB",
+   "grabbable": true,
+   "name_cn": "配电板 PDB",
+   "material": "厚铜 PCB + 铜排",
+   "desc": "6 个电源插在这块板上，输出并在一起，再经铜排送到 GPU 基板和主板。几百安培的电流靠厚铜层和铜排走，普通导线会发烫。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P09_GpuTray",
+   "grabbable": true,
+   "name_cn": "GPU 托盘",
+   "material": "钢板冲压托盘 + 前拉手",
+   "desc": "整个 GPU 部分装在这个托盘上，从机箱前面整体抽出来维修。托盘底板同时把上层 GPU 风道和下层 CPU 风道隔开。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P10_HGXBaseboard",
+   "grabbable": true,
+   "name_cn": "HGX 基板",
+   "material": "多层高速 PCB（约 20 层以上）· NVLink 走线",
+   "desc": "8 块 GPU 和 4 颗 NVSwitch 都插在这块板上。浅绿色的线代表 NVLink 走线：每块 GPU 拉 18 条 NVLink 到 4 颗 NVSwitch，任意两块 GPU 之间都能以 900 GB/s 直接交换数据，8 块卡用起来像一块大 GPU。后端的接口经线缆连到下层主板的 PCIe 交换芯片。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P11_SXM_1",
+   "grabbable": true,
+   "name_cn": "SXM5 模组载板",
+   "material": "高速 PCB · 背面两个高密度板对板连接器",
+   "desc": "GPU 芯片不是插在 PCIe 插槽里，而是焊在这块载板上，再整块压在基板的两个连接器上（SXM 接口）。这样供电能到 700 W、NVLink 不用绕线，PCIe 显卡做不到。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P11_SXM_2",
+   "grabbable": true,
+   "name_cn": "SXM5 模组载板",
+   "material": "高速 PCB · 背面两个高密度板对板连接器",
+   "desc": "GPU 芯片不是插在 PCIe 插槽里，而是焊在这块载板上，再整块压在基板的两个连接器上（SXM 接口）。这样供电能到 700 W、NVLink 不用绕线，PCIe 显卡做不到。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P11_SXM_3",
+   "grabbable": true,
+   "name_cn": "SXM5 模组载板",
+   "material": "高速 PCB · 背面两个高密度板对板连接器",
+   "desc": "GPU 芯片不是插在 PCIe 插槽里，而是焊在这块载板上，再整块压在基板的两个连接器上（SXM 接口）。这样供电能到 700 W、NVLink 不用绕线，PCIe 显卡做不到。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P11_SXM_4",
+   "grabbable": true,
+   "name_cn": "SXM5 模组载板",
+   "material": "高速 PCB · 背面两个高密度板对板连接器",
+   "desc": "GPU 芯片不是插在 PCIe 插槽里，而是焊在这块载板上，再整块压在基板的两个连接器上（SXM 接口）。这样供电能到 700 W、NVLink 不用绕线，PCIe 显卡做不到。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P11_SXM_5",
+   "grabbable": true,
+   "name_cn": "SXM5 模组载板",
+   "material": "高速 PCB · 背面两个高密度板对板连接器",
+   "desc": "GPU 芯片不是插在 PCIe 插槽里，而是焊在这块载板上，再整块压在基板的两个连接器上（SXM 接口）。这样供电能到 700 W、NVLink 不用绕线，PCIe 显卡做不到。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P11_SXM_6",
+   "grabbable": true,
+   "name_cn": "SXM5 模组载板",
+   "material": "高速 PCB · 背面两个高密度板对板连接器",
+   "desc": "GPU 芯片不是插在 PCIe 插槽里，而是焊在这块载板上，再整块压在基板的两个连接器上（SXM 接口）。这样供电能到 700 W、NVLink 不用绕线，PCIe 显卡做不到。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P11_SXM_7",
+   "grabbable": true,
+   "name_cn": "SXM5 模组载板",
+   "material": "高速 PCB · 背面两个高密度板对板连接器",
+   "desc": "GPU 芯片不是插在 PCIe 插槽里，而是焊在这块载板上，再整块压在基板的两个连接器上（SXM 接口）。这样供电能到 700 W、NVLink 不用绕线，PCIe 显卡做不到。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P11_SXM_8",
+   "grabbable": true,
+   "name_cn": "SXM5 模组载板",
+   "material": "高速 PCB · 背面两个高密度板对板连接器",
+   "desc": "GPU 芯片不是插在 PCIe 插槽里，而是焊在这块载板上，再整块压在基板的两个连接器上（SXM 接口）。这样供电能到 700 W、NVLink 不用绕线，PCIe 显卡做不到。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P12_GPU_1",
+   "grabbable": true,
+   "name_cn": "GPU 芯片（H100）",
+   "material": "TSMC 4N 工艺 · 800 亿晶体管 · 芯片面积 814 mm² · CoWoS 封装",
+   "desc": "AI 训练真正干活的地方：里面有 132 个 SM（流式多处理器），每个 SM 里的 Tensor Core 专门做矩阵乘法——神经网络的计算 90% 以上都是矩阵乘法。FP8 下每秒能算约 2000 万亿次。芯片下面那层灰色的是硅中介层（interposer），芯片和 6 颗 HBM 都坐在它上面，靠里面几千条极细的走线互连。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P12_GPU_2",
+   "grabbable": true,
+   "name_cn": "GPU 芯片（H100）",
+   "material": "TSMC 4N 工艺 · 800 亿晶体管 · 芯片面积 814 mm² · CoWoS 封装",
+   "desc": "AI 训练真正干活的地方：里面有 132 个 SM（流式多处理器），每个 SM 里的 Tensor Core 专门做矩阵乘法——神经网络的计算 90% 以上都是矩阵乘法。FP8 下每秒能算约 2000 万亿次。芯片下面那层灰色的是硅中介层（interposer），芯片和 6 颗 HBM 都坐在它上面，靠里面几千条极细的走线互连。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P12_GPU_3",
+   "grabbable": true,
+   "name_cn": "GPU 芯片（H100）",
+   "material": "TSMC 4N 工艺 · 800 亿晶体管 · 芯片面积 814 mm² · CoWoS 封装",
+   "desc": "AI 训练真正干活的地方：里面有 132 个 SM（流式多处理器），每个 SM 里的 Tensor Core 专门做矩阵乘法——神经网络的计算 90% 以上都是矩阵乘法。FP8 下每秒能算约 2000 万亿次。芯片下面那层灰色的是硅中介层（interposer），芯片和 6 颗 HBM 都坐在它上面，靠里面几千条极细的走线互连。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P12_GPU_4",
+   "grabbable": true,
+   "name_cn": "GPU 芯片（H100）",
+   "material": "TSMC 4N 工艺 · 800 亿晶体管 · 芯片面积 814 mm² · CoWoS 封装",
+   "desc": "AI 训练真正干活的地方：里面有 132 个 SM（流式多处理器），每个 SM 里的 Tensor Core 专门做矩阵乘法——神经网络的计算 90% 以上都是矩阵乘法。FP8 下每秒能算约 2000 万亿次。芯片下面那层灰色的是硅中介层（interposer），芯片和 6 颗 HBM 都坐在它上面，靠里面几千条极细的走线互连。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P12_GPU_5",
+   "grabbable": true,
+   "name_cn": "GPU 芯片（H100）",
+   "material": "TSMC 4N 工艺 · 800 亿晶体管 · 芯片面积 814 mm² · CoWoS 封装",
+   "desc": "AI 训练真正干活的地方：里面有 132 个 SM（流式多处理器），每个 SM 里的 Tensor Core 专门做矩阵乘法——神经网络的计算 90% 以上都是矩阵乘法。FP8 下每秒能算约 2000 万亿次。芯片下面那层灰色的是硅中介层（interposer），芯片和 6 颗 HBM 都坐在它上面，靠里面几千条极细的走线互连。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P12_GPU_6",
+   "grabbable": true,
+   "name_cn": "GPU 芯片（H100）",
+   "material": "TSMC 4N 工艺 · 800 亿晶体管 · 芯片面积 814 mm² · CoWoS 封装",
+   "desc": "AI 训练真正干活的地方：里面有 132 个 SM（流式多处理器），每个 SM 里的 Tensor Core 专门做矩阵乘法——神经网络的计算 90% 以上都是矩阵乘法。FP8 下每秒能算约 2000 万亿次。芯片下面那层灰色的是硅中介层（interposer），芯片和 6 颗 HBM 都坐在它上面，靠里面几千条极细的走线互连。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P12_GPU_7",
+   "grabbable": true,
+   "name_cn": "GPU 芯片（H100）",
+   "material": "TSMC 4N 工艺 · 800 亿晶体管 · 芯片面积 814 mm² · CoWoS 封装",
+   "desc": "AI 训练真正干活的地方：里面有 132 个 SM（流式多处理器），每个 SM 里的 Tensor Core 专门做矩阵乘法——神经网络的计算 90% 以上都是矩阵乘法。FP8 下每秒能算约 2000 万亿次。芯片下面那层灰色的是硅中介层（interposer），芯片和 6 颗 HBM 都坐在它上面，靠里面几千条极细的走线互连。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P12_GPU_8",
+   "grabbable": true,
+   "name_cn": "GPU 芯片（H100）",
+   "material": "TSMC 4N 工艺 · 800 亿晶体管 · 芯片面积 814 mm² · CoWoS 封装",
+   "desc": "AI 训练真正干活的地方：里面有 132 个 SM（流式多处理器），每个 SM 里的 Tensor Core 专门做矩阵乘法——神经网络的计算 90% 以上都是矩阵乘法。FP8 下每秒能算约 2000 万亿次。芯片下面那层灰色的是硅中介层（interposer），芯片和 6 颗 HBM 都坐在它上面，靠里面几千条极细的走线互连。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P13_HBM_G1A",
+   "grabbable": true,
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "material": "8 层 DRAM 芯片垂直堆叠 · 硅通孔（TSV）互连 · 每颗 16 GB",
+   "desc": "把 8 片内存芯片叠起来、用硅通孔从上到下打通，贴在 GPU 芯片旁边。离得近、位宽大（每颗 1024 位），6 颗（5 颗启用）合计 80 GB、带宽 3.35 TB/s，大约是普通显卡显存的 3 倍。大模型训练常常卡在\"数据搬不过来\"，所以 HBM 很关键。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P13_HBM_G2A",
+   "grabbable": true,
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "material": "8 层 DRAM 芯片垂直堆叠 · 硅通孔（TSV）互连 · 每颗 16 GB",
+   "desc": "把 8 片内存芯片叠起来、用硅通孔从上到下打通，贴在 GPU 芯片旁边。离得近、位宽大（每颗 1024 位），6 颗（5 颗启用）合计 80 GB、带宽 3.35 TB/s，大约是普通显卡显存的 3 倍。大模型训练常常卡在\"数据搬不过来\"，所以 HBM 很关键。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P13_HBM_G3A",
+   "grabbable": true,
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "material": "8 层 DRAM 芯片垂直堆叠 · 硅通孔（TSV）互连 · 每颗 16 GB",
+   "desc": "把 8 片内存芯片叠起来、用硅通孔从上到下打通，贴在 GPU 芯片旁边。离得近、位宽大（每颗 1024 位），6 颗（5 颗启用）合计 80 GB、带宽 3.35 TB/s，大约是普通显卡显存的 3 倍。大模型训练常常卡在\"数据搬不过来\"，所以 HBM 很关键。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P13_HBM_G4A",
+   "grabbable": true,
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "material": "8 层 DRAM 芯片垂直堆叠 · 硅通孔（TSV）互连 · 每颗 16 GB",
+   "desc": "把 8 片内存芯片叠起来、用硅通孔从上到下打通，贴在 GPU 芯片旁边。离得近、位宽大（每颗 1024 位），6 颗（5 颗启用）合计 80 GB、带宽 3.35 TB/s，大约是普通显卡显存的 3 倍。大模型训练常常卡在\"数据搬不过来\"，所以 HBM 很关键。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P13_HBM_G5A",
+   "grabbable": true,
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "material": "8 层 DRAM 芯片垂直堆叠 · 硅通孔（TSV）互连 · 每颗 16 GB",
+   "desc": "把 8 片内存芯片叠起来、用硅通孔从上到下打通，贴在 GPU 芯片旁边。离得近、位宽大（每颗 1024 位），6 颗（5 颗启用）合计 80 GB、带宽 3.35 TB/s，大约是普通显卡显存的 3 倍。大模型训练常常卡在\"数据搬不过来\"，所以 HBM 很关键。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P13_HBM_G6A",
+   "grabbable": true,
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "material": "8 层 DRAM 芯片垂直堆叠 · 硅通孔（TSV）互连 · 每颗 16 GB",
+   "desc": "把 8 片内存芯片叠起来、用硅通孔从上到下打通，贴在 GPU 芯片旁边。离得近、位宽大（每颗 1024 位），6 颗（5 颗启用）合计 80 GB、带宽 3.35 TB/s，大约是普通显卡显存的 3 倍。大模型训练常常卡在\"数据搬不过来\"，所以 HBM 很关键。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P13_HBM_G7A",
+   "grabbable": true,
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "material": "8 层 DRAM 芯片垂直堆叠 · 硅通孔（TSV）互连 · 每颗 16 GB",
+   "desc": "把 8 片内存芯片叠起来、用硅通孔从上到下打通，贴在 GPU 芯片旁边。离得近、位宽大（每颗 1024 位），6 颗（5 颗启用）合计 80 GB、带宽 3.35 TB/s，大约是普通显卡显存的 3 倍。大模型训练常常卡在\"数据搬不过来\"，所以 HBM 很关键。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P13_HBM_G8A",
+   "grabbable": true,
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "material": "8 层 DRAM 芯片垂直堆叠 · 硅通孔（TSV）互连 · 每颗 16 GB",
+   "desc": "把 8 片内存芯片叠起来、用硅通孔从上到下打通，贴在 GPU 芯片旁边。离得近、位宽大（每颗 1024 位），6 颗（5 颗启用）合计 80 GB、带宽 3.35 TB/s，大约是普通显卡显存的 3 倍。大模型训练常常卡在\"数据搬不过来\"，所以 HBM 很关键。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P14_VRM_1",
+   "grabbable": true,
+   "name_cn": "GPU 供电模块（VRM）",
+   "material": "多相 DrMOS 功率级 + 贴片电感",
+   "desc": "基板送来的是 54 V / 12 V，GPU 芯片只要 0.7~1 V 左右，但电流高达 700 A 以上。这些功率级（黑色小方块）和电感（银色方块）分成几十相轮流开关，把电压降下来，电流平均分摊，单个元件才不会烧。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P14_VRM_2",
+   "grabbable": true,
+   "name_cn": "GPU 供电模块（VRM）",
+   "material": "多相 DrMOS 功率级 + 贴片电感",
+   "desc": "基板送来的是 54 V / 12 V，GPU 芯片只要 0.7~1 V 左右，但电流高达 700 A 以上。这些功率级（黑色小方块）和电感（银色方块）分成几十相轮流开关，把电压降下来，电流平均分摊，单个元件才不会烧。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P14_VRM_3",
+   "grabbable": true,
+   "name_cn": "GPU 供电模块（VRM）",
+   "material": "多相 DrMOS 功率级 + 贴片电感",
+   "desc": "基板送来的是 54 V / 12 V，GPU 芯片只要 0.7~1 V 左右，但电流高达 700 A 以上。这些功率级（黑色小方块）和电感（银色方块）分成几十相轮流开关，把电压降下来，电流平均分摊，单个元件才不会烧。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P14_VRM_4",
+   "grabbable": true,
+   "name_cn": "GPU 供电模块（VRM）",
+   "material": "多相 DrMOS 功率级 + 贴片电感",
+   "desc": "基板送来的是 54 V / 12 V，GPU 芯片只要 0.7~1 V 左右，但电流高达 700 A 以上。这些功率级（黑色小方块）和电感（银色方块）分成几十相轮流开关，把电压降下来，电流平均分摊，单个元件才不会烧。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P14_VRM_5",
+   "grabbable": true,
+   "name_cn": "GPU 供电模块（VRM）",
+   "material": "多相 DrMOS 功率级 + 贴片电感",
+   "desc": "基板送来的是 54 V / 12 V，GPU 芯片只要 0.7~1 V 左右，但电流高达 700 A 以上。这些功率级（黑色小方块）和电感（银色方块）分成几十相轮流开关，把电压降下来，电流平均分摊，单个元件才不会烧。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P14_VRM_6",
+   "grabbable": true,
+   "name_cn": "GPU 供电模块（VRM）",
+   "material": "多相 DrMOS 功率级 + 贴片电感",
+   "desc": "基板送来的是 54 V / 12 V，GPU 芯片只要 0.7~1 V 左右，但电流高达 700 A 以上。这些功率级（黑色小方块）和电感（银色方块）分成几十相轮流开关，把电压降下来，电流平均分摊，单个元件才不会烧。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P14_VRM_7",
+   "grabbable": true,
+   "name_cn": "GPU 供电模块（VRM）",
+   "material": "多相 DrMOS 功率级 + 贴片电感",
+   "desc": "基板送来的是 54 V / 12 V，GPU 芯片只要 0.7~1 V 左右，但电流高达 700 A 以上。这些功率级（黑色小方块）和电感（银色方块）分成几十相轮流开关，把电压降下来，电流平均分摊，单个元件才不会烧。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P14_VRM_8",
+   "grabbable": true,
+   "name_cn": "GPU 供电模块（VRM）",
+   "material": "多相 DrMOS 功率级 + 贴片电感",
+   "desc": "基板送来的是 54 V / 12 V，GPU 芯片只要 0.7~1 V 左右，但电流高达 700 A 以上。这些功率级（黑色小方块）和电感（银色方块）分成几十相轮流开关，把电压降下来，电流平均分摊，单个元件才不会烧。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P15_GpuHeatsink_1",
+   "grabbable": true,
+   "name_cn": "GPU 散热器",
+   "material": "铜底均热板（Vapor Chamber）+ 铜热管 + 铝鳍片",
+   "desc": "一块 GPU 满载 700 W，比电磁炉一个灶眼还热。铜底里是抽了真空的腔体，里面的水在芯片上方蒸发、到边上冷凝，把热量迅速铺开到整块底板；热管再把热量送上鳍片，风扇吹来的风从鳍片缝里带走热量。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P15_GpuHeatsink_2",
+   "grabbable": true,
+   "name_cn": "GPU 散热器",
+   "material": "铜底均热板（Vapor Chamber）+ 铜热管 + 铝鳍片",
+   "desc": "一块 GPU 满载 700 W，比电磁炉一个灶眼还热。铜底里是抽了真空的腔体，里面的水在芯片上方蒸发、到边上冷凝，把热量迅速铺开到整块底板；热管再把热量送上鳍片，风扇吹来的风从鳍片缝里带走热量。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P15_GpuHeatsink_3",
+   "grabbable": true,
+   "name_cn": "GPU 散热器",
+   "material": "铜底均热板（Vapor Chamber）+ 铜热管 + 铝鳍片",
+   "desc": "一块 GPU 满载 700 W，比电磁炉一个灶眼还热。铜底里是抽了真空的腔体，里面的水在芯片上方蒸发、到边上冷凝，把热量迅速铺开到整块底板；热管再把热量送上鳍片，风扇吹来的风从鳍片缝里带走热量。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P15_GpuHeatsink_4",
+   "grabbable": true,
+   "name_cn": "GPU 散热器",
+   "material": "铜底均热板（Vapor Chamber）+ 铜热管 + 铝鳍片",
+   "desc": "一块 GPU 满载 700 W，比电磁炉一个灶眼还热。铜底里是抽了真空的腔体，里面的水在芯片上方蒸发、到边上冷凝，把热量迅速铺开到整块底板；热管再把热量送上鳍片，风扇吹来的风从鳍片缝里带走热量。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P15_GpuHeatsink_5",
+   "grabbable": true,
+   "name_cn": "GPU 散热器",
+   "material": "铜底均热板（Vapor Chamber）+ 铜热管 + 铝鳍片",
+   "desc": "一块 GPU 满载 700 W，比电磁炉一个灶眼还热。铜底里是抽了真空的腔体，里面的水在芯片上方蒸发、到边上冷凝，把热量迅速铺开到整块底板；热管再把热量送上鳍片，风扇吹来的风从鳍片缝里带走热量。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P15_GpuHeatsink_6",
+   "grabbable": true,
+   "name_cn": "GPU 散热器",
+   "material": "铜底均热板（Vapor Chamber）+ 铜热管 + 铝鳍片",
+   "desc": "一块 GPU 满载 700 W，比电磁炉一个灶眼还热。铜底里是抽了真空的腔体，里面的水在芯片上方蒸发、到边上冷凝，把热量迅速铺开到整块底板；热管再把热量送上鳍片，风扇吹来的风从鳍片缝里带走热量。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P15_GpuHeatsink_7",
+   "grabbable": true,
+   "name_cn": "GPU 散热器",
+   "material": "铜底均热板（Vapor Chamber）+ 铜热管 + 铝鳍片",
+   "desc": "一块 GPU 满载 700 W，比电磁炉一个灶眼还热。铜底里是抽了真空的腔体，里面的水在芯片上方蒸发、到边上冷凝，把热量迅速铺开到整块底板；热管再把热量送上鳍片，风扇吹来的风从鳍片缝里带走热量。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P15_GpuHeatsink_8",
+   "grabbable": true,
+   "name_cn": "GPU 散热器",
+   "material": "铜底均热板（Vapor Chamber）+ 铜热管 + 铝鳍片",
+   "desc": "一块 GPU 满载 700 W，比电磁炉一个灶眼还热。铜底里是抽了真空的腔体，里面的水在芯片上方蒸发、到边上冷凝，把热量迅速铺开到整块底板；热管再把热量送上鳍片，风扇吹来的风从鳍片缝里带走热量。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P16_NVSwitch_1",
+   "grabbable": true,
+   "name_cn": "NVSwitch 芯片",
+   "material": "NVLink 交换芯片 · 64 个 NVLink4 端口",
+   "desc": "相当于 GPU 之间的\"交换机\"。4 颗 NVSwitch 把 8 块 GPU 全部互连，任意两块之间都能满速通信，多块卡一起训练一个大模型时，同步梯度（每一步都要做）就靠它。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P16_NVSwitch_2",
+   "grabbable": true,
+   "name_cn": "NVSwitch 芯片",
+   "material": "NVLink 交换芯片 · 64 个 NVLink4 端口",
+   "desc": "相当于 GPU 之间的\"交换机\"。4 颗 NVSwitch 把 8 块 GPU 全部互连，任意两块之间都能满速通信，多块卡一起训练一个大模型时，同步梯度（每一步都要做）就靠它。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P16_NVSwitch_3",
+   "grabbable": true,
+   "name_cn": "NVSwitch 芯片",
+   "material": "NVLink 交换芯片 · 64 个 NVLink4 端口",
+   "desc": "相当于 GPU 之间的\"交换机\"。4 颗 NVSwitch 把 8 块 GPU 全部互连，任意两块之间都能满速通信，多块卡一起训练一个大模型时，同步梯度（每一步都要做）就靠它。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P16_NVSwitch_4",
+   "grabbable": true,
+   "name_cn": "NVSwitch 芯片",
+   "material": "NVLink 交换芯片 · 64 个 NVLink4 端口",
+   "desc": "相当于 GPU 之间的\"交换机\"。4 颗 NVSwitch 把 8 块 GPU 全部互连，任意两块之间都能满速通信，多块卡一起训练一个大模型时，同步梯度（每一步都要做）就靠它。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P17_NVSHeatsink_1",
+   "grabbable": true,
+   "name_cn": "NVSwitch 散热器",
+   "material": "铝鳍片 + 铜底",
+   "desc": "每颗 NVSwitch 也有几十瓦发热，用一个矮一点的散热器，同样被 GPU 区风扇的风吹着。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P17_NVSHeatsink_2",
+   "grabbable": true,
+   "name_cn": "NVSwitch 散热器",
+   "material": "铝鳍片 + 铜底",
+   "desc": "每颗 NVSwitch 也有几十瓦发热，用一个矮一点的散热器，同样被 GPU 区风扇的风吹着。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P17_NVSHeatsink_3",
+   "grabbable": true,
+   "name_cn": "NVSwitch 散热器",
+   "material": "铝鳍片 + 铜底",
+   "desc": "每颗 NVSwitch 也有几十瓦发热，用一个矮一点的散热器，同样被 GPU 区风扇的风吹着。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P17_NVSHeatsink_4",
+   "grabbable": true,
+   "name_cn": "NVSwitch 散热器",
+   "material": "铝鳍片 + 铜底",
+   "desc": "每颗 NVSwitch 也有几十瓦发热，用一个矮一点的散热器，同样被 GPU 区风扇的风吹着。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P19_PCIeSwitch_1",
+   "grabbable": true,
+   "name_cn": "PCIe 交换芯片",
+   "material": "PCIe 5.0 交换芯片 · 带小散热片",
+   "desc": "把 CPU 的 PCIe 通道\"分叉\"：每颗交换芯片连 2 块 GPU、2 张网卡和 NVMe 硬盘，让网卡可以直接把数据写进 GPU 显存（GPUDirect RDMA），不用先绕到 CPU 内存里，省时间也省 CPU。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P19_PCIeSwitch_2",
+   "grabbable": true,
+   "name_cn": "PCIe 交换芯片",
+   "material": "PCIe 5.0 交换芯片 · 带小散热片",
+   "desc": "把 CPU 的 PCIe 通道\"分叉\"：每颗交换芯片连 2 块 GPU、2 张网卡和 NVMe 硬盘，让网卡可以直接把数据写进 GPU 显存（GPUDirect RDMA），不用先绕到 CPU 内存里，省时间也省 CPU。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P19_PCIeSwitch_3",
+   "grabbable": true,
+   "name_cn": "PCIe 交换芯片",
+   "material": "PCIe 5.0 交换芯片 · 带小散热片",
+   "desc": "把 CPU 的 PCIe 通道\"分叉\"：每颗交换芯片连 2 块 GPU、2 张网卡和 NVMe 硬盘，让网卡可以直接把数据写进 GPU 显存（GPUDirect RDMA），不用先绕到 CPU 内存里，省时间也省 CPU。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P19_PCIeSwitch_4",
+   "grabbable": true,
+   "name_cn": "PCIe 交换芯片",
+   "material": "PCIe 5.0 交换芯片 · 带小散热片",
+   "desc": "把 CPU 的 PCIe 通道\"分叉\"：每颗交换芯片连 2 块 GPU、2 张网卡和 NVMe 硬盘，让网卡可以直接把数据写进 GPU 显存（GPUDirect RDMA），不用先绕到 CPU 内存里，省时间也省 CPU。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P21_MbTray",
+   "grabbable": true,
+   "name_cn": "主板托盘",
+   "material": "钢板冲压托盘 + 后面板 + 拉手",
+   "desc": "下层整块主板装在这个托盘上，从机箱后面整体抽出来。后面板上开着网卡、管理口、USB 的孔。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P22_Motherboard",
+   "grabbable": true,
+   "name_cn": "主板（双路）",
+   "material": "多层 PCB · 2 个 LGA4677 插座 · 32 个内存插槽 · PCIe 5.0 插槽",
+   "desc": "服务器的\"指挥中心\"：两颗 CPU、内存、网卡、硬盘、管理芯片都连在这块板上。CPU 旁边成排的银色方块是 CPU 供电电感，后部的黑色插槽是网卡用的 PCIe x16 插槽，中间几排小接口经线缆连到上层 GPU 基板。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P23_CPU_1",
+   "grabbable": true,
+   "name_cn": "CPU 处理器",
+   "material": "至强级服务器 CPU · 56 核 · LGA4677 封装",
+   "desc": "训练时 GPU 负责算，CPU 负责\"打杂\"：读硬盘、解码和预处理训练数据、调度任务、管网络。两颗 CPU 一共 112 核，数据预处理跟不上的话 GPU 就要空等。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P23_CPU_2",
+   "grabbable": true,
+   "name_cn": "CPU 处理器",
+   "material": "至强级服务器 CPU · 56 核 · LGA4677 封装",
+   "desc": "训练时 GPU 负责算，CPU 负责\"打杂\"：读硬盘、解码和预处理训练数据、调度任务、管网络。两颗 CPU 一共 112 核，数据预处理跟不上的话 GPU 就要空等。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P24_CpuHeatsink_1",
+   "grabbable": true,
+   "name_cn": "CPU 散热器",
+   "material": "铜底 + 4 根热管 + 铝鳍片 · 2U 高",
+   "desc": "CPU 满载约 350 W。热管把热量从铜底送到上面的鳍片，CPU 区风扇的风从鳍片缝里吹过去带走。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P24_CpuHeatsink_2",
+   "grabbable": true,
+   "name_cn": "CPU 散热器",
+   "material": "铜底 + 4 根热管 + 铝鳍片 · 2U 高",
+   "desc": "CPU 满载约 350 W。热管把热量从铜底送到上面的鳍片，CPU 区风扇的风从鳍片缝里吹过去带走。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P25_DIMM_A1",
+   "grabbable": true,
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "material": "DDR5-4800 RDIMM · 64 GB/根 · 带 ECC",
+   "desc": "每颗 CPU 两边各 8 根，一共 32 根 2 TB。训练数据先读进内存、预处理好再送进 GPU。服务器内存带 ECC 纠错：每 64 位数据多存 8 位校验，偶尔有位翻转能自动纠正，几周不停机的训练不会因为一个比特出错而崩掉。中间的小芯片是 RCD（地址缓冲）和 PMIC（内存条自带的电源芯片）。",
+   "grab": {
+    "type": "box",
+    "center": [
+     -6.6,
+     6.0,
+     3.06
+    ],
+    "extent": [
+     0.19,
+     6.67,
+     1.56
+    ]
+   }
+  },
+  {
+   "id": "P25_DIMM_B1",
+   "grabbable": true,
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "material": "DDR5-4800 RDIMM · 64 GB/根 · 带 ECC",
+   "desc": "每颗 CPU 两边各 8 根，一共 32 根 2 TB。训练数据先读进内存、预处理好再送进 GPU。服务器内存带 ECC 纠错：每 64 位数据多存 8 位校验，偶尔有位翻转能自动纠正，几周不停机的训练不会因为一个比特出错而崩掉。中间的小芯片是 RCD（地址缓冲）和 PMIC（内存条自带的电源芯片）。",
+   "grab": {
+    "type": "box",
+    "center": [
+     -15.4,
+     6.0,
+     3.06
+    ],
+    "extent": [
+     0.19,
+     6.67,
+     1.56
+    ]
+   }
+  },
+  {
+   "id": "P25_DIMM_C1",
+   "grabbable": true,
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "material": "DDR5-4800 RDIMM · 64 GB/根 · 带 ECC",
+   "desc": "每颗 CPU 两边各 8 根，一共 32 根 2 TB。训练数据先读进内存、预处理好再送进 GPU。服务器内存带 ECC 纠错：每 64 位数据多存 8 位校验，偶尔有位翻转能自动纠正，几周不停机的训练不会因为一个比特出错而崩掉。中间的小芯片是 RCD（地址缓冲）和 PMIC（内存条自带的电源芯片）。",
+   "grab": {
+    "type": "box",
+    "center": [
+     6.6,
+     6.0,
+     3.06
+    ],
+    "extent": [
+     0.19,
+     6.67,
+     1.56
+    ]
+   }
+  },
+  {
+   "id": "P25_DIMM_D1",
+   "grabbable": true,
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "material": "DDR5-4800 RDIMM · 64 GB/根 · 带 ECC",
+   "desc": "每颗 CPU 两边各 8 根，一共 32 根 2 TB。训练数据先读进内存、预处理好再送进 GPU。服务器内存带 ECC 纠错：每 64 位数据多存 8 位校验，偶尔有位翻转能自动纠正，几周不停机的训练不会因为一个比特出错而崩掉。中间的小芯片是 RCD（地址缓冲）和 PMIC（内存条自带的电源芯片）。",
+   "grab": {
+    "type": "box",
+    "center": [
+     15.4,
+     6.0,
+     3.06
+    ],
+    "extent": [
+     0.19,
+     6.67,
+     1.56
+    ]
+   }
+  },
+  {
+   "id": "P26_NIC_1",
+   "grabbable": true,
+   "name_cn": "400G 网卡（ConnectX-7）",
+   "material": "PCIe 5.0 x16 · 1 × OSFP 400 Gb/s · InfiniBand / 以太网",
+   "desc": "每块 GPU 配一张网卡，8 张合计 3.2 Tb/s。几十上百台服务器一起训练一个大模型时，每一步都要和其他机器交换梯度，网卡用 RDMA 直接读写对方 GPU 的显存，CPU 不用插手。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P26_NIC_2",
+   "grabbable": true,
+   "name_cn": "400G 网卡（ConnectX-7）",
+   "material": "PCIe 5.0 x16 · 1 × OSFP 400 Gb/s · InfiniBand / 以太网",
+   "desc": "每块 GPU 配一张网卡，8 张合计 3.2 Tb/s。几十上百台服务器一起训练一个大模型时，每一步都要和其他机器交换梯度，网卡用 RDMA 直接读写对方 GPU 的显存，CPU 不用插手。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P26_NIC_3",
+   "grabbable": true,
+   "name_cn": "400G 网卡（ConnectX-7）",
+   "material": "PCIe 5.0 x16 · 1 × OSFP 400 Gb/s · InfiniBand / 以太网",
+   "desc": "每块 GPU 配一张网卡，8 张合计 3.2 Tb/s。几十上百台服务器一起训练一个大模型时，每一步都要和其他机器交换梯度，网卡用 RDMA 直接读写对方 GPU 的显存，CPU 不用插手。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P26_NIC_4",
+   "grabbable": true,
+   "name_cn": "400G 网卡（ConnectX-7）",
+   "material": "PCIe 5.0 x16 · 1 × OSFP 400 Gb/s · InfiniBand / 以太网",
+   "desc": "每块 GPU 配一张网卡，8 张合计 3.2 Tb/s。几十上百台服务器一起训练一个大模型时，每一步都要和其他机器交换梯度，网卡用 RDMA 直接读写对方 GPU 的显存，CPU 不用插手。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P26_NIC_5",
+   "grabbable": true,
+   "name_cn": "400G 网卡（ConnectX-7）",
+   "material": "PCIe 5.0 x16 · 1 × OSFP 400 Gb/s · InfiniBand / 以太网",
+   "desc": "每块 GPU 配一张网卡，8 张合计 3.2 Tb/s。几十上百台服务器一起训练一个大模型时，每一步都要和其他机器交换梯度，网卡用 RDMA 直接读写对方 GPU 的显存，CPU 不用插手。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P26_NIC_6",
+   "grabbable": true,
+   "name_cn": "400G 网卡（ConnectX-7）",
+   "material": "PCIe 5.0 x16 · 1 × OSFP 400 Gb/s · InfiniBand / 以太网",
+   "desc": "每块 GPU 配一张网卡，8 张合计 3.2 Tb/s。几十上百台服务器一起训练一个大模型时，每一步都要和其他机器交换梯度，网卡用 RDMA 直接读写对方 GPU 的显存，CPU 不用插手。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P26_NIC_7",
+   "grabbable": true,
+   "name_cn": "400G 网卡（ConnectX-7）",
+   "material": "PCIe 5.0 x16 · 1 × OSFP 400 Gb/s · InfiniBand / 以太网",
+   "desc": "每块 GPU 配一张网卡，8 张合计 3.2 Tb/s。几十上百台服务器一起训练一个大模型时，每一步都要和其他机器交换梯度，网卡用 RDMA 直接读写对方 GPU 的显存，CPU 不用插手。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P26_NIC_8",
+   "grabbable": true,
+   "name_cn": "400G 网卡（ConnectX-7）",
+   "material": "PCIe 5.0 x16 · 1 × OSFP 400 Gb/s · InfiniBand / 以太网",
+   "desc": "每块 GPU 配一张网卡，8 张合计 3.2 Tb/s。几十上百台服务器一起训练一个大模型时，每一步都要和其他机器交换梯度，网卡用 RDMA 直接读写对方 GPU 的显存，CPU 不用插手。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P27_OCPNic",
+   "grabbable": true,
+   "name_cn": "OCP 3.0 网卡",
+   "material": "双口 25G 以太网 · OCP 3.0 小卡",
+   "desc": "存储和管理用的普通网络：从共享存储读训练数据、给运维登录。和 GPU 训练用的 400G 网络分开，互不抢带宽。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P28_M2_1",
+   "grabbable": true,
+   "name_cn": "M.2 启动盘",
+   "material": "M.2 2280 NVMe SSD · 960 GB",
+   "desc": "装操作系统和驱动。两块做 RAID 1 镜像，坏一块照样开机。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P28_M2_2",
+   "grabbable": true,
+   "name_cn": "M.2 启动盘",
+   "material": "M.2 2280 NVMe SSD · 960 GB",
+   "desc": "装操作系统和驱动。两块做 RAID 1 镜像，坏一块照样开机。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P29_BMC",
+   "grabbable": true,
+   "name_cn": "BMC 管理芯片",
+   "material": "AST2600 · ARM 核心 + 独立网口",
+   "desc": "服务器里的\"小电脑\"，只要插着电源就在运行，主机关机也能用：远程开关机、看温度和风扇转速、远程看屏幕、刷固件。机房里成百上千台机器，靠它不用人跑到机器前。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P30_CMOS",
+   "grabbable": true,
+   "name_cn": "CMOS 纽扣电池",
+   "material": "CR2032 · 3 V 锂电池",
+   "desc": "拔掉电源后给主板上的实时时钟和 BIOS 设置供电，几年换一次。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P31_TPM",
+   "grabbable": true,
+   "name_cn": "TPM 安全模块",
+   "material": "TPM 2.0 小板",
+   "desc": "存加密密钥、校验开机过程有没有被篡改（安全启动），硬盘加密的钥匙也放在这里。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P33_PCH",
+   "grabbable": true,
+   "name_cn": "PCH 芯片组",
+   "material": "平台控制芯片 + 小散热片",
+   "desc": "管\"慢速\"设备：USB、SATA、BIOS 闪存、BMC 的连接等。高速的内存和 PCIe 已经直接连在 CPU 上了。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P35_Backplane",
+   "grabbable": true,
+   "name_cn": "硬盘背板",
+   "material": "PCB · 8 个 U.2 插座",
+   "desc": "硬盘插进来就接上了电和 PCIe 信号，不用接线；背板再经线缆连到主板。所以硬盘能从前面直接拔插（热插拔）。",
+   "grab": {
+    "type": "surface"
+   }
+  }
+ ],
+ "parts": [
+  {
+   "name": "P01_Chassis",
+   "name_cn": "机箱",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P01_Chassis.P01_Chassis",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "P02_Lid",
+   "name_cn": "顶盖",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P02_Lid.P02_Lid",
+   "spin": 0,
+   "unit": "P02_Lid",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     52.0,
+     0.0
+    ]
+   ]
+  },
+  {
+   "name": "P03_GpuFan_1",
+   "name_cn": "GPU 区风扇（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P03_GpuFan_1.P03_GpuFan_1",
+   "spin": 0,
+   "unit": "P03_GpuFan_1",
+   "ex": [
+    [
+     0.0,
+     13.0,
+     0.0,
+     0.04
+    ]
+   ]
+  },
+  {
+   "name": "P03_GpuFan_2",
+   "name_cn": "GPU 区风扇（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P03_GpuFan_2.P03_GpuFan_2",
+   "spin": 0,
+   "unit": "P03_GpuFan_2",
+   "ex": [
+    [
+     0.0,
+     13.0,
+     0.0,
+     0.046
+    ]
+   ]
+  },
+  {
+   "name": "P03_GpuFan_3",
+   "name_cn": "GPU 区风扇（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P03_GpuFan_3.P03_GpuFan_3",
+   "spin": 0,
+   "unit": "P03_GpuFan_3",
+   "ex": [
+    [
+     0.0,
+     13.0,
+     0.0,
+     0.052000000000000005
+    ]
+   ]
+  },
+  {
+   "name": "P03_GpuFan_4",
+   "name_cn": "GPU 区风扇（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P03_GpuFan_4.P03_GpuFan_4",
+   "spin": 0,
+   "unit": "P03_GpuFan_4",
+   "ex": [
+    [
+     0.0,
+     13.0,
+     0.0,
+     0.058
+    ]
+   ]
+  },
+  {
+   "name": "P03_GpuFan_5",
+   "name_cn": "GPU 区风扇（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P03_GpuFan_5.P03_GpuFan_5",
+   "spin": 0,
+   "unit": "P03_GpuFan_5",
+   "ex": [
+    [
+     0.0,
+     13.0,
+     0.0,
+     0.064
+    ]
+   ]
+  },
+  {
+   "name": "P03_GpuFan_6",
+   "name_cn": "GPU 区风扇（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P03_GpuFan_6.P03_GpuFan_6",
+   "spin": 0,
+   "unit": "P03_GpuFan_6",
+   "ex": [
+    [
+     0.0,
+     13.0,
+     0.0,
+     0.07
+    ]
+   ]
+  },
+  {
+   "name": "P03_GpuFan_7",
+   "name_cn": "GPU 区风扇（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P03_GpuFan_7.P03_GpuFan_7",
+   "spin": 0,
+   "unit": "P03_GpuFan_7",
+   "ex": [
+    [
+     0.0,
+     13.0,
+     0.0,
+     0.07600000000000001
+    ]
+   ]
+  },
+  {
+   "name": "P03_GpuFan_8",
+   "name_cn": "GPU 区风扇（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P03_GpuFan_8.P03_GpuFan_8",
+   "spin": 0,
+   "unit": "P03_GpuFan_8",
+   "ex": [
+    [
+     0.0,
+     13.0,
+     0.0,
+     0.082
+    ]
+   ]
+  },
+  {
+   "name": "P03_GpuFan_9",
+   "name_cn": "GPU 区风扇（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P03_GpuFan_9.P03_GpuFan_9",
+   "spin": 0,
+   "unit": "P03_GpuFan_9",
+   "ex": [
+    [
+     0.0,
+     13.0,
+     0.0,
+     0.088
+    ]
+   ]
+  },
+  {
+   "name": "P03_GpuFan_10",
+   "name_cn": "GPU 区风扇（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P03_GpuFan_10.P03_GpuFan_10",
+   "spin": 0,
+   "unit": "P03_GpuFan_10",
+   "ex": [
+    [
+     0.0,
+     13.0,
+     0.0,
+     0.094
+    ]
+   ]
+  },
+  {
+   "name": "P04_CpuFan_1",
+   "name_cn": "CPU 区风扇（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P04_CpuFan_1.P04_CpuFan_1",
+   "spin": 0,
+   "unit": "P04_CpuFan_1",
+   "ex": [
+    [
+     0.0,
+     12.0,
+     0.0,
+     0.1
+    ]
+   ]
+  },
+  {
+   "name": "P04_CpuFan_2",
+   "name_cn": "CPU 区风扇（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P04_CpuFan_2.P04_CpuFan_2",
+   "spin": 0,
+   "unit": "P04_CpuFan_2",
+   "ex": [
+    [
+     0.0,
+     12.0,
+     0.0,
+     0.10600000000000001
+    ]
+   ]
+  },
+  {
+   "name": "P04_CpuFan_3",
+   "name_cn": "CPU 区风扇（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P04_CpuFan_3.P04_CpuFan_3",
+   "spin": 0,
+   "unit": "P04_CpuFan_3",
+   "ex": [
+    [
+     0.0,
+     12.0,
+     0.0,
+     0.112
+    ]
+   ]
+  },
+  {
+   "name": "P04_CpuFan_4",
+   "name_cn": "CPU 区风扇（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P04_CpuFan_4.P04_CpuFan_4",
+   "spin": 0,
+   "unit": "P04_CpuFan_4",
+   "ex": [
+    [
+     0.0,
+     12.0,
+     0.0,
+     0.11800000000000001
+    ]
+   ]
+  },
+  {
+   "name": "P05_Drive_1",
+   "name_cn": "NVMe 固态硬盘",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P05_Drive_1.P05_Drive_1",
+   "spin": 0,
+   "unit": "P05_Drive_1",
+   "ex": [
+    [
+     0.0,
+     15.0,
+     0.0,
+     0.12
+    ]
+   ]
+  },
+  {
+   "name": "P05_Drive_2",
+   "name_cn": "NVMe 固态硬盘",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P05_Drive_2.P05_Drive_2",
+   "spin": 0,
+   "unit": "P05_Drive_2",
+   "ex": [
+    [
+     0.0,
+     15.0,
+     0.0,
+     0.126
+    ]
+   ]
+  },
+  {
+   "name": "P05_Drive_3",
+   "name_cn": "NVMe 固态硬盘",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P05_Drive_3.P05_Drive_3",
+   "spin": 0,
+   "unit": "P05_Drive_3",
+   "ex": [
+    [
+     0.0,
+     15.0,
+     0.0,
+     0.132
+    ]
+   ]
+  },
+  {
+   "name": "P05_Drive_4",
+   "name_cn": "NVMe 固态硬盘",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P05_Drive_4.P05_Drive_4",
+   "spin": 0,
+   "unit": "P05_Drive_4",
+   "ex": [
+    [
+     0.0,
+     15.0,
+     0.0,
+     0.138
+    ]
+   ]
+  },
+  {
+   "name": "P05_Drive_5",
+   "name_cn": "NVMe 固态硬盘",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P05_Drive_5.P05_Drive_5",
+   "spin": 0,
+   "unit": "P05_Drive_5",
+   "ex": [
+    [
+     0.0,
+     15.0,
+     0.0,
+     0.144
+    ]
+   ]
+  },
+  {
+   "name": "P05_Drive_6",
+   "name_cn": "NVMe 固态硬盘",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P05_Drive_6.P05_Drive_6",
+   "spin": 0,
+   "unit": "P05_Drive_6",
+   "ex": [
+    [
+     0.0,
+     15.0,
+     0.0,
+     0.15
+    ]
+   ]
+  },
+  {
+   "name": "P05_Drive_7",
+   "name_cn": "NVMe 固态硬盘",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P05_Drive_7.P05_Drive_7",
+   "spin": 0,
+   "unit": "P05_Drive_7",
+   "ex": [
+    [
+     0.0,
+     15.0,
+     0.0,
+     0.156
+    ]
+   ]
+  },
+  {
+   "name": "P05_Drive_8",
+   "name_cn": "NVMe 固态硬盘",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P05_Drive_8.P05_Drive_8",
+   "spin": 0,
+   "unit": "P05_Drive_8",
+   "ex": [
+    [
+     0.0,
+     15.0,
+     0.0,
+     0.162
+    ]
+   ]
+  },
+  {
+   "name": "P06_FrontPanel",
+   "name_cn": "前控制面板",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P06_FrontPanel.P06_FrontPanel",
+   "spin": 0,
+   "unit": "P06_FrontPanel",
+   "ex": [
+    [
+     0.0,
+     8.5,
+     0.0,
+     0.17
+    ]
+   ]
+  },
+  {
+   "name": "P07_PSU_1",
+   "name_cn": "电源模块（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P07_PSU_1.P07_PSU_1",
+   "spin": 0,
+   "unit": "P07_PSU_1",
+   "ex": [
+    [
+     0.0,
+     -11.0,
+     0.0,
+     0.1
+    ],
+    [
+     0.0,
+     0.0,
+     22.0,
+     0.17
+    ]
+   ]
+  },
+  {
+   "name": "P07_PSU_2",
+   "name_cn": "电源模块（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P07_PSU_2.P07_PSU_2",
+   "spin": 0,
+   "unit": "P07_PSU_2",
+   "ex": [
+    [
+     0.0,
+     -11.0,
+     0.0,
+     0.10800000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     22.0,
+     0.17800000000000002
+    ]
+   ]
+  },
+  {
+   "name": "P07_PSU_3",
+   "name_cn": "电源模块（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P07_PSU_3.P07_PSU_3",
+   "spin": 0,
+   "unit": "P07_PSU_3",
+   "ex": [
+    [
+     0.0,
+     -11.0,
+     0.0,
+     0.116
+    ],
+    [
+     0.0,
+     0.0,
+     22.0,
+     0.186
+    ]
+   ]
+  },
+  {
+   "name": "P07_PSU_4",
+   "name_cn": "电源模块（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P07_PSU_4.P07_PSU_4",
+   "spin": 0,
+   "unit": "P07_PSU_4",
+   "ex": [
+    [
+     0.0,
+     -11.0,
+     0.0,
+     0.124
+    ],
+    [
+     0.0,
+     0.0,
+     22.0,
+     0.194
+    ]
+   ]
+  },
+  {
+   "name": "P07_PSU_5",
+   "name_cn": "电源模块（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P07_PSU_5.P07_PSU_5",
+   "spin": 0,
+   "unit": "P07_PSU_5",
+   "ex": [
+    [
+     0.0,
+     -11.0,
+     0.0,
+     0.132
+    ],
+    [
+     0.0,
+     0.0,
+     22.0,
+     0.202
+    ]
+   ]
+  },
+  {
+   "name": "P07_PSU_6",
+   "name_cn": "电源模块（热插拔）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P07_PSU_6.P07_PSU_6",
+   "spin": 0,
+   "unit": "P07_PSU_6",
+   "ex": [
+    [
+     0.0,
+     -11.0,
+     0.0,
+     0.14
+    ],
+    [
+     0.0,
+     0.0,
+     22.0,
+     0.21000000000000002
+    ]
+   ]
+  },
+  {
+   "name": "P08_PDB",
+   "name_cn": "配电板 PDB",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P08_PDB.P08_PDB",
+   "spin": 0,
+   "unit": "P08_PDB",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     19.0,
+     0.26
+    ]
+   ]
+  },
+  {
+   "name": "P09_GpuTray",
+   "name_cn": "GPU 托盘",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P09_GpuTray.P09_GpuTray",
+   "spin": 0,
+   "unit": "P09_GpuTray",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ]
+   ]
+  },
+  {
+   "name": "P10_HGXBaseboard",
+   "name_cn": "HGX 基板",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P10_HGXBaseboard.P10_HGXBaseboard",
+   "spin": 0,
+   "unit": "P10_HGXBaseboard",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     1.0,
+     0.98
+    ]
+   ]
+  },
+  {
+   "name": "P11_SXM_1",
+   "name_cn": "SXM5 模组载板",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P11_SXM_1.P11_SXM_1",
+   "spin": 0,
+   "unit": "P11_SXM_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.54
+    ]
+   ]
+  },
+  {
+   "name": "P11_SXM_2",
+   "name_cn": "SXM5 模组载板",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P11_SXM_2.P11_SXM_2",
+   "spin": 0,
+   "unit": "P11_SXM_2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.546
+    ]
+   ]
+  },
+  {
+   "name": "P11_SXM_3",
+   "name_cn": "SXM5 模组载板",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P11_SXM_3.P11_SXM_3",
+   "spin": 0,
+   "unit": "P11_SXM_3",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.552
+    ]
+   ]
+  },
+  {
+   "name": "P11_SXM_4",
+   "name_cn": "SXM5 模组载板",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P11_SXM_4.P11_SXM_4",
+   "spin": 0,
+   "unit": "P11_SXM_4",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.558
+    ]
+   ]
+  },
+  {
+   "name": "P11_SXM_5",
+   "name_cn": "SXM5 模组载板",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P11_SXM_5.P11_SXM_5",
+   "spin": 0,
+   "unit": "P11_SXM_5",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5640000000000001
+    ]
+   ]
+  },
+  {
+   "name": "P11_SXM_6",
+   "name_cn": "SXM5 模组载板",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P11_SXM_6.P11_SXM_6",
+   "spin": 0,
+   "unit": "P11_SXM_6",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5700000000000001
+    ]
+   ]
+  },
+  {
+   "name": "P11_SXM_7",
+   "name_cn": "SXM5 模组载板",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P11_SXM_7.P11_SXM_7",
+   "spin": 0,
+   "unit": "P11_SXM_7",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5760000000000001
+    ]
+   ]
+  },
+  {
+   "name": "P11_SXM_8",
+   "name_cn": "SXM5 模组载板",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P11_SXM_8.P11_SXM_8",
+   "spin": 0,
+   "unit": "P11_SXM_8",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5820000000000001
+    ]
+   ]
+  },
+  {
+   "name": "P12_GPU_1",
+   "name_cn": "GPU 芯片（H100）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P12_GPU_1.P12_GPU_1",
+   "spin": 0,
+   "unit": "P12_GPU_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.54
+    ],
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.66
+    ]
+   ]
+  },
+  {
+   "name": "P12_GPU_2",
+   "name_cn": "GPU 芯片（H100）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P12_GPU_2.P12_GPU_2",
+   "spin": 0,
+   "unit": "P12_GPU_2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.546
+    ],
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.664
+    ]
+   ]
+  },
+  {
+   "name": "P12_GPU_3",
+   "name_cn": "GPU 芯片（H100）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P12_GPU_3.P12_GPU_3",
+   "spin": 0,
+   "unit": "P12_GPU_3",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.552
+    ],
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.668
+    ]
+   ]
+  },
+  {
+   "name": "P12_GPU_4",
+   "name_cn": "GPU 芯片（H100）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P12_GPU_4.P12_GPU_4",
+   "spin": 0,
+   "unit": "P12_GPU_4",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.558
+    ],
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.672
+    ]
+   ]
+  },
+  {
+   "name": "P12_GPU_5",
+   "name_cn": "GPU 芯片（H100）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P12_GPU_5.P12_GPU_5",
+   "spin": 0,
+   "unit": "P12_GPU_5",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5640000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.676
+    ]
+   ]
+  },
+  {
+   "name": "P12_GPU_6",
+   "name_cn": "GPU 芯片（H100）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P12_GPU_6.P12_GPU_6",
+   "spin": 0,
+   "unit": "P12_GPU_6",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5700000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.68
+    ]
+   ]
+  },
+  {
+   "name": "P12_GPU_7",
+   "name_cn": "GPU 芯片（H100）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P12_GPU_7.P12_GPU_7",
+   "spin": 0,
+   "unit": "P12_GPU_7",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5760000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.684
+    ]
+   ]
+  },
+  {
+   "name": "P12_GPU_8",
+   "name_cn": "GPU 芯片（H100）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P12_GPU_8.P12_GPU_8",
+   "spin": 0,
+   "unit": "P12_GPU_8",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5820000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     3.0,
+     0.6880000000000001
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G1A",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G1A.P13_HBM_G1A",
+   "spin": 0,
+   "unit": "P13_HBM_G1A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.54
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.7
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G1B",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G1B.P13_HBM_G1B",
+   "spin": 0,
+   "unit": "P13_HBM_G1A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.54
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.7
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G1C",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G1C.P13_HBM_G1C",
+   "spin": 0,
+   "unit": "P13_HBM_G1A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.54
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.7
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G1D",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G1D.P13_HBM_G1D",
+   "spin": 0,
+   "unit": "P13_HBM_G1A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.54
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.7
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G1E",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G1E.P13_HBM_G1E",
+   "spin": 0,
+   "unit": "P13_HBM_G1A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.54
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.7
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G1F",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G1F.P13_HBM_G1F",
+   "spin": 0,
+   "unit": "P13_HBM_G1A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.54
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.7
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G2A",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G2A.P13_HBM_G2A",
+   "spin": 0,
+   "unit": "P13_HBM_G2A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.546
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.704
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G2B",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G2B.P13_HBM_G2B",
+   "spin": 0,
+   "unit": "P13_HBM_G2A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.546
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.704
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G2C",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G2C.P13_HBM_G2C",
+   "spin": 0,
+   "unit": "P13_HBM_G2A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.546
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.704
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G2D",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G2D.P13_HBM_G2D",
+   "spin": 0,
+   "unit": "P13_HBM_G2A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.546
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.704
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G2E",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G2E.P13_HBM_G2E",
+   "spin": 0,
+   "unit": "P13_HBM_G2A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.546
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.704
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G2F",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G2F.P13_HBM_G2F",
+   "spin": 0,
+   "unit": "P13_HBM_G2A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.546
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.704
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G3A",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G3A.P13_HBM_G3A",
+   "spin": 0,
+   "unit": "P13_HBM_G3A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.552
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.708
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G3B",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G3B.P13_HBM_G3B",
+   "spin": 0,
+   "unit": "P13_HBM_G3A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.552
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.708
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G3C",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G3C.P13_HBM_G3C",
+   "spin": 0,
+   "unit": "P13_HBM_G3A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.552
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.708
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G3D",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G3D.P13_HBM_G3D",
+   "spin": 0,
+   "unit": "P13_HBM_G3A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.552
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.708
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G3E",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G3E.P13_HBM_G3E",
+   "spin": 0,
+   "unit": "P13_HBM_G3A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.552
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.708
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G3F",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G3F.P13_HBM_G3F",
+   "spin": 0,
+   "unit": "P13_HBM_G3A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.552
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.708
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G4A",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G4A.P13_HBM_G4A",
+   "spin": 0,
+   "unit": "P13_HBM_G4A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.558
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.712
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G4B",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G4B.P13_HBM_G4B",
+   "spin": 0,
+   "unit": "P13_HBM_G4A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.558
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.712
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G4C",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G4C.P13_HBM_G4C",
+   "spin": 0,
+   "unit": "P13_HBM_G4A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.558
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.712
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G4D",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G4D.P13_HBM_G4D",
+   "spin": 0,
+   "unit": "P13_HBM_G4A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.558
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.712
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G4E",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G4E.P13_HBM_G4E",
+   "spin": 0,
+   "unit": "P13_HBM_G4A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.558
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.712
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G4F",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G4F.P13_HBM_G4F",
+   "spin": 0,
+   "unit": "P13_HBM_G4A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.558
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.712
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G5A",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G5A.P13_HBM_G5A",
+   "spin": 0,
+   "unit": "P13_HBM_G5A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5640000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.716
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G5B",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G5B.P13_HBM_G5B",
+   "spin": 0,
+   "unit": "P13_HBM_G5A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5640000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.716
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G5C",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G5C.P13_HBM_G5C",
+   "spin": 0,
+   "unit": "P13_HBM_G5A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5640000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.716
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G5D",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G5D.P13_HBM_G5D",
+   "spin": 0,
+   "unit": "P13_HBM_G5A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5640000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.716
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G5E",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G5E.P13_HBM_G5E",
+   "spin": 0,
+   "unit": "P13_HBM_G5A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5640000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.716
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G5F",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G5F.P13_HBM_G5F",
+   "spin": 0,
+   "unit": "P13_HBM_G5A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5640000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.716
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G6A",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G6A.P13_HBM_G6A",
+   "spin": 0,
+   "unit": "P13_HBM_G6A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5700000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.72
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G6B",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G6B.P13_HBM_G6B",
+   "spin": 0,
+   "unit": "P13_HBM_G6A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5700000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.72
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G6C",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G6C.P13_HBM_G6C",
+   "spin": 0,
+   "unit": "P13_HBM_G6A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5700000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.72
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G6D",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G6D.P13_HBM_G6D",
+   "spin": 0,
+   "unit": "P13_HBM_G6A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5700000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.72
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G6E",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G6E.P13_HBM_G6E",
+   "spin": 0,
+   "unit": "P13_HBM_G6A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5700000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.72
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G6F",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G6F.P13_HBM_G6F",
+   "spin": 0,
+   "unit": "P13_HBM_G6A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5700000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.72
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G7A",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G7A.P13_HBM_G7A",
+   "spin": 0,
+   "unit": "P13_HBM_G7A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5760000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.724
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G7B",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G7B.P13_HBM_G7B",
+   "spin": 0,
+   "unit": "P13_HBM_G7A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5760000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.724
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G7C",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G7C.P13_HBM_G7C",
+   "spin": 0,
+   "unit": "P13_HBM_G7A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5760000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.724
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G7D",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G7D.P13_HBM_G7D",
+   "spin": 0,
+   "unit": "P13_HBM_G7A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5760000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.724
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G7E",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G7E.P13_HBM_G7E",
+   "spin": 0,
+   "unit": "P13_HBM_G7A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5760000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.724
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G7F",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G7F.P13_HBM_G7F",
+   "spin": 0,
+   "unit": "P13_HBM_G7A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5760000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.724
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G8A",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G8A.P13_HBM_G8A",
+   "spin": 0,
+   "unit": "P13_HBM_G8A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5820000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.728
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G8B",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G8B.P13_HBM_G8B",
+   "spin": 0,
+   "unit": "P13_HBM_G8A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5820000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.728
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G8C",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G8C.P13_HBM_G8C",
+   "spin": 0,
+   "unit": "P13_HBM_G8A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5820000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.728
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G8D",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G8D.P13_HBM_G8D",
+   "spin": 0,
+   "unit": "P13_HBM_G8A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5820000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.728
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G8E",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G8E.P13_HBM_G8E",
+   "spin": 0,
+   "unit": "P13_HBM_G8A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5820000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.728
+    ]
+   ]
+  },
+  {
+   "name": "P13_HBM_G8F",
+   "name_cn": "HBM3 显存堆栈（一组 6 颗）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P13_HBM_G8F.P13_HBM_G8F",
+   "spin": 0,
+   "unit": "P13_HBM_G8A",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5820000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     4.6000000000000005,
+     0.728
+    ]
+   ]
+  },
+  {
+   "name": "P14_VRM_1",
+   "name_cn": "GPU 供电模块（VRM）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P14_VRM_1.P14_VRM_1",
+   "spin": 0,
+   "unit": "P14_VRM_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.54
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.62
+    ]
+   ]
+  },
+  {
+   "name": "P14_VRM_2",
+   "name_cn": "GPU 供电模块（VRM）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P14_VRM_2.P14_VRM_2",
+   "spin": 0,
+   "unit": "P14_VRM_2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.546
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.624
+    ]
+   ]
+  },
+  {
+   "name": "P14_VRM_3",
+   "name_cn": "GPU 供电模块（VRM）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P14_VRM_3.P14_VRM_3",
+   "spin": 0,
+   "unit": "P14_VRM_3",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.552
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.628
+    ]
+   ]
+  },
+  {
+   "name": "P14_VRM_4",
+   "name_cn": "GPU 供电模块（VRM）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P14_VRM_4.P14_VRM_4",
+   "spin": 0,
+   "unit": "P14_VRM_4",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.558
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.632
+    ]
+   ]
+  },
+  {
+   "name": "P14_VRM_5",
+   "name_cn": "GPU 供电模块（VRM）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P14_VRM_5.P14_VRM_5",
+   "spin": 0,
+   "unit": "P14_VRM_5",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5640000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.636
+    ]
+   ]
+  },
+  {
+   "name": "P14_VRM_6",
+   "name_cn": "GPU 供电模块（VRM）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P14_VRM_6.P14_VRM_6",
+   "spin": 0,
+   "unit": "P14_VRM_6",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5700000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.64
+    ]
+   ]
+  },
+  {
+   "name": "P14_VRM_7",
+   "name_cn": "GPU 供电模块（VRM）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P14_VRM_7.P14_VRM_7",
+   "spin": 0,
+   "unit": "P14_VRM_7",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5760000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.644
+    ]
+   ]
+  },
+  {
+   "name": "P14_VRM_8",
+   "name_cn": "GPU 供电模块（VRM）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P14_VRM_8.P14_VRM_8",
+   "spin": 0,
+   "unit": "P14_VRM_8",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.5820000000000001
+    ],
+    [
+     0.0,
+     0.0,
+     1.4000000000000001,
+     0.648
+    ]
+   ]
+  },
+  {
+   "name": "P15_GpuHeatsink_1",
+   "name_cn": "GPU 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P15_GpuHeatsink_1.P15_GpuHeatsink_1",
+   "spin": 0,
+   "unit": "P15_GpuHeatsink_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     23.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "P15_GpuHeatsink_2",
+   "name_cn": "GPU 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P15_GpuHeatsink_2.P15_GpuHeatsink_2",
+   "spin": 0,
+   "unit": "P15_GpuHeatsink_2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     23.0,
+     0.458
+    ]
+   ]
+  },
+  {
+   "name": "P15_GpuHeatsink_3",
+   "name_cn": "GPU 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P15_GpuHeatsink_3.P15_GpuHeatsink_3",
+   "spin": 0,
+   "unit": "P15_GpuHeatsink_3",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     23.0,
+     0.466
+    ]
+   ]
+  },
+  {
+   "name": "P15_GpuHeatsink_4",
+   "name_cn": "GPU 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P15_GpuHeatsink_4.P15_GpuHeatsink_4",
+   "spin": 0,
+   "unit": "P15_GpuHeatsink_4",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     23.0,
+     0.47400000000000003
+    ]
+   ]
+  },
+  {
+   "name": "P15_GpuHeatsink_5",
+   "name_cn": "GPU 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P15_GpuHeatsink_5.P15_GpuHeatsink_5",
+   "spin": 0,
+   "unit": "P15_GpuHeatsink_5",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     23.0,
+     0.482
+    ]
+   ]
+  },
+  {
+   "name": "P15_GpuHeatsink_6",
+   "name_cn": "GPU 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P15_GpuHeatsink_6.P15_GpuHeatsink_6",
+   "spin": 0,
+   "unit": "P15_GpuHeatsink_6",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     23.0,
+     0.49
+    ]
+   ]
+  },
+  {
+   "name": "P15_GpuHeatsink_7",
+   "name_cn": "GPU 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P15_GpuHeatsink_7.P15_GpuHeatsink_7",
+   "spin": 0,
+   "unit": "P15_GpuHeatsink_7",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     23.0,
+     0.498
+    ]
+   ]
+  },
+  {
+   "name": "P15_GpuHeatsink_8",
+   "name_cn": "GPU 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P15_GpuHeatsink_8.P15_GpuHeatsink_8",
+   "spin": 0,
+   "unit": "P15_GpuHeatsink_8",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     23.0,
+     0.506
+    ]
+   ]
+  },
+  {
+   "name": "P16_NVSwitch_1",
+   "name_cn": "NVSwitch 芯片",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P16_NVSwitch_1.P16_NVSwitch_1",
+   "spin": 0,
+   "unit": "P16_NVSwitch_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     5.5,
+     0.6
+    ]
+   ]
+  },
+  {
+   "name": "P16_NVSwitch_2",
+   "name_cn": "NVSwitch 芯片",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P16_NVSwitch_2.P16_NVSwitch_2",
+   "spin": 0,
+   "unit": "P16_NVSwitch_2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     5.5,
+     0.606
+    ]
+   ]
+  },
+  {
+   "name": "P16_NVSwitch_3",
+   "name_cn": "NVSwitch 芯片",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P16_NVSwitch_3.P16_NVSwitch_3",
+   "spin": 0,
+   "unit": "P16_NVSwitch_3",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     5.5,
+     0.612
+    ]
+   ]
+  },
+  {
+   "name": "P16_NVSwitch_4",
+   "name_cn": "NVSwitch 芯片",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P16_NVSwitch_4.P16_NVSwitch_4",
+   "spin": 0,
+   "unit": "P16_NVSwitch_4",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     5.5,
+     0.618
+    ]
+   ]
+  },
+  {
+   "name": "P17_NVSHeatsink_1",
+   "name_cn": "NVSwitch 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P17_NVSHeatsink_1.P17_NVSHeatsink_1",
+   "spin": 0,
+   "unit": "P17_NVSHeatsink_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.5
+    ]
+   ]
+  },
+  {
+   "name": "P17_NVSHeatsink_2",
+   "name_cn": "NVSwitch 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P17_NVSHeatsink_2.P17_NVSHeatsink_2",
+   "spin": 0,
+   "unit": "P17_NVSHeatsink_2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.508
+    ]
+   ]
+  },
+  {
+   "name": "P17_NVSHeatsink_3",
+   "name_cn": "NVSwitch 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P17_NVSHeatsink_3.P17_NVSHeatsink_3",
+   "spin": 0,
+   "unit": "P17_NVSHeatsink_3",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.516
+    ]
+   ]
+  },
+  {
+   "name": "P17_NVSHeatsink_4",
+   "name_cn": "NVSwitch 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P17_NVSHeatsink_4.P17_NVSHeatsink_4",
+   "spin": 0,
+   "unit": "P17_NVSHeatsink_4",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     28.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.524
+    ]
+   ]
+  },
+  {
+   "name": "P19_PCIeSwitch_1",
+   "name_cn": "PCIe 交换芯片",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P19_PCIeSwitch_1.P19_PCIeSwitch_1",
+   "spin": 0,
+   "unit": "P19_PCIeSwitch_1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     4.5,
+     0.88
+    ]
+   ]
+  },
+  {
+   "name": "P19_PCIeSwitch_2",
+   "name_cn": "PCIe 交换芯片",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P19_PCIeSwitch_2.P19_PCIeSwitch_2",
+   "spin": 0,
+   "unit": "P19_PCIeSwitch_2",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     4.5,
+     0.886
+    ]
+   ]
+  },
+  {
+   "name": "P19_PCIeSwitch_3",
+   "name_cn": "PCIe 交换芯片",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P19_PCIeSwitch_3.P19_PCIeSwitch_3",
+   "spin": 0,
+   "unit": "P19_PCIeSwitch_3",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     4.5,
+     0.892
+    ]
+   ]
+  },
+  {
+   "name": "P19_PCIeSwitch_4",
+   "name_cn": "PCIe 交换芯片",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P19_PCIeSwitch_4.P19_PCIeSwitch_4",
+   "spin": 0,
+   "unit": "P19_PCIeSwitch_4",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     4.5,
+     0.898
+    ]
+   ]
+  },
+  {
+   "name": "P21_MbTray",
+   "name_cn": "主板托盘",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P21_MbTray.P21_MbTray",
+   "spin": 0,
+   "unit": "P21_MbTray",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ]
+   ]
+  },
+  {
+   "name": "P22_Motherboard",
+   "name_cn": "主板（双路）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P22_Motherboard.P22_Motherboard",
+   "spin": 0,
+   "unit": "P22_Motherboard",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     1.2000000000000002,
+     0.97
+    ]
+   ]
+  },
+  {
+   "name": "P23_CPU_1",
+   "name_cn": "CPU 处理器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P23_CPU_1.P23_CPU_1",
+   "spin": 0,
+   "unit": "P23_CPU_1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     7.0,
+     0.7
+    ]
+   ]
+  },
+  {
+   "name": "P23_CPU_2",
+   "name_cn": "CPU 处理器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P23_CPU_2.P23_CPU_2",
+   "spin": 0,
+   "unit": "P23_CPU_2",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     7.0,
+     0.71
+    ]
+   ]
+  },
+  {
+   "name": "P24_CpuHeatsink_1",
+   "name_cn": "CPU 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P24_CpuHeatsink_1.P24_CpuHeatsink_1",
+   "spin": 0,
+   "unit": "P24_CpuHeatsink_1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     14.0,
+     0.62
+    ]
+   ]
+  },
+  {
+   "name": "P24_CpuHeatsink_2",
+   "name_cn": "CPU 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P24_CpuHeatsink_2.P24_CpuHeatsink_2",
+   "spin": 0,
+   "unit": "P24_CpuHeatsink_2",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     14.0,
+     0.63
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_A1",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_A1.P25_DIMM_A1",
+   "spin": 0,
+   "unit": "P25_DIMM_A1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.74
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_A2",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_A2.P25_DIMM_A2",
+   "spin": 0,
+   "unit": "P25_DIMM_A1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.74
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_A3",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_A3.P25_DIMM_A3",
+   "spin": 0,
+   "unit": "P25_DIMM_A1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.74
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_A4",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_A4.P25_DIMM_A4",
+   "spin": 0,
+   "unit": "P25_DIMM_A1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.74
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_A5",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_A5.P25_DIMM_A5",
+   "spin": 0,
+   "unit": "P25_DIMM_A1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.74
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_A6",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_A6.P25_DIMM_A6",
+   "spin": 0,
+   "unit": "P25_DIMM_A1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.74
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_A7",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_A7.P25_DIMM_A7",
+   "spin": 0,
+   "unit": "P25_DIMM_A1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.74
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_A8",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_A8.P25_DIMM_A8",
+   "spin": 0,
+   "unit": "P25_DIMM_A1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.74
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_B1",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_B1.P25_DIMM_B1",
+   "spin": 0,
+   "unit": "P25_DIMM_B1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.752
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_B2",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_B2.P25_DIMM_B2",
+   "spin": 0,
+   "unit": "P25_DIMM_B1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.752
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_B3",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_B3.P25_DIMM_B3",
+   "spin": 0,
+   "unit": "P25_DIMM_B1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.752
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_B4",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_B4.P25_DIMM_B4",
+   "spin": 0,
+   "unit": "P25_DIMM_B1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.752
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_B5",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_B5.P25_DIMM_B5",
+   "spin": 0,
+   "unit": "P25_DIMM_B1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.752
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_B6",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_B6.P25_DIMM_B6",
+   "spin": 0,
+   "unit": "P25_DIMM_B1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.752
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_B7",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_B7.P25_DIMM_B7",
+   "spin": 0,
+   "unit": "P25_DIMM_B1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.752
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_B8",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_B8.P25_DIMM_B8",
+   "spin": 0,
+   "unit": "P25_DIMM_B1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.752
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_C1",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_C1.P25_DIMM_C1",
+   "spin": 0,
+   "unit": "P25_DIMM_C1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.764
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_C2",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_C2.P25_DIMM_C2",
+   "spin": 0,
+   "unit": "P25_DIMM_C1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.764
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_C3",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_C3.P25_DIMM_C3",
+   "spin": 0,
+   "unit": "P25_DIMM_C1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.764
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_C4",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_C4.P25_DIMM_C4",
+   "spin": 0,
+   "unit": "P25_DIMM_C1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.764
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_C5",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_C5.P25_DIMM_C5",
+   "spin": 0,
+   "unit": "P25_DIMM_C1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.764
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_C6",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_C6.P25_DIMM_C6",
+   "spin": 0,
+   "unit": "P25_DIMM_C1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.764
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_C7",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_C7.P25_DIMM_C7",
+   "spin": 0,
+   "unit": "P25_DIMM_C1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.764
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_C8",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_C8.P25_DIMM_C8",
+   "spin": 0,
+   "unit": "P25_DIMM_C1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.764
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_D1",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_D1.P25_DIMM_D1",
+   "spin": 0,
+   "unit": "P25_DIMM_D1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.776
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_D2",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_D2.P25_DIMM_D2",
+   "spin": 0,
+   "unit": "P25_DIMM_D1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.776
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_D3",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_D3.P25_DIMM_D3",
+   "spin": 0,
+   "unit": "P25_DIMM_D1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.776
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_D4",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_D4.P25_DIMM_D4",
+   "spin": 0,
+   "unit": "P25_DIMM_D1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.776
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_D5",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_D5.P25_DIMM_D5",
+   "spin": 0,
+   "unit": "P25_DIMM_D1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.776
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_D6",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_D6.P25_DIMM_D6",
+   "spin": 0,
+   "unit": "P25_DIMM_D1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.776
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_D7",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_D7.P25_DIMM_D7",
+   "spin": 0,
+   "unit": "P25_DIMM_D1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.776
+    ]
+   ]
+  },
+  {
+   "name": "P25_DIMM_D8",
+   "name_cn": "DDR5 内存条（一组 8 根）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P25_DIMM_D8.P25_DIMM_D8",
+   "spin": 0,
+   "unit": "P25_DIMM_D1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.776
+    ]
+   ]
+  },
+  {
+   "name": "P26_NIC_1",
+   "name_cn": "400G 网卡（ConnectX-7）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P26_NIC_1.P26_NIC_1",
+   "spin": 0,
+   "unit": "P26_NIC_1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     10.0,
+     0.78
+    ]
+   ]
+  },
+  {
+   "name": "P26_NIC_2",
+   "name_cn": "400G 网卡（ConnectX-7）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P26_NIC_2.P26_NIC_2",
+   "spin": 0,
+   "unit": "P26_NIC_2",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     10.0,
+     0.787
+    ]
+   ]
+  },
+  {
+   "name": "P26_NIC_3",
+   "name_cn": "400G 网卡（ConnectX-7）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P26_NIC_3.P26_NIC_3",
+   "spin": 0,
+   "unit": "P26_NIC_3",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     10.0,
+     0.794
+    ]
+   ]
+  },
+  {
+   "name": "P26_NIC_4",
+   "name_cn": "400G 网卡（ConnectX-7）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P26_NIC_4.P26_NIC_4",
+   "spin": 0,
+   "unit": "P26_NIC_4",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     10.0,
+     0.801
+    ]
+   ]
+  },
+  {
+   "name": "P26_NIC_5",
+   "name_cn": "400G 网卡（ConnectX-7）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P26_NIC_5.P26_NIC_5",
+   "spin": 0,
+   "unit": "P26_NIC_5",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     10.0,
+     0.808
+    ]
+   ]
+  },
+  {
+   "name": "P26_NIC_6",
+   "name_cn": "400G 网卡（ConnectX-7）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P26_NIC_6.P26_NIC_6",
+   "spin": 0,
+   "unit": "P26_NIC_6",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     10.0,
+     0.8150000000000001
+    ]
+   ]
+  },
+  {
+   "name": "P26_NIC_7",
+   "name_cn": "400G 网卡（ConnectX-7）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P26_NIC_7.P26_NIC_7",
+   "spin": 0,
+   "unit": "P26_NIC_7",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     10.0,
+     0.8220000000000001
+    ]
+   ]
+  },
+  {
+   "name": "P26_NIC_8",
+   "name_cn": "400G 网卡（ConnectX-7）",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P26_NIC_8.P26_NIC_8",
+   "spin": 0,
+   "unit": "P26_NIC_8",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     10.0,
+     0.8290000000000001
+    ]
+   ]
+  },
+  {
+   "name": "P27_OCPNic",
+   "name_cn": "OCP 3.0 网卡",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P27_OCPNic.P27_OCPNic",
+   "spin": 0,
+   "unit": "P27_OCPNic",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.84
+    ]
+   ]
+  },
+  {
+   "name": "P28_M2_1",
+   "name_cn": "M.2 启动盘",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P28_M2_1.P28_M2_1",
+   "spin": 0,
+   "unit": "P28_M2_1",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     4.0,
+     0.86
+    ]
+   ]
+  },
+  {
+   "name": "P28_M2_2",
+   "name_cn": "M.2 启动盘",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P28_M2_2.P28_M2_2",
+   "spin": 0,
+   "unit": "P28_M2_2",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     4.0,
+     0.87
+    ]
+   ]
+  },
+  {
+   "name": "P29_BMC",
+   "name_cn": "BMC 管理芯片",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P29_BMC.P29_BMC",
+   "spin": 0,
+   "unit": "P29_BMC",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     4.0,
+     0.93
+    ]
+   ]
+  },
+  {
+   "name": "P30_CMOS",
+   "name_cn": "CMOS 纽扣电池",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P30_CMOS.P30_CMOS",
+   "spin": 0,
+   "unit": "P30_CMOS",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     4.0,
+     0.95
+    ]
+   ]
+  },
+  {
+   "name": "P31_TPM",
+   "name_cn": "TPM 安全模块",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P31_TPM.P31_TPM",
+   "spin": 0,
+   "unit": "P31_TPM",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     4.0,
+     0.94
+    ]
+   ]
+  },
+  {
+   "name": "P33_PCH",
+   "name_cn": "PCH 芯片组",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P33_PCH.P33_PCH",
+   "spin": 0,
+   "unit": "P33_PCH",
+   "ex": [
+    [
+     0.0,
+     -69.0,
+     0.0,
+     0.46
+    ],
+    [
+     -32.0,
+     0.0,
+     0.0,
+     0.9
+    ],
+    [
+     0.0,
+     0.0,
+     4.5,
+     0.92
+    ]
+   ]
+  },
+  {
+   "name": "P35_Backplane",
+   "name_cn": "硬盘背板",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P35_Backplane.P35_Backplane",
+   "spin": 0,
+   "unit": "P35_Backplane",
+   "ex": [
+    [
+     0.0,
+     9.5,
+     0.0,
+     0.2
+    ]
+   ]
+  }
+ ]
+}

@@ -10,7 +10,7 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 - **挪模型**：触屏最下面一排 **<< LEFT / MOVE NEAR / MOVE FAR / >> RIGHT**，每按一下把桌上的模型整体挪 10cm（离站立点 55~95cm、左右 -40~+20cm，不会挪出桌面或撞上触屏），状态栏显示现在离你多远。所有模型共用这个位置，换模型也不会弹回去。默认放在 70cm（以前是 90cm，站着伸手够不着）。
 - **零件抓取查看**：装配状态下抓电机任意位置 = 拿起整台电机；爆炸后每个零件（转子总成、端盖、风扇、螺钉……共 27 个抓取单元）都能单独抓起来看，手边浮出中文信息牌（名字、材料、作用）。松手零件自己飞回原位，拿着靠近原位 5cm 会出现半透明虚影、松手吸回去；触屏 **RESET PARTS** 一键全部复位。
 
-房间、桌子、触屏、方块都是 C++ 用引擎自带的基础形状拼出来的（默认关卡 `L_Studio` 只是放了一个工作室的壳），每一处改动都能在 PR 里看 diff。二进制资产只有：电机、阀门、无人机、车床、万用表模型（`Content/Models/Motor`、`Valve`、`Drone`、`Lathe`、`Multimeter`）和虚影 / 高亮用的半透明材质（`Content/Materials/M_ToyGhost`），由脚本生成，见下面「电机模型从哪来」「阀门模型从哪来」「无人机模型从哪来」「车床模型从哪来」「万用表模型从哪来」；手模型（`Content/XRMannequins`），是从 UE 自带的 VR 模板拷来的，见「手的模型」。
+房间、桌子、触屏、方块都是 C++ 用引擎自带的基础形状拼出来的（默认关卡 `L_Studio` 只是放了一个工作室的壳），每一处改动都能在 PR 里看 diff。二进制资产只有：电机、阀门、无人机、车床、万用表、AI 服务器模型（`Content/Models/Motor`、`Valve`、`Drone`、`Lathe`、`Multimeter`、`AIServer`）和虚影 / 高亮用的半透明材质（`Content/Materials/M_ToyGhost`），由脚本生成，见下面「电机模型从哪来」「阀门模型从哪来」「无人机模型从哪来」「车床模型从哪来」「万用表模型从哪来」「AI 服务器模型从哪来」；手模型（`Content/XRMannequins`），是从 UE 自带的 VR 模板拷来的，见「手的模型」。
 
 ## 怎么跑（Windows）
 
@@ -53,7 +53,7 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 | --- | --- | --- |
 | ![](docs/screenshots/move_back.jpg) | ![](docs/screenshots/teleport_valid.jpg) | ![](docs/screenshots/teleport_invalid.jpg) |
 
-控制台输入 `toy.Screen <按钮>` 等于戳触屏上那个按钮，可以连着写：`toy.Screen Lathe MoveNear MoveNear Explode`（按钮名：Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Explode / Reset / MoveNear / MoveFar / MoveLeft / MoveRight），命令行里用 `-ExecCmds=` 也行。`toy.ShowGrabPoints 1` 可以在游戏里看到手和方块的抓点箭头（之后生成的方块生效）。`toy.PalmSnap 1` 切回旧的"手掌贴合"抓法（见「零件抓取」）。`toy.HandPreview 1 / 2 / 3` 在桌面模式下把左手侧着摆到镜头前（张开 / 握拳 / 来回握），用来检查手模型。
+控制台输入 `toy.Screen <按钮>` 等于戳触屏上那个按钮，可以连着写：`toy.Screen Lathe MoveNear MoveNear Explode`（按钮名：Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Server / Explode / Reset / MoveNear / MoveFar / MoveLeft / MoveRight），命令行里用 `-ExecCmds=` 也行。`toy.ShowGrabPoints 1` 可以在游戏里看到手和方块的抓点箭头（之后生成的方块生效）。`toy.PalmSnap 1` 切回旧的"手掌贴合"抓法（见「零件抓取」）。`toy.HandPreview 1 / 2 / 3` 在桌面模式下把左手侧着摆到镜头前（张开 / 握拳 / 来回握），用来检查手模型。
 
 ## 手的模型
 
@@ -184,6 +184,23 @@ ITBasics/万用表爆炸图/build_multimeter.py ──Blender──▶ multimete
 - **桌上的位置**：同一个位置，Yaw 90：屏幕那头朝远处、插孔和表笔插头朝着玩家，红表笔在右手边。
 - **抓取单元**：主板上的元件路线本来都一样（会被合成一个单元），Blender 脚本给每个元件的出场时刻错开 0.008，所以每个元件都能单独抓、单独看信息牌。通用规则得出 37 个单元，底壳与电池弹片是基座，36 个能抓：捏 22、圆柱 4、方块 3、贴表面 7。手写覆盖（`Tools/grab_overrides/Multimeter.json`）2 条：红黑表笔写成握笔杆（线和插头把包围盒撑大了）。
 
+## AI 服务器模型从哪来
+
+| 装配（Blender 预览图） | 爆炸（左边 GPU 托盘、中间机箱、右边主板托盘） |
+| --- | --- |
+| ![](docs/screenshots/ai_server_assembled.jpg) | ![](docs/screenshots/ai_server_exploded.jpg) |
+
+```
+ITBasics/AI服务器爆炸图/build_ai_server.py ──Blender──▶ ai_server.glb ──Tools/import_model.py（MODEL_NAME=AIServer）──▶ Content/Models/AIServer/*.uasset + parts.json
+```
+
+- **模型**：8U 风冷 AI 训练服务器（8 卡 HGX H100 平台，按 DGX / HGX 的公开图片原创简化）。31 种零件 180 个实例：机箱 + 顶盖；GPU 区 10 个 / CPU 区 4 个热插拔风扇、8 块 U.2 NVMe + 背板、前控制面板；6 个 3000 W 电源 + 配电板；GPU 托盘、HGX 基板（NVLink 走线示意），每块 GPU 拆成 SXM5 载板、GPU 芯片（含硅中介层）、6 颗 HBM3、供电模块、散热器，4 颗 NVSwitch + 散热器；主板托盘、双路主板、2 颗 CPU + 散热器、32 根 DDR5、8 张 400G 网卡、OCP 网卡、2 块 M.2、4 颗 PCIe 交换芯片、PCH、BMC、TPM、CMOS 电池。信息牌讲每个零件在整台机器里干什么，原理速记见 ITBasics 的 `AI服务器爆炸图/README.md`。
+- **展示尺寸 55cm**：`MODELS['AIServer']` 里 `length_cm=55`，实物约 91 cm（含把手），缩放约 0.61 倍。
+- **拆机顺序**：掀顶盖 → 拔前面的风扇、硬盘、面板、背板 → 电源从后面拔出再抬高，配电板抬高 → GPU 托盘先抬高再往前抽出，上面的散热器、HBM、GPU 芯片、供电模块、SXM 载板、NVSwitch 一层层往上浮 → 主板托盘从后面整个抽出再往远处让，CPU 散热器、CPU、内存、网卡、小芯片往上浮。机箱是基座。
+- **桌上的位置**：`ServerMount` Yaw 180，前面板朝左手边、后面朝右手边。爆炸后 GPU 托盘在左边、比机箱高（散热器顶在桌面上方约 53cm），主板托盘在右边贴着桌面，抽出后再往远处让，避开右手边的触屏。
+- **抓取单元**：112 个（机箱是基座），111 个能抓：贴表面 47、捏 54、方块 10。同一种零件超过 8 个的按路线分组：每块 GPU 的 6 颗 HBM 一组、每排 8 根内存一组；其他零件都单独抓。没有手写覆盖。
+- **体量**：180 个静态网格、约 32 万三角面，`Content/Models/AIServer` 24MB。
+
 ## 原理
 
 ### 先猜一下
@@ -267,7 +284,7 @@ ITBasics/万用表爆炸图/build_multimeter.py ──Blender──▶ multimete
 | 车床 | 67 | 捏 50、圆柱 5、方块 5、贴表面 7（手写 5） |
 | 万用表 | 36 | 捏 22、圆柱 4、方块 3、贴表面 7（手写 2） |
 
-**抓取体检 `toy.GrabAudit`。** 控制台输入 `toy.GrabAudit`（或 `Motor` / `Valve` / `Drone` / `Lathe` / `Multimeter`，加 `quit` 跑完退出），会依次摆出模型（先拍一张装配全景 `00_assembled.png`）、爆炸（再拍一张 `00_exploded.png`），用右手按桌面模式的方式（捏合点放在零件上离镜头最近的表面点、扣扳机）把每个单元捏一遍，捏住后手往上提、镜头给一个特写，截图到 `Saved/GrabAudit/<模型>/<序号>_<单元>.png`，并写 `Saved/GrabAudit/summary.csv`。五个模型 180 个单元约 6 分钟跑完（只跑车床或万用表约 1 分钟）。命令行批量跑：
+**抓取体检 `toy.GrabAudit`。** 控制台输入 `toy.GrabAudit`（或 `Motor` / `Valve` / `Drone` / `Lathe` / `Multimeter` / `Server`，加 `quit` 跑完退出），会依次摆出模型（先拍一张装配全景 `00_assembled.png`）、爆炸（再拍一张 `00_exploded.png`），用右手按桌面模式的方式（捏合点放在零件上离镜头最近的表面点、扣扳机）把每个单元捏一遍，捏住后手往上提、镜头给一个特写，截图到 `Saved/GrabAudit/<模型>/<序号>_<单元>.png`，并写 `Saved/GrabAudit/summary.csv`。五个模型 180 个单元约 6 分钟跑完（只跑车床或万用表约 1 分钟）。命令行批量跑：
 
 ```
 UnrealEditor.exe VRToyBox.uproject -game -windowed -ResX=1280 -ResY=720 "-ExecCmds=toy.GrabAudit All quit"
@@ -287,7 +304,7 @@ UnrealEditor.exe VRToyBox.uproject -game -windowed -ResX=1280 -ResY=720 "-ExecCm
 
 ![触屏](docs/screenshots/touchscreen.jpg)
 
-四排按钮：方块（生成 / 清空）；五个模型（SHOW / HIDE，一次只摆一个）；爆炸 / 复位；挪模型（左 / 近 / 远 / 右）。常用的宽按钮 14cm，一排四个的窄按钮 7cm（指尖约 1.5cm 宽，7cm 在 VR 里也好戳），一排五个的模型按钮 5.8cm。按钮面的颜色压暗到 45%，灯就在桌子正上方，原来的颜色在画面里发白，白字看不清。
+四排按钮：方块（生成 / 清空）；六个模型（SHOW / HIDE，一次只摆一个）；爆炸 / 复位；挪模型（左 / 近 / 远 / 右）。常用的宽按钮 14cm，一排四个的窄按钮 7cm（指尖约 1.5cm 宽，7cm 在 VR 里也好戳），一排六个的模型按钮 4.8cm（加了 AI 服务器以后从 5.8cm 缩窄，字也小一号）。按钮面的颜色压暗到 45%，灯就在桌子正上方，原来的颜色在画面里发白，白字看不清。
 
 
 每个按钮前面有一个看不见的触发盒（`AToyTouchScreen::MakeButton`）。手每帧在食指指尖做一次小球重叠查询，**刚进入**触发盒的那一帧算一次点击，再加 0.35 秒冷却，防止手指抖一下触发两次。按钮按下时变白、往里缩 0.5cm，控制器震一下。
@@ -313,7 +330,8 @@ OpenXR 只会给"项目里用到的按键"向运行时申请绑定，所以 `Con
 - ✅ **手柄输入（VR，用户实测）**：旧式轴映射在 UE 5.8 + Quest 3 上生效，握把 / 扳机都能读到。⚠️ 新加的左摇杆、右摇杆 Y 是同一套机制，应该也行，还没在头显上测。
 - ✅ **无人机（桌面模式）**：SHOW DRONE 摆出（机头朝玩家）、EXPLODE / ASSEMBLE、抓桨 / 电机 / 电池 / 相机 / 涵道都能抓、信息牌中文、松手飞回；`导入无人机模型.bat` 从头跑通。
 - ✅ **车床（桌面模式）**：`toy.GrabAudit Lathe` 摆出车床（正面朝玩家）、爆炸、67 个单元全部捏到，信息牌中文。⚠️ 新触屏布局（四个模型一排、挪模型一排）和挪动按钮只在桌面模式用 `toy.Screen` 测过（挪到 55cm、左右撞到边界停住、换模型保持位置，体检 144 个单元全部捏到），还没在头显里戳过；尺寸是按产品图估的，和实物可能差 10% 左右。
-- ✅ **万用表（桌面模式）**：`toy.GrabAudit Multimeter` 摆出万用表（插孔朝玩家）、爆炸、36 个单元全部捏到，信息牌中文。⚠️ 第二排五个模型按钮（5.8cm 宽）只在桌面模式看过，还没在头显里戳过；外形尺寸按产品图估，内部结构是按同类表补的示意。
+- ✅ **万用表（桌面模式）**：`toy.GrabAudit Multimeter` 摆出万用表（插孔朝玩家）、爆炸、36 个单元全部捏到，信息牌中文。⚠️ 外形尺寸按产品图估，内部结构是按同类表补的示意。
+- ✅ **AI 服务器（桌面模式）**：`toy.GrabAudit Server` 摆出服务器、爆炸、111 个能抓的单元全部捏到（贴表面 47、捏 54、方块 10），导入方向检查 3 项 OK。⚠️ 第二排六个模型按钮（4.8cm 宽）只在桌面模式看过，还没在头显里戳过；180 个零件 32 万三角面，头显里的帧率还没测；第一次体检时爆炸后左右伸得太开（左边伸出桌沿、右边碰到触屏），已把 GPU 托盘的抽出距离从 62cm 缩到 50cm（模型单位），主板托盘往远处多让 10cm，改后还没重新截图。
 - ✅ **球阀（桌面模式）**：SHOW VALVE 摆出球阀（执行器缸体沿桌子长边）、EXPLODE / ASSEMBLE、左键捏起执行器缸体并显示中文信息牌、松手飞回；`toy.GrabAudit Valve` 63 个单元全部捏到。
 - ✅ **扳机捏取（桌面模式）**：左键 = 扳机，零件、整机、方块都能捏起；进入 / 离开捏合范围有日志（`右手捏合范围内：…`）。⚠️ 范围小球在桌面模式的镜头里被手背挡住，看不到颜色变化，要在 VR 里确认大小、颜色是否合适。
 - ✅ **移动的小修**：平滑移动 / 传送检查忽略手里拿着的东西；一开始就卡在东西里时只允许往外走；落点无效时红圈贴到正下方的地上（找不到地就不显示）。
