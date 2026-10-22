@@ -2,7 +2,7 @@
  "source": "ai_server.glb",
  "model": {
   "title": "AI 训练服务器 · 8U 八卡 HGX H100 平台（按公开图片原创简化）",
-  "body": "8 × H100 SXM5 · 4 × NVSwitch · 双路 56 核 CPU · 2 TB DDR5 · 8 × 400G 网卡 · 6 × 3000 W 电源（满载约 10 kW）\n装配状态：抓任意位置拿起整台机器看。点 EXPLODE 拆开：GPU 托盘往左上抽出、8 块 GPU 再往上提排成前后两层，主板托盘往右抽出。按部件拆（一块 GPU、一颗 CPU、一排内存…），每个部件都能单独抓。",
+  "body": "8 × H100 SXM5 · 4 × NVSwitch · 双路 56 核 CPU · 2 TB DDR5 · 8 × 400G 网卡 · 6 × 3000 W 电源（满载约 10 kW）\n装配状态：抓任意位置拿起整台机器看。点 EXPLODE 拆开：GPU 托盘往左上抽出、8 块 GPU 再往上提排成前后两层（散热器浮在上面，露出芯片），主板托盘往右抽出。按部件拆（一块 GPU、一个散热器、一颗 CPU、一排内存…），每个部件都能单独抓。",
   "explode_scale": 1.0,
   "length_cm": 55.0
  },
@@ -98,79 +98,239 @@
   {
    "id": "P11_GPU_1",
    "grabbable": true,
-   "name_cn": "GPU 模组（H100 SXM5 + 散热器）",
-   "material": "GH100 芯片（800 亿晶体管）+ 6 颗 HBM3（80 GB）· 700 W · 铜底均热板 + 热管 + 铝鳍片",
-   "desc": "AI 训练真正干活的地方：芯片里的 Tensor Core 专做矩阵乘法，神经网络 90% 以上的计算都是它。芯片两边贴着 6 颗 HBM 显存（8 层内存芯片叠起来，带宽 3.35 TB/s），载板两端是把 54 V 降到 1 V 左右、700 A 以上的供电模块。上面的大散热器负责把 700 W 的热量带走。整块模组压在基板的两个连接器上（SXM 接口），比 PCIe 显卡供电更足、互连更快。",
+   "name_cn": "GPU 模组（H100 SXM5）",
+   "material": "GH100 芯片（800 亿晶体管）+ 6 颗 HBM3（80 GB）· 700 W · SXM5 载板 + 供电模块",
+   "desc": "AI 训练真正干活的地方：中间那颗大芯片里的 Tensor Core 专做矩阵乘法，神经网络 90% 以上的计算都是它。芯片两边贴着 6 颗 HBM 显存（8 层内存芯片叠起来，带宽 3.35 TB/s），载板两端是把 54 V 降到 1 V 左右、700 A 以上的供电模块。整块模组压在基板的两个连接器上（SXM 接口），比 PCIe 显卡供电更足、互连更快。上面浮着的是它的散热器。",
    "grab": {
-    "type": "surface"
+    "type": "box",
+    "center": [
+     -15.75,
+     19.0,
+     19.63
+    ],
+    "extent": [
+     3.9,
+     7.05,
+     0.33
+    ]
    }
   },
   {
    "id": "P11_GPU_2",
    "grabbable": true,
-   "name_cn": "GPU 模组（H100 SXM5 + 散热器）",
-   "material": "GH100 芯片（800 亿晶体管）+ 6 颗 HBM3（80 GB）· 700 W · 铜底均热板 + 热管 + 铝鳍片",
-   "desc": "AI 训练真正干活的地方：芯片里的 Tensor Core 专做矩阵乘法，神经网络 90% 以上的计算都是它。芯片两边贴着 6 颗 HBM 显存（8 层内存芯片叠起来，带宽 3.35 TB/s），载板两端是把 54 V 降到 1 V 左右、700 A 以上的供电模块。上面的大散热器负责把 700 W 的热量带走。整块模组压在基板的两个连接器上（SXM 接口），比 PCIe 显卡供电更足、互连更快。",
+   "name_cn": "GPU 模组（H100 SXM5）",
+   "material": "GH100 芯片（800 亿晶体管）+ 6 颗 HBM3（80 GB）· 700 W · SXM5 载板 + 供电模块",
+   "desc": "AI 训练真正干活的地方：中间那颗大芯片里的 Tensor Core 专做矩阵乘法，神经网络 90% 以上的计算都是它。芯片两边贴着 6 颗 HBM 显存（8 层内存芯片叠起来，带宽 3.35 TB/s），载板两端是把 54 V 降到 1 V 左右、700 A 以上的供电模块。整块模组压在基板的两个连接器上（SXM 接口），比 PCIe 显卡供电更足、互连更快。上面浮着的是它的散热器。",
    "grab": {
-    "type": "surface"
+    "type": "box",
+    "center": [
+     -5.25,
+     19.0,
+     19.63
+    ],
+    "extent": [
+     3.9,
+     7.05,
+     0.33
+    ]
    }
   },
   {
    "id": "P11_GPU_3",
    "grabbable": true,
-   "name_cn": "GPU 模组（H100 SXM5 + 散热器）",
-   "material": "GH100 芯片（800 亿晶体管）+ 6 颗 HBM3（80 GB）· 700 W · 铜底均热板 + 热管 + 铝鳍片",
-   "desc": "AI 训练真正干活的地方：芯片里的 Tensor Core 专做矩阵乘法，神经网络 90% 以上的计算都是它。芯片两边贴着 6 颗 HBM 显存（8 层内存芯片叠起来，带宽 3.35 TB/s），载板两端是把 54 V 降到 1 V 左右、700 A 以上的供电模块。上面的大散热器负责把 700 W 的热量带走。整块模组压在基板的两个连接器上（SXM 接口），比 PCIe 显卡供电更足、互连更快。",
+   "name_cn": "GPU 模组（H100 SXM5）",
+   "material": "GH100 芯片（800 亿晶体管）+ 6 颗 HBM3（80 GB）· 700 W · SXM5 载板 + 供电模块",
+   "desc": "AI 训练真正干活的地方：中间那颗大芯片里的 Tensor Core 专做矩阵乘法，神经网络 90% 以上的计算都是它。芯片两边贴着 6 颗 HBM 显存（8 层内存芯片叠起来，带宽 3.35 TB/s），载板两端是把 54 V 降到 1 V 左右、700 A 以上的供电模块。整块模组压在基板的两个连接器上（SXM 接口），比 PCIe 显卡供电更足、互连更快。上面浮着的是它的散热器。",
    "grab": {
-    "type": "surface"
+    "type": "box",
+    "center": [
+     5.25,
+     19.0,
+     19.63
+    ],
+    "extent": [
+     3.9,
+     7.05,
+     0.33
+    ]
    }
   },
   {
    "id": "P11_GPU_4",
    "grabbable": true,
-   "name_cn": "GPU 模组（H100 SXM5 + 散热器）",
-   "material": "GH100 芯片（800 亿晶体管）+ 6 颗 HBM3（80 GB）· 700 W · 铜底均热板 + 热管 + 铝鳍片",
-   "desc": "AI 训练真正干活的地方：芯片里的 Tensor Core 专做矩阵乘法，神经网络 90% 以上的计算都是它。芯片两边贴着 6 颗 HBM 显存（8 层内存芯片叠起来，带宽 3.35 TB/s），载板两端是把 54 V 降到 1 V 左右、700 A 以上的供电模块。上面的大散热器负责把 700 W 的热量带走。整块模组压在基板的两个连接器上（SXM 接口），比 PCIe 显卡供电更足、互连更快。",
+   "name_cn": "GPU 模组（H100 SXM5）",
+   "material": "GH100 芯片（800 亿晶体管）+ 6 颗 HBM3（80 GB）· 700 W · SXM5 载板 + 供电模块",
+   "desc": "AI 训练真正干活的地方：中间那颗大芯片里的 Tensor Core 专做矩阵乘法，神经网络 90% 以上的计算都是它。芯片两边贴着 6 颗 HBM 显存（8 层内存芯片叠起来，带宽 3.35 TB/s），载板两端是把 54 V 降到 1 V 左右、700 A 以上的供电模块。整块模组压在基板的两个连接器上（SXM 接口），比 PCIe 显卡供电更足、互连更快。上面浮着的是它的散热器。",
    "grab": {
-    "type": "surface"
+    "type": "box",
+    "center": [
+     15.75,
+     19.0,
+     19.63
+    ],
+    "extent": [
+     3.9,
+     7.05,
+     0.33
+    ]
    }
   },
   {
    "id": "P11_GPU_5",
    "grabbable": true,
-   "name_cn": "GPU 模组（H100 SXM5 + 散热器）",
-   "material": "GH100 芯片（800 亿晶体管）+ 6 颗 HBM3（80 GB）· 700 W · 铜底均热板 + 热管 + 铝鳍片",
-   "desc": "AI 训练真正干活的地方：芯片里的 Tensor Core 专做矩阵乘法，神经网络 90% 以上的计算都是它。芯片两边贴着 6 颗 HBM 显存（8 层内存芯片叠起来，带宽 3.35 TB/s），载板两端是把 54 V 降到 1 V 左右、700 A 以上的供电模块。上面的大散热器负责把 700 W 的热量带走。整块模组压在基板的两个连接器上（SXM 接口），比 PCIe 显卡供电更足、互连更快。",
+   "name_cn": "GPU 模组（H100 SXM5）",
+   "material": "GH100 芯片（800 亿晶体管）+ 6 颗 HBM3（80 GB）· 700 W · SXM5 载板 + 供电模块",
+   "desc": "AI 训练真正干活的地方：中间那颗大芯片里的 Tensor Core 专做矩阵乘法，神经网络 90% 以上的计算都是它。芯片两边贴着 6 颗 HBM 显存（8 层内存芯片叠起来，带宽 3.35 TB/s），载板两端是把 54 V 降到 1 V 左右、700 A 以上的供电模块。整块模组压在基板的两个连接器上（SXM 接口），比 PCIe 显卡供电更足、互连更快。上面浮着的是它的散热器。",
    "grab": {
-    "type": "surface"
+    "type": "box",
+    "center": [
+     -15.75,
+     -11.0,
+     19.63
+    ],
+    "extent": [
+     3.9,
+     7.05,
+     0.33
+    ]
    }
   },
   {
    "id": "P11_GPU_6",
    "grabbable": true,
-   "name_cn": "GPU 模组（H100 SXM5 + 散热器）",
-   "material": "GH100 芯片（800 亿晶体管）+ 6 颗 HBM3（80 GB）· 700 W · 铜底均热板 + 热管 + 铝鳍片",
-   "desc": "AI 训练真正干活的地方：芯片里的 Tensor Core 专做矩阵乘法，神经网络 90% 以上的计算都是它。芯片两边贴着 6 颗 HBM 显存（8 层内存芯片叠起来，带宽 3.35 TB/s），载板两端是把 54 V 降到 1 V 左右、700 A 以上的供电模块。上面的大散热器负责把 700 W 的热量带走。整块模组压在基板的两个连接器上（SXM 接口），比 PCIe 显卡供电更足、互连更快。",
+   "name_cn": "GPU 模组（H100 SXM5）",
+   "material": "GH100 芯片（800 亿晶体管）+ 6 颗 HBM3（80 GB）· 700 W · SXM5 载板 + 供电模块",
+   "desc": "AI 训练真正干活的地方：中间那颗大芯片里的 Tensor Core 专做矩阵乘法，神经网络 90% 以上的计算都是它。芯片两边贴着 6 颗 HBM 显存（8 层内存芯片叠起来，带宽 3.35 TB/s），载板两端是把 54 V 降到 1 V 左右、700 A 以上的供电模块。整块模组压在基板的两个连接器上（SXM 接口），比 PCIe 显卡供电更足、互连更快。上面浮着的是它的散热器。",
    "grab": {
-    "type": "surface"
+    "type": "box",
+    "center": [
+     -5.25,
+     -11.0,
+     19.63
+    ],
+    "extent": [
+     3.9,
+     7.05,
+     0.33
+    ]
    }
   },
   {
    "id": "P11_GPU_7",
    "grabbable": true,
-   "name_cn": "GPU 模组（H100 SXM5 + 散热器）",
-   "material": "GH100 芯片（800 亿晶体管）+ 6 颗 HBM3（80 GB）· 700 W · 铜底均热板 + 热管 + 铝鳍片",
-   "desc": "AI 训练真正干活的地方：芯片里的 Tensor Core 专做矩阵乘法，神经网络 90% 以上的计算都是它。芯片两边贴着 6 颗 HBM 显存（8 层内存芯片叠起来，带宽 3.35 TB/s），载板两端是把 54 V 降到 1 V 左右、700 A 以上的供电模块。上面的大散热器负责把 700 W 的热量带走。整块模组压在基板的两个连接器上（SXM 接口），比 PCIe 显卡供电更足、互连更快。",
+   "name_cn": "GPU 模组（H100 SXM5）",
+   "material": "GH100 芯片（800 亿晶体管）+ 6 颗 HBM3（80 GB）· 700 W · SXM5 载板 + 供电模块",
+   "desc": "AI 训练真正干活的地方：中间那颗大芯片里的 Tensor Core 专做矩阵乘法，神经网络 90% 以上的计算都是它。芯片两边贴着 6 颗 HBM 显存（8 层内存芯片叠起来，带宽 3.35 TB/s），载板两端是把 54 V 降到 1 V 左右、700 A 以上的供电模块。整块模组压在基板的两个连接器上（SXM 接口），比 PCIe 显卡供电更足、互连更快。上面浮着的是它的散热器。",
    "grab": {
-    "type": "surface"
+    "type": "box",
+    "center": [
+     5.25,
+     -11.0,
+     19.63
+    ],
+    "extent": [
+     3.9,
+     7.05,
+     0.33
+    ]
    }
   },
   {
    "id": "P11_GPU_8",
    "grabbable": true,
-   "name_cn": "GPU 模组（H100 SXM5 + 散热器）",
-   "material": "GH100 芯片（800 亿晶体管）+ 6 颗 HBM3（80 GB）· 700 W · 铜底均热板 + 热管 + 铝鳍片",
-   "desc": "AI 训练真正干活的地方：芯片里的 Tensor Core 专做矩阵乘法，神经网络 90% 以上的计算都是它。芯片两边贴着 6 颗 HBM 显存（8 层内存芯片叠起来，带宽 3.35 TB/s），载板两端是把 54 V 降到 1 V 左右、700 A 以上的供电模块。上面的大散热器负责把 700 W 的热量带走。整块模组压在基板的两个连接器上（SXM 接口），比 PCIe 显卡供电更足、互连更快。",
+   "name_cn": "GPU 模组（H100 SXM5）",
+   "material": "GH100 芯片（800 亿晶体管）+ 6 颗 HBM3（80 GB）· 700 W · SXM5 载板 + 供电模块",
+   "desc": "AI 训练真正干活的地方：中间那颗大芯片里的 Tensor Core 专做矩阵乘法，神经网络 90% 以上的计算都是它。芯片两边贴着 6 颗 HBM 显存（8 层内存芯片叠起来，带宽 3.35 TB/s），载板两端是把 54 V 降到 1 V 左右、700 A 以上的供电模块。整块模组压在基板的两个连接器上（SXM 接口），比 PCIe 显卡供电更足、互连更快。上面浮着的是它的散热器。",
+   "grab": {
+    "type": "box",
+    "center": [
+     15.75,
+     -11.0,
+     19.63
+    ],
+    "extent": [
+     3.9,
+     7.05,
+     0.33
+    ]
+   }
+  },
+  {
+   "id": "P15_GpuHeatsink_1",
+   "grabbable": true,
+   "name_cn": "GPU 散热器",
+   "material": "铜底均热板（Vapor Chamber）+ 铜热管 + 铝鳍片",
+   "desc": "一块 GPU 满载 700 W，比电磁炉一个灶眼还热。铜底里是抽了真空的腔体，里面的水在芯片上方蒸发、到边上冷凝，把热量迅速铺开到整块底板；热管再把热量送上鳍片，风扇吹来的风从鳍片缝里带走热量。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P15_GpuHeatsink_2",
+   "grabbable": true,
+   "name_cn": "GPU 散热器",
+   "material": "铜底均热板（Vapor Chamber）+ 铜热管 + 铝鳍片",
+   "desc": "一块 GPU 满载 700 W，比电磁炉一个灶眼还热。铜底里是抽了真空的腔体，里面的水在芯片上方蒸发、到边上冷凝，把热量迅速铺开到整块底板；热管再把热量送上鳍片，风扇吹来的风从鳍片缝里带走热量。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P15_GpuHeatsink_3",
+   "grabbable": true,
+   "name_cn": "GPU 散热器",
+   "material": "铜底均热板（Vapor Chamber）+ 铜热管 + 铝鳍片",
+   "desc": "一块 GPU 满载 700 W，比电磁炉一个灶眼还热。铜底里是抽了真空的腔体，里面的水在芯片上方蒸发、到边上冷凝，把热量迅速铺开到整块底板；热管再把热量送上鳍片，风扇吹来的风从鳍片缝里带走热量。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P15_GpuHeatsink_4",
+   "grabbable": true,
+   "name_cn": "GPU 散热器",
+   "material": "铜底均热板（Vapor Chamber）+ 铜热管 + 铝鳍片",
+   "desc": "一块 GPU 满载 700 W，比电磁炉一个灶眼还热。铜底里是抽了真空的腔体，里面的水在芯片上方蒸发、到边上冷凝，把热量迅速铺开到整块底板；热管再把热量送上鳍片，风扇吹来的风从鳍片缝里带走热量。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P15_GpuHeatsink_5",
+   "grabbable": true,
+   "name_cn": "GPU 散热器",
+   "material": "铜底均热板（Vapor Chamber）+ 铜热管 + 铝鳍片",
+   "desc": "一块 GPU 满载 700 W，比电磁炉一个灶眼还热。铜底里是抽了真空的腔体，里面的水在芯片上方蒸发、到边上冷凝，把热量迅速铺开到整块底板；热管再把热量送上鳍片，风扇吹来的风从鳍片缝里带走热量。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P15_GpuHeatsink_6",
+   "grabbable": true,
+   "name_cn": "GPU 散热器",
+   "material": "铜底均热板（Vapor Chamber）+ 铜热管 + 铝鳍片",
+   "desc": "一块 GPU 满载 700 W，比电磁炉一个灶眼还热。铜底里是抽了真空的腔体，里面的水在芯片上方蒸发、到边上冷凝，把热量迅速铺开到整块底板；热管再把热量送上鳍片，风扇吹来的风从鳍片缝里带走热量。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P15_GpuHeatsink_7",
+   "grabbable": true,
+   "name_cn": "GPU 散热器",
+   "material": "铜底均热板（Vapor Chamber）+ 铜热管 + 铝鳍片",
+   "desc": "一块 GPU 满载 700 W，比电磁炉一个灶眼还热。铜底里是抽了真空的腔体，里面的水在芯片上方蒸发、到边上冷凝，把热量迅速铺开到整块底板；热管再把热量送上鳍片，风扇吹来的风从鳍片缝里带走热量。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P15_GpuHeatsink_8",
+   "grabbable": true,
+   "name_cn": "GPU 散热器",
+   "material": "铜底均热板（Vapor Chamber）+ 铜热管 + 铝鳍片",
+   "desc": "一块 GPU 满载 700 W，比电磁炉一个灶眼还热。铜底里是抽了真空的腔体，里面的水在芯片上方蒸发、到边上冷凝，把热量迅速铺开到整块底板；热管再把热量送上鳍片，风扇吹来的风从鳍片缝里带走热量。",
    "grab": {
     "type": "surface"
    }
@@ -290,7 +450,7 @@
     ],
     [
      0.0,
-     -30.0,
+     -35.0,
      0.0,
      0.06
     ]
@@ -385,7 +545,7 @@
   },
   {
    "name": "P11_GPU_1",
-   "name_cn": "GPU 模组（H100 SXM5 + 散热器）",
+   "name_cn": "GPU 模组（H100 SXM5）",
    "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P11_GPU_1.P11_GPU_1",
    "spin": 0,
    "unit": "P11_GPU_1",
@@ -405,7 +565,7 @@
     [
      0.0,
      0.0,
-     12.0,
+     10.0,
      0.3
     ],
     [
@@ -424,7 +584,7 @@
   },
   {
    "name": "P11_GPU_2",
-   "name_cn": "GPU 模组（H100 SXM5 + 散热器）",
+   "name_cn": "GPU 模组（H100 SXM5）",
    "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P11_GPU_2.P11_GPU_2",
    "spin": 0,
    "unit": "P11_GPU_2",
@@ -444,7 +604,7 @@
     [
      0.0,
      0.0,
-     12.0,
+     10.0,
      0.3
     ],
     [
@@ -463,7 +623,7 @@
   },
   {
    "name": "P11_GPU_3",
-   "name_cn": "GPU 模组（H100 SXM5 + 散热器）",
+   "name_cn": "GPU 模组（H100 SXM5）",
    "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P11_GPU_3.P11_GPU_3",
    "spin": 0,
    "unit": "P11_GPU_3",
@@ -483,7 +643,7 @@
     [
      0.0,
      0.0,
-     12.0,
+     10.0,
      0.3
     ],
     [
@@ -502,7 +662,7 @@
   },
   {
    "name": "P11_GPU_4",
-   "name_cn": "GPU 模组（H100 SXM5 + 散热器）",
+   "name_cn": "GPU 模组（H100 SXM5）",
    "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P11_GPU_4.P11_GPU_4",
    "spin": 0,
    "unit": "P11_GPU_4",
@@ -522,7 +682,7 @@
     [
      0.0,
      0.0,
-     12.0,
+     10.0,
      0.3
     ],
     [
@@ -541,7 +701,7 @@
   },
   {
    "name": "P11_GPU_5",
-   "name_cn": "GPU 模组（H100 SXM5 + 散热器）",
+   "name_cn": "GPU 模组（H100 SXM5）",
    "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P11_GPU_5.P11_GPU_5",
    "spin": 0,
    "unit": "P11_GPU_5",
@@ -561,7 +721,7 @@
     [
      0.0,
      0.0,
-     30.0,
+     34.0,
      0.3
     ],
     [
@@ -580,7 +740,7 @@
   },
   {
    "name": "P11_GPU_6",
-   "name_cn": "GPU 模组（H100 SXM5 + 散热器）",
+   "name_cn": "GPU 模组（H100 SXM5）",
    "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P11_GPU_6.P11_GPU_6",
    "spin": 0,
    "unit": "P11_GPU_6",
@@ -600,7 +760,7 @@
     [
      0.0,
      0.0,
-     30.0,
+     34.0,
      0.3
     ],
     [
@@ -619,7 +779,7 @@
   },
   {
    "name": "P11_GPU_7",
-   "name_cn": "GPU 模组（H100 SXM5 + 散热器）",
+   "name_cn": "GPU 模组（H100 SXM5）",
    "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P11_GPU_7.P11_GPU_7",
    "spin": 0,
    "unit": "P11_GPU_7",
@@ -639,7 +799,7 @@
     [
      0.0,
      0.0,
-     30.0,
+     34.0,
      0.3
     ],
     [
@@ -658,7 +818,7 @@
   },
   {
    "name": "P11_GPU_8",
-   "name_cn": "GPU 模组（H100 SXM5 + 散热器）",
+   "name_cn": "GPU 模组（H100 SXM5）",
    "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P11_GPU_8.P11_GPU_8",
    "spin": 0,
    "unit": "P11_GPU_8",
@@ -678,7 +838,319 @@
     [
      0.0,
      0.0,
-     30.0,
+     34.0,
+     0.3
+    ],
+    [
+     0.0,
+     -14.950000000000001,
+     0.0,
+     0.65
+    ],
+    [
+     -24.25,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ]
+  },
+  {
+   "name": "P15_GpuHeatsink_1",
+   "name_cn": "GPU 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P15_GpuHeatsink_1.P15_GpuHeatsink_1",
+   "spin": 0,
+   "unit": "P15_GpuHeatsink_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     22.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     18.0,
+     0.3
+    ],
+    [
+     0.0,
+     16.55,
+     0.0,
+     0.65
+    ],
+    [
+     24.25,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ]
+  },
+  {
+   "name": "P15_GpuHeatsink_2",
+   "name_cn": "GPU 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P15_GpuHeatsink_2.P15_GpuHeatsink_2",
+   "spin": 0,
+   "unit": "P15_GpuHeatsink_2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     22.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     18.0,
+     0.3
+    ],
+    [
+     0.0,
+     -3.95,
+     0.0,
+     0.65
+    ],
+    [
+     13.75,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ]
+  },
+  {
+   "name": "P15_GpuHeatsink_3",
+   "name_cn": "GPU 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P15_GpuHeatsink_3.P15_GpuHeatsink_3",
+   "spin": 0,
+   "unit": "P15_GpuHeatsink_3",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     22.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     18.0,
+     0.3
+    ],
+    [
+     0.0,
+     -24.450000000000003,
+     0.0,
+     0.65
+    ],
+    [
+     3.25,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ]
+  },
+  {
+   "name": "P15_GpuHeatsink_4",
+   "name_cn": "GPU 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P15_GpuHeatsink_4.P15_GpuHeatsink_4",
+   "spin": 0,
+   "unit": "P15_GpuHeatsink_4",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     22.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     18.0,
+     0.3
+    ],
+    [
+     0.0,
+     -44.95,
+     0.0,
+     0.65
+    ],
+    [
+     -7.25,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ]
+  },
+  {
+   "name": "P15_GpuHeatsink_5",
+   "name_cn": "GPU 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P15_GpuHeatsink_5.P15_GpuHeatsink_5",
+   "spin": 0,
+   "unit": "P15_GpuHeatsink_5",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     22.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     42.0,
+     0.3
+    ],
+    [
+     0.0,
+     46.550000000000004,
+     0.0,
+     0.65
+    ],
+    [
+     7.25,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ]
+  },
+  {
+   "name": "P15_GpuHeatsink_6",
+   "name_cn": "GPU 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P15_GpuHeatsink_6.P15_GpuHeatsink_6",
+   "spin": 0,
+   "unit": "P15_GpuHeatsink_6",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     22.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     42.0,
+     0.3
+    ],
+    [
+     0.0,
+     26.05,
+     0.0,
+     0.65
+    ],
+    [
+     -3.25,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ]
+  },
+  {
+   "name": "P15_GpuHeatsink_7",
+   "name_cn": "GPU 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P15_GpuHeatsink_7.P15_GpuHeatsink_7",
+   "spin": 0,
+   "unit": "P15_GpuHeatsink_7",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     22.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     42.0,
+     0.3
+    ],
+    [
+     0.0,
+     5.550000000000001,
+     0.0,
+     0.65
+    ],
+    [
+     -13.75,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ]
+  },
+  {
+   "name": "P15_GpuHeatsink_8",
+   "name_cn": "GPU 散热器",
+   "mesh": "/Game/Models/AIServer/ai_server/StaticMeshes/P15_GpuHeatsink_8.P15_GpuHeatsink_8",
+   "spin": 0,
+   "unit": "P15_GpuHeatsink_8",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     22.0,
+     0.18
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.4
+    ],
+    [
+     0.0,
+     0.0,
+     42.0,
      0.3
     ],
     [
