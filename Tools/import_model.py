@@ -3,7 +3,7 @@
 在编辑器里跑（命令行由 scripts/import_motor.bat、scripts/import_valve.bat 调用）：
     UnrealEditor-Cmd.exe VRToyBox.uproject -run=pythonscript -script=...
 环境变量：
-    MODEL_NAME           模型名，决定资产目录 /Game/Models/<名字> 和下面 MODELS 里的配置（Motor / Valve / Drone / Lathe / Multimeter / AIServer）
+    MODEL_NAME           模型名，决定资产目录 /Game/Models/<名字> 和下面 MODELS 里的配置（Motor / Valve / Drone / Lathe / Multimeter / AIServer / OrbBot）
     MODEL_GLB            glb 路径（电机兼容旧的 MOTOR_GLB）
     MODEL_MANIFEST_ONLY  =1 时不重新导入资产，只重写 parts.json（兼容旧的 MOTOR_MANIFEST_ONLY）
 
@@ -149,6 +149,24 @@ MODELS = {
         # 爆炸路线写在 Blender 脚本里：GPU 托盘往前抽 50cm、主板托盘往后抽 69cm 再往远处让 32cm（模型单位，未缩放）
         # 模型 +Y 是前面板（Blender 的 -Y）：风扇在前上方，电源在后上方，硬盘在前下方靠 -X
         check={'P03_GpuFan_1': (0, 1, 1), 'P07_PSU_1': (0, -1, 1), 'P05_Drive_1': (-1, 1, 0)},
+    ),
+    'OrbBot': dict(
+        info=dict(
+            title='球形漂浮机器人 ORB-1（科幻原创：液体燃料涡轮发电 + 共轴涵道风扇）',
+            body='航空煤油 → 微型燃气涡轮发电机 → 共轴反转涵道风扇 · 6 片导流舵片 + 4 个偏航喷口 · 96 个零件\n'
+                 '装配状态：抓任意位置拿起整台机器人看。点 EXPLODE 拆开，每个零件都能单独抓；信息牌标了【真实原理】还是【科幻设定】。',
+        ),
+        named={},
+        units={
+            'base': dict(name_cn='停机坪与主骨架', material='碳纤维停机坪 + 钛合金赤道承力带 + 碳纤维涵道 + 主眼镜筒',
+                         desc='停机加注坪、赤道承力带（含 4 根辐条）、中央涵道、主眼镜筒。拆机时它们不动，'
+                              '其他零件都从骨架上拿走：燃料舱和承力带在同一高度，只能最后往上提出来。'),
+        },
+        rotor=None,
+        # 含停机坪的总高 56cm（球径 36cm），桌上展示 50cm：球体约 32cm、离坪面约 15cm
+        length_cm=50.0,
+        # 模型 +Y 是主眼（Blender 的 -Y），+X 是涡轮发电机那侧，-X 是电子舱
+        check={'P49_FrontLens': (0, 1, 0), 'P21_GenStator': (1, 0, 1), 'P46_FlightCtrl': (-1, 0, 1)},
     ),
 }
 CONFIG = MODELS.get(MODEL, dict(info=dict(title=MODEL, body=''), named={}, units={}, rotor=None, check={}))

@@ -18,7 +18,8 @@ enum class EToyModelKind : uint8
 	Drone,
 	Lathe,
 	Multimeter,
-	Server
+	Server,
+	Orb
 };
 
 /**
@@ -141,6 +142,14 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	FString ServerManifest = TEXT("Models/AIServer/parts.json");
+
+	/** 球形漂浮机器人 ORB-1：Yaw 90，主眼（模型 +Y）朝着玩家，涡轮发电机（模型 +X）在右手边、电子舱在左手边。
+	 *  模型里自带停机坪，机器人悬在坪上方约 15cm。展示尺寸 50cm（含停机坪的总高）。 */
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<USceneComponent> OrbMount;
+
+	UPROPERTY(EditAnywhere, Category = "ToyBox")
+	FString OrbManifest = TEXT("Models/OrbBot/parts.json");
 
 	/** 模型装配状态下最长边的长度（厘米）。模型清单里写了 length_cm 的以清单为准（万用表 40、AI 服务器 55）。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
