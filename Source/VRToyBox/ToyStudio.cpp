@@ -193,6 +193,17 @@ void AToyStudio::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// L_Studio 是在有 ModelAnchor 之前存的：关卡里的工作室把电机 / 阀门 / 无人机的支架存成挂在 Root 上（原点 = 地板），
+	// 构造函数里的 SetupAttachment 盖不过关卡里存的值。这里统一挂回 ModelAnchor，不然这三个模型摆在桌子前面的地上
+	for (USceneComponent* Mount : { MotorMount.Get(), ValveMount.Get(), DroneMount.Get(), LatheMount.Get(), MultimeterMount.Get(), ServerMount.Get() })
+	{
+		if (Mount && Mount->GetAttachParent() != ModelAnchor)
+		{
+			Mount->AttachToComponent(ModelAnchor, FAttachmentTransformRules::KeepRelativeTransform);
+			Mount->SetRelativeLocation(FVector::ZeroVector);
+		}
+	}
+
 	// 触屏是构造时建好的子 Actor（编辑器里也看得见），这里只接上回调
 	Screen = Cast<AToyTouchScreen>(ScreenChild->GetChildActor());
 	if (Screen)

@@ -12,6 +12,16 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 
 房间、桌子、触屏、方块都是 C++ 用引擎自带的基础形状拼出来的（默认关卡 `L_Studio` 只是放了一个工作室的壳），每一处改动都能在 PR 里看 diff。二进制资产只有：电机、阀门、无人机、车床、万用表、AI 服务器模型（`Content/Models/Motor`、`Valve`、`Drone`、`Lathe`、`Multimeter`、`AIServer`）和虚影 / 高亮用的半透明材质（`Content/Materials/M_ToyGhost`），由脚本生成，见下面「电机模型从哪来」「阀门模型从哪来」「无人机模型从哪来」「车床模型从哪来」「万用表模型从哪来」「AI 服务器模型从哪来」；手模型（`Content/XRMannequins`），是从 UE 自带的 VR 模板拷来的，见「手的模型」。
 
+## 演示
+
+桌面模式自动录的（`toy.Demo`，见「零件抓取」最后）：装配 → 爆炸 → 右手捏起一个零件、信息牌浮出来 → 松手飞回 → 装配回去。
+
+| 三相电机 | 气动球阀 | 涵道无人机 |
+| --- | --- | --- |
+| ![三相电机](docs/gifs/motor.gif) | ![气动球阀](docs/gifs/valve.gif) | ![涵道无人机](docs/gifs/drone.gif) |
+| **迷你车床** | **数字万用表** | **AI 服务器** |
+| ![迷你车床](docs/gifs/lathe.gif) | ![数字万用表](docs/gifs/multimeter.gif) | ![AI 服务器](docs/gifs/ai_server.gif) |
+
 ## 怎么跑（Windows）
 
 需要：UE 5.8（Epic 启动器安装）、Visual Studio 2022 的「使用 C++ 的游戏开发」工作负载、git。
@@ -290,6 +300,15 @@ ITBasics/AI服务器爆炸图/build_ai_server.py ──Blender──▶ ai_serve
 UnrealEditor.exe VRToyBox.uproject -game -windowed -ResX=1280 -ResY=720 "-ExecCmds=toy.GrabAudit All quit"
 ```
 
+**录演示动图 `toy.Demo`。** 控制台输入 `toy.Demo`（或 `Motor` / `Valve` / `Drone` / `Lathe` / `Multimeter` / `Server`，加 `quit` 录完退出），每个模型先爆炸一次再装回去、量出两种状态的包围盒，然后逐帧截图到 `Saved/Demo/<模型>/f_0000.png …`：装配停 1 秒 → 爆炸 → 右手从镜头右下方伸过去捏起第二大的零件（最大的一般是机壳）、往上提 → 松手 → 装配回去，镜头按包围盒自动拉远拉近、绕模型慢慢转 24°。要带 `-benchmark -fps=15`（固定步长，截图慢也不掉帧）。README 上面那 6 张 GIF 就是这样录的（10 帧/秒、480 宽、96 色，每张约 3MB）：
+
+```
+UnrealEditor.exe VRToyBox.uproject -game -windowed -ResX=960 -ResY=540 -benchmark -fps=15 -nosound "-ExecCmds=r.MotionBlurQuality 0,toy.Demo quit"
+ffmpeg -framerate 15 -i Saved/Demo/MOTOR/f_%04d.png -vf "fps=10,scale=480:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=96[p];[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" docs/gifs/motor.gif
+```
+
+ffmpeg 要用带 `palettegen` 滤镜的版本（2014 年以后的都行；pip 装的 `ffmpeg` 包里那个 2013 年的版本没有）。
+
 | 以前的手掌贴合（`toy.PalmSnap 1`）：吊环 | 端盖 | 涵道 | 电池 | 机身罩 |
 | --- | --- | --- | --- | --- |
 | ![](docs/screenshots/grab_motor_eyebolt.jpg) | ![](docs/screenshots/grab_motor_endshield.jpg) | ![](docs/screenshots/grab_drone_duct.jpg) | ![](docs/screenshots/grab_drone_battery.jpg) | ![](docs/screenshots/grab_drone_canopy.jpg) |
@@ -326,6 +345,7 @@ OpenXR 只会给"项目里用到的按键"向运行时申请绑定，所以 `Con
 - ✅ **编译**：0 警告。注意 UE 5.8 里 `HeadMountedDisplayFunctionLibrary.h` 挪进了 XRBase 插件，所以 Build.cs 依赖 `XRBase`。
 - ✅ **桌面模式**：点 SPAWN CUBE 生成方块、计数刷新，左键抓起拖动、松开落下，CLEAR ALL 清空。
 - ✅ **画面亮度**：没有 `r.DefaultFeature.AutoExposure.ExtendDefaultLuminanceRange=True` 时整个画面严重过曝，已写进 DefaultEngine.ini。
+- ✅ **模型摆在桌上（2026-10-22 修）**：`L_Studio` 是在加 `ModelAnchor` 之前存的，关卡里的工作室把电机 / 阀门 / 无人机的支架存成直接挂在 Root 上（原点 = 地板），构造函数里的 `SetupAttachment` 盖不过关卡里存的值，所以 `-game` 打开 L_Studio 时这三个模型摆在桌子前面的地上（车床、万用表、服务器是后加的，没受影响）。`AToyStudio::BeginPlay` 现在把六个支架统一挂回 `ModelAnchor`；`toy.Demo` 录的六张动图里六个模型都在桌上。⚠️ 还没在头显里看过。
 - ✅ **出生点**：Entry 地图自带一个 PlayerStart，会让人出生在工作室外面（黑屏），所以 GameMode 总是让玩家出生在工作室原点。
 - ✅ **手柄输入（VR，用户实测）**：旧式轴映射在 UE 5.8 + Quest 3 上生效，握把 / 扳机都能读到。⚠️ 新加的左摇杆、右摇杆 Y 是同一套机制，应该也行，还没在头显上测。
 - ✅ **无人机（桌面模式）**：SHOW DRONE 摆出（机头朝玩家）、EXPLODE / ASSEMBLE、抓桨 / 电机 / 电池 / 相机 / 涵道都能抓、信息牌中文、松手飞回；`导入无人机模型.bat` 从头跑通。
@@ -370,6 +390,7 @@ OpenXR 只会给"项目里用到的按键"向运行时申请绑定，所以 `Con
 | `ToyExplodedModel` | 读 parts.json、生成抓取单元，原始 / 爆炸切换动画，整机抓取，虚影 / 高亮 / 复位 |
 | `ToyPartUnit` | 一个抓取单元：小件捏到捏合点、其余自由捏取（旧的圆柱面 / 实心盒 / 贴实物表面贴合在 `toy.PalmSnap 1` 下），松手飞回原位，磁吸 |
 | `ToyGrabAudit` | 调试命令 `toy.GrabAudit`：自动把每个单元抓一遍、截图、写 summary.csv |
+| `ToyDemoRecorder` | 调试命令 `toy.Demo`：录 README 演示动图的逐帧截图（装配 → 爆炸 → 捏起一个零件 → 装配回去） |
 | `Tools/grab_overrides/*.json` | 各模型手写的抓法覆盖，每条带 `why` |
 | `ToyGrabbable` | 可抓物体的接口（方块、零件、整机都实现它） |
 | `Tools/import_model.py` | glb → UE 资产 + parts.json（含抓取单元和抓点），电机、球阀、无人机、车床、万用表共用，`MODELS` 里是各模型的配置 |
