@@ -35,7 +35,7 @@ namespace
 	const FLinearColor LegColor(0.1f, 0.1f, 0.1f);
 	const FLinearColor ShelfColor(0.3f, 0.2f, 0.12f);
 
-	// 调试命令 toy.Screen <按钮名>：和戳触屏上那个按钮一样（Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Server / Explode / Reset /
+	// 调试命令 toy.Screen <按钮名>：和戳触屏上那个按钮一样（Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Server / Robot / Explode / Reset /
 	// MoveNear / MoveFar / MoveLeft / MoveRight），可以在 -ExecCmds 里连着写，不用鼠标点
 	void ScreenCommand(const TArray<FString>& Args, UWorld* World)
 	{
@@ -45,6 +45,7 @@ namespace
 			{ TEXT("drone"), EToyScreenAction::ToggleDrone }, { TEXT("lathe"), EToyScreenAction::ToggleLathe },
 			{ TEXT("meter"), EToyScreenAction::ToggleMultimeter }, { TEXT("multimeter"), EToyScreenAction::ToggleMultimeter },
 			{ TEXT("server"), EToyScreenAction::ToggleServer }, { TEXT("aiserver"), EToyScreenAction::ToggleServer },
+			{ TEXT("robot"), EToyScreenAction::ToggleOrb }, { TEXT("orb"), EToyScreenAction::ToggleOrb },
 			{ TEXT("explode"), EToyScreenAction::ToggleExplode }, { TEXT("reset"), EToyScreenAction::ResetParts },
 			{ TEXT("movenear"), EToyScreenAction::MoveNear }, { TEXT("movefar"), EToyScreenAction::MoveFar },
 			{ TEXT("moveleft"), EToyScreenAction::MoveLeft }, { TEXT("moveright"), EToyScreenAction::MoveRight },
@@ -179,6 +180,12 @@ AToyStudio::AToyStudio()
 	ServerMount->SetupAttachment(ModelAnchor);
 	ServerMount->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
 
+	// 球形漂浮机器人：同一个位置。模型 +Y 是主眼（Blender 里的 -Y），Yaw 90 让主眼朝向玩家（-X）。
+	// 爆炸时涡轮发电机（模型 +X）往右手边拉出、电子舱往左手边，燃料舱和风扇往上，镜片沿视线朝玩家排开约 20cm
+	OrbMount = CreateDefaultSubobject<USceneComponent>(TEXT("OrbMount"));
+	OrbMount->SetupAttachment(ModelAnchor);
+	OrbMount->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
+
 	// 触屏：桌面右手边靠前，转过来正对玩家站立点
 	const FVector ScreenLocation(TableX - 20.f, 60.f, TableHeight);
 	ScreenMount = CreateDefaultSubobject<USceneComponent>(TEXT("ScreenMount"));
@@ -195,7 +202,7 @@ void AToyStudio::BeginPlay()
 
 	// L_Studio 是在有 ModelAnchor 之前存的：关卡里的工作室把电机 / 阀门 / 无人机的支架存成挂在 Root 上（原点 = 地板），
 	// 构造函数里的 SetupAttachment 盖不过关卡里存的值。这里统一挂回 ModelAnchor，不然这三个模型摆在桌子前面的地上
-	for (USceneComponent* Mount : { MotorMount.Get(), ValveMount.Get(), DroneMount.Get(), LatheMount.Get(), MultimeterMount.Get(), ServerMount.Get() })
+	for (USceneComponent* Mount : { MotorMount.Get(), ValveMount.Get(), DroneMount.Get(), LatheMount.Get(), MultimeterMount.Get(), ServerMount.Get(), OrbMount.Get() })
 	{
 		if (Mount && Mount->GetAttachParent() != ModelAnchor)
 		{
@@ -271,6 +278,7 @@ FString AToyStudio::KindName(EToyModelKind Kind)
 	case EToyModelKind::Lathe: return TEXT("LATHE");
 	case EToyModelKind::Multimeter: return TEXT("METER");
 	case EToyModelKind::Server:     return TEXT("SERVER");
+	case EToyModelKind::Orb:        return TEXT("ROBOT");
 	default:                   return TEXT("DRONE");
 	}
 }
@@ -287,6 +295,7 @@ void AToyStudio::HandleScreenAction(EToyScreenAction Action)
 	case EToyScreenAction::ToggleLathe:   ToggleModel(EToyModelKind::Lathe); break;
 	case EToyScreenAction::ToggleMultimeter: ToggleModel(EToyModelKind::Multimeter); break;
 	case EToyScreenAction::ToggleServer:  ToggleModel(EToyModelKind::Server); break;
+	case EToyScreenAction::ToggleOrb:     ToggleModel(EToyModelKind::Orb); break;
 	case EToyScreenAction::ToggleExplode: ToggleModelExploded(); break;
 	case EToyScreenAction::ResetParts:    ResetModel(); break;
 	case EToyScreenAction::MoveNear:      MoveModel(FVector(-MoveStepCm, 0.f, 0.f)); break;
@@ -340,6 +349,7 @@ bool AToyStudio::ToggleModel(EToyModelKind Kind)
 	case EToyModelKind::Lathe: Mount = LatheMount; Manifest = &LatheManifest; break;
 	case EToyModelKind::Multimeter: Mount = MultimeterMount; Manifest = &MultimeterManifest; break;
 	case EToyModelKind::Server: Mount = ServerMount; Manifest = &ServerManifest; break;
+	case EToyModelKind::Orb: Mount = OrbMount; Manifest = &OrbManifest; break;
 	default: break;
 	}
 	FActorSpawnParameters Params;

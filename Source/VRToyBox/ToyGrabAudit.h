@@ -10,7 +10,7 @@ class AToyExplodedModel;
 class AToyPartUnit;
 
 /**
- * 调试命令 toy.GrabAudit [Motor|Valve|Drone|Lathe|Multimeter|Server|All] [quit]：桌面模式下自动把每个抓取单元抓一遍并截图。
+ * 调试命令 toy.GrabAudit [Motor|Valve|Drone|Lathe|Multimeter|Server|Robot|All] [quit]：桌面模式下自动把每个抓取单元抓一遍并截图。
  *
  * 每个模型：摆出来 → 等着色器编译完 → 爆炸 → 对每个能抓的单元：
  *   右手从镜头方向伸过去，捏合点放在零件上离镜头最近的表面点（和桌面模式鼠标点中零件一样），扣扳机 → 走正常的捏取流程；

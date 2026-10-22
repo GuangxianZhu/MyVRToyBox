@@ -1,0 +1,2702 @@
+{
+ "source": "orb_bot.glb",
+ "model": {
+  "title": "球形漂浮机器人 ORB-1（科幻原创：液体燃料涡轮发电 + 共轴涵道风扇）",
+  "body": "航空煤油 → 微型燃气涡轮发电机 → 共轴反转涵道风扇 · 6 片导流舵片 + 4 个偏航喷口 · 96 个零件\n装配状态：抓任意位置拿起整台机器人看。点 EXPLODE 拆开，每个零件都能单独抓；信息牌标了【真实原理】还是【科幻设定】。",
+  "explode_scale": 1.0,
+  "length_cm": 50.0
+ },
+ "units": [
+  {
+   "id": "base",
+   "grabbable": false,
+   "name_cn": "停机坪与主骨架",
+   "material": "碳纤维停机坪 + 钛合金赤道承力带 + 碳纤维涵道 + 主眼镜筒",
+   "desc": "停机加注坪、赤道承力带（含 4 根辐条）、中央涵道、主眼镜筒。拆机时它们不动，其他零件都从骨架上拿走：燃料舱和承力带在同一高度，只能最后往上提出来。",
+   "grab": null
+  },
+  {
+   "id": "P05_UpperPetal_1",
+   "grabbable": true,
+   "name_cn": "上装甲瓣",
+   "material": "白色碳纤维复合材料 · 橙色警示条 · 6 瓣",
+   "desc": "【真实原理】球壳分成 6 瓣，每瓣单独拆下就能检修里面。球形外壳没有棱角，被风吹时受力均匀，撞到东西也会滑开。瓣与瓣之间留了 4 mm 缝，热胀冷缩不会顶在一起。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P05_UpperPetal_2",
+   "grabbable": true,
+   "name_cn": "上装甲瓣",
+   "material": "白色碳纤维复合材料 · 橙色警示条 · 6 瓣",
+   "desc": "【真实原理】球壳分成 6 瓣，每瓣单独拆下就能检修里面。球形外壳没有棱角，被风吹时受力均匀，撞到东西也会滑开。瓣与瓣之间留了 4 mm 缝，热胀冷缩不会顶在一起。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P05_UpperPetal_3",
+   "grabbable": true,
+   "name_cn": "上装甲瓣",
+   "material": "白色碳纤维复合材料 · 橙色警示条 · 6 瓣",
+   "desc": "【真实原理】球壳分成 6 瓣，每瓣单独拆下就能检修里面。球形外壳没有棱角，被风吹时受力均匀，撞到东西也会滑开。瓣与瓣之间留了 4 mm 缝，热胀冷缩不会顶在一起。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P05_UpperPetal_4",
+   "grabbable": true,
+   "name_cn": "上装甲瓣",
+   "material": "白色碳纤维复合材料 · 橙色警示条 · 6 瓣",
+   "desc": "【真实原理】球壳分成 6 瓣，每瓣单独拆下就能检修里面。球形外壳没有棱角，被风吹时受力均匀，撞到东西也会滑开。瓣与瓣之间留了 4 mm 缝，热胀冷缩不会顶在一起。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P05_UpperPetal_5",
+   "grabbable": true,
+   "name_cn": "上装甲瓣",
+   "material": "白色碳纤维复合材料 · 橙色警示条 · 6 瓣",
+   "desc": "【真实原理】球壳分成 6 瓣，每瓣单独拆下就能检修里面。球形外壳没有棱角，被风吹时受力均匀，撞到东西也会滑开。瓣与瓣之间留了 4 mm 缝，热胀冷缩不会顶在一起。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P05_UpperPetal_6",
+   "grabbable": true,
+   "name_cn": "上装甲瓣",
+   "material": "白色碳纤维复合材料 · 橙色警示条 · 6 瓣",
+   "desc": "【真实原理】球壳分成 6 瓣，每瓣单独拆下就能检修里面。球形外壳没有棱角，被风吹时受力均匀，撞到东西也会滑开。瓣与瓣之间留了 4 mm 缝，热胀冷缩不会顶在一起。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P06_LowerPetal_1",
+   "grabbable": true,
+   "name_cn": "下装甲瓣",
+   "material": "白色碳纤维复合材料 · 6 瓣",
+   "desc": "【真实原理】和上半球一样分 6 瓣。下面两瓣开了孔，给测高雷达\"看\"地面。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P06_LowerPetal_2",
+   "grabbable": true,
+   "name_cn": "下装甲瓣",
+   "material": "白色碳纤维复合材料 · 6 瓣",
+   "desc": "【真实原理】和上半球一样分 6 瓣。下面两瓣开了孔，给测高雷达\"看\"地面。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P06_LowerPetal_3",
+   "grabbable": true,
+   "name_cn": "下装甲瓣",
+   "material": "白色碳纤维复合材料 · 6 瓣",
+   "desc": "【真实原理】和上半球一样分 6 瓣。下面两瓣开了孔，给测高雷达\"看\"地面。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P06_LowerPetal_4",
+   "grabbable": true,
+   "name_cn": "下装甲瓣",
+   "material": "白色碳纤维复合材料 · 6 瓣",
+   "desc": "【真实原理】和上半球一样分 6 瓣。下面两瓣开了孔，给测高雷达\"看\"地面。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P06_LowerPetal_5",
+   "grabbable": true,
+   "name_cn": "下装甲瓣",
+   "material": "白色碳纤维复合材料 · 6 瓣",
+   "desc": "【真实原理】和上半球一样分 6 瓣。下面两瓣开了孔，给测高雷达\"看\"地面。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P06_LowerPetal_6",
+   "grabbable": true,
+   "name_cn": "下装甲瓣",
+   "material": "白色碳纤维复合材料 · 6 瓣",
+   "desc": "【真实原理】和上半球一样分 6 瓣。下面两瓣开了孔，给测高雷达\"看\"地面。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P07_TopGrille",
+   "grabbable": true,
+   "name_cn": "顶部进气格栅",
+   "material": "铝合金冲压 · 4 圈弧形进气缝",
+   "desc": "【真实原理】涵道风扇从这里吸气。格栅挡住树叶、手指，开口面积要够大，不然风扇\"吸不到气\"，推力下降。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     54.91
+    ],
+    "segments": [
+     [
+      -0.79,
+      0.79,
+      5.88
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P08_BottomGrille",
+   "grabbable": true,
+   "name_cn": "底部出风格栅",
+   "material": "铝合金冲压 · 4 圈弧形出风缝",
+   "desc": "【真实原理】风扇往下吹的气流从这里出去，产生向上的反作用力——这就是升力的来源（牛顿第三定律）。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     21.09
+    ],
+    "segments": [
+     [
+      -0.79,
+      0.79,
+      5.88
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P09_LidarRing",
+   "grabbable": true,
+   "name_cn": "激光雷达环",
+   "material": "360° 固态激光雷达 · 深色滤光窗",
+   "desc": "【真实原理】一圈 360° 测距：每秒几十万个激光点，算出周围墙壁、障碍物和人的距离，避障和建图都靠它。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     54.19
+    ],
+    "segments": [
+     [
+      -0.76,
+      0.76,
+      7.95
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P10_Halo",
+   "grabbable": true,
+   "name_cn": "浮游光环",
+   "material": "白色陶瓷环 · 内圈橙色灯带 · 3 个节点",
+   "desc": "【科幻设定】绕着赤道斜挂的一圈光环，和机身没有任何连接——纯粹的科幻装饰（现实里没有能让它\"自己漂着\"的物理）。可以把它想成机器人的\"状态指示器\"：橙色常亮 = 正常悬停。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     -0.22,
+     38.26
+    ],
+    "segments": [
+     [
+      -4.16,
+      4.16,
+      22.26
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P11_LightStrip_1",
+   "grabbable": true,
+   "name_cn": "赤道灯带",
+   "material": "导光条 + 橙色 LED · 3 段",
+   "desc": "【科幻设定】嵌在赤道凹槽里的发光带，告诉周围的人\"它在工作\"。现实中的无人机也有航行灯，这里做得更夸张。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P11_LightStrip_2",
+   "grabbable": true,
+   "name_cn": "赤道灯带",
+   "material": "导光条 + 橙色 LED · 3 段",
+   "desc": "【科幻设定】嵌在赤道凹槽里的发光带，告诉周围的人\"它在工作\"。现实中的无人机也有航行灯，这里做得更夸张。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P11_LightStrip_3",
+   "grabbable": true,
+   "name_cn": "赤道灯带",
+   "material": "导光条 + 橙色 LED · 3 段",
+   "desc": "【科幻设定】嵌在赤道凹槽里的发光带，告诉周围的人\"它在工作\"。现实中的无人机也有航行灯，这里做得更夸张。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P12_FuelTank_1",
+   "grabbable": true,
+   "name_cn": "环形燃料舱",
+   "material": "碳纤维缠绕复合材料储罐 · 橙色箍带 · 3 段（前面留给主眼）",
+   "desc": "【真实原理】燃料（航空煤油）装在绕赤道一圈的弧形舱里，重量均匀分布在一圈上，烧掉燃料时重心几乎不偏（卫星、火箭也爱用环形 / 球形储罐）。三段之间用跨接油管连通。拿起来想想开头的预测题：直接把燃料喷出去悬停，一分钟就要烧掉约 2 kg。",
+   "grab": {
+    "type": "box",
+    "center": [
+     11.8,
+     0.0,
+     38.0
+    ],
+    "extent": [
+     3.0,
+     9.24,
+     2.82
+    ]
+   }
+  },
+  {
+   "id": "P12_FuelTank_2",
+   "grabbable": true,
+   "name_cn": "环形燃料舱",
+   "material": "碳纤维缠绕复合材料储罐 · 橙色箍带 · 3 段（前面留给主眼）",
+   "desc": "【真实原理】燃料（航空煤油）装在绕赤道一圈的弧形舱里，重量均匀分布在一圈上，烧掉燃料时重心几乎不偏（卫星、火箭也爱用环形 / 球形储罐）。三段之间用跨接油管连通。拿起来想想开头的预测题：直接把燃料喷出去悬停，一分钟就要烧掉约 2 kg。",
+   "grab": {
+    "type": "box",
+    "center": [
+     0.0,
+     -11.8,
+     38.0
+    ],
+    "extent": [
+     9.24,
+     3.0,
+     2.82
+    ]
+   }
+  },
+  {
+   "id": "P12_FuelTank_3",
+   "grabbable": true,
+   "name_cn": "环形燃料舱",
+   "material": "碳纤维缠绕复合材料储罐 · 橙色箍带 · 3 段（前面留给主眼）",
+   "desc": "【真实原理】燃料（航空煤油）装在绕赤道一圈的弧形舱里，重量均匀分布在一圈上，烧掉燃料时重心几乎不偏（卫星、火箭也爱用环形 / 球形储罐）。三段之间用跨接油管连通。拿起来想想开头的预测题：直接把燃料喷出去悬停，一分钟就要烧掉约 2 kg。",
+   "grab": {
+    "type": "box",
+    "center": [
+     -11.8,
+     -0.0,
+     38.0
+    ],
+    "extent": [
+     3.0,
+     9.24,
+     2.82
+    ]
+   }
+  },
+  {
+   "id": "P13_FillerNeck",
+   "grabbable": true,
+   "name_cn": "加注管",
+   "material": "不锈钢波纹管 + 法兰",
+   "desc": "【真实原理】从背后的加注口通到燃料舱。机器人停在加注坪上时，坪里的加注臂就从这里加油。",
+   "grab": {
+    "type": "box",
+    "center": [
+     -3.07,
+     -11.46,
+     44.83
+    ],
+    "extent": [
+     0.71,
+     0.86,
+     4.43
+    ]
+   }
+  },
+  {
+   "id": "P14_FillerCap",
+   "grabbable": true,
+   "name_cn": "加注口盖",
+   "material": "铝合金 · 橙色阳极氧化 · 带密封圈",
+   "desc": "【真实原理】拧紧后密封，防止油气挥发。盖子是橙色的，一眼就能找到。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P15_LevelSensor",
+   "grabbable": true,
+   "name_cn": "液位传感器",
+   "material": "电容式液位探针",
+   "desc": "【真实原理】测燃料还剩多少：探针在油里和在空气里电容不一样，飞控据此算剩余悬停时间，油不够了自动回坪。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P16_FuelFilter",
+   "grabbable": true,
+   "name_cn": "燃油滤清器",
+   "material": "不锈钢滤网 · 10 μm",
+   "desc": "【真实原理】燃油先过滤再进泵：涡轮的喷油嘴孔只有零点几毫米，一粒灰就能堵住，一边喷不出油燃烧就会偏、烧坏涡轮。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P17_FuelPump",
+   "grabbable": true,
+   "name_cn": "燃油泵",
+   "material": "无刷电机驱动的齿轮泵",
+   "desc": "【真实原理】把燃油加压送去喷油嘴。泵的转速由飞控调：要更大推力就多送油、涡轮转得更快、发电更多。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P18_ShutoffValve",
+   "grabbable": true,
+   "name_cn": "电磁截止阀",
+   "material": "常闭电磁阀 · 橙色线圈罩",
+   "desc": "【真实原理】断电就关（常闭）：一旦失控或摔落，飞控断开它，燃油立刻停止供给，涡轮熄火——这是最重要的安全件。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P19_Regulator",
+   "grabbable": true,
+   "name_cn": "调压阀",
+   "material": "膜片式减压阀 · 橙色调节旋钮",
+   "desc": "【真实原理】让送到喷油嘴的油压保持稳定。油压忽高忽低，喷出的油雾就不均匀，燃烧温度跟着乱跳。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P20_FuelLine_1",
+   "grabbable": true,
+   "name_cn": "油管",
+   "material": "不锈钢编织软管 · 7 根（含 2 根跨接管）",
+   "desc": "【真实原理】燃料舱 → 滤清器 → 泵 → 截止阀 → 调压阀 → 喷油嘴，一路串起来。两根跨接管把三段燃料舱连通，油面自动拉平。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P20_FuelLine_2",
+   "grabbable": true,
+   "name_cn": "油管",
+   "material": "不锈钢编织软管 · 7 根（含 2 根跨接管）",
+   "desc": "【真实原理】燃料舱 → 滤清器 → 泵 → 截止阀 → 调压阀 → 喷油嘴，一路串起来。两根跨接管把三段燃料舱连通，油面自动拉平。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P20_FuelLine_3",
+   "grabbable": true,
+   "name_cn": "油管",
+   "material": "不锈钢编织软管 · 7 根（含 2 根跨接管）",
+   "desc": "【真实原理】燃料舱 → 滤清器 → 泵 → 截止阀 → 调压阀 → 喷油嘴，一路串起来。两根跨接管把三段燃料舱连通，油面自动拉平。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P20_FuelLine_4",
+   "grabbable": true,
+   "name_cn": "油管",
+   "material": "不锈钢编织软管 · 7 根（含 2 根跨接管）",
+   "desc": "【真实原理】燃料舱 → 滤清器 → 泵 → 截止阀 → 调压阀 → 喷油嘴，一路串起来。两根跨接管把三段燃料舱连通，油面自动拉平。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P20_FuelLine_5",
+   "grabbable": true,
+   "name_cn": "油管",
+   "material": "不锈钢编织软管 · 7 根（含 2 根跨接管）",
+   "desc": "【真实原理】燃料舱 → 滤清器 → 泵 → 截止阀 → 调压阀 → 喷油嘴，一路串起来。两根跨接管把三段燃料舱连通，油面自动拉平。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P20_FuelLine_6",
+   "grabbable": true,
+   "name_cn": "油管",
+   "material": "不锈钢编织软管 · 7 根（含 2 根跨接管）",
+   "desc": "【真实原理】燃料舱 → 滤清器 → 泵 → 截止阀 → 调压阀 → 喷油嘴，一路串起来。两根跨接管把三段燃料舱连通，油面自动拉平。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P20_FuelLine_7",
+   "grabbable": true,
+   "name_cn": "油管",
+   "material": "不锈钢编织软管 · 7 根（含 2 根跨接管）",
+   "desc": "【真实原理】燃料舱 → 滤清器 → 泵 → 截止阀 → 调压阀 → 喷油嘴，一路串起来。两根跨接管把三段燃料舱连通，油面自动拉平。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P21_GenStator",
+   "grabbable": true,
+   "name_cn": "发电机定子",
+   "material": "硅钢片 + 铜绕组 · 带散热鳍",
+   "desc": "【真实原理】涡轮带着转子高速旋转（每分钟十万转以上），转子的磁铁扫过这些铜线圈，感应出电——和自行车发电机同一个原理，只是转得快得多。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P22_GenRotor",
+   "grabbable": true,
+   "name_cn": "发电机转子",
+   "material": "钐钴永磁体 + 碳纤维护套",
+   "desc": "【真实原理】装在主轴上的永磁体。转速太高，磁铁会被离心力甩碎，所以外面要用碳纤维绑紧。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P23_Intake",
+   "grabbable": true,
+   "name_cn": "进气口",
+   "material": "铝合金喇叭口",
+   "desc": "【真实原理】把空气平顺地引进压气机。喇叭口的圆弧让气流不\"撞墙\"，进气阻力更小。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P24_Compressor",
+   "grabbable": true,
+   "name_cn": "压气机叶轮",
+   "material": "钛合金离心叶轮 · 12 片叶片",
+   "desc": "【真实原理】布雷顿循环第 1 步：把空气甩到外圈压缩，压力升到 3~4 倍。空气越密，同样体积里能烧的燃料越多。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P25_Combustor",
+   "grabbable": true,
+   "name_cn": "环形燃烧室",
+   "material": "镍基高温合金 · 表面一圈圈稀释孔",
+   "desc": "【真实原理】第 2 步：压缩空气和燃油在这里混合燃烧，温度上千度。外壁的小孔补进冷空气，把燃气温度降到涡轮叶片能承受的范围。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P26_Injectors",
+   "grabbable": true,
+   "name_cn": "喷油嘴（6 个，带环形油路）",
+   "material": "不锈钢 · 雾化孔径约 0.3 mm",
+   "desc": "【真实原理】把燃油喷成细雾，雾越细烧得越快越干净。6 个均匀分布，火焰才不会偏到一边。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P27_Igniter",
+   "grabbable": true,
+   "name_cn": "点火器",
+   "material": "陶瓷绝缘火花塞",
+   "desc": "【真实原理】启动时打火点燃油雾，火焰稳定后就关掉——之后燃烧室里的火是自己维持的。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P28_TurbineWheel",
+   "grabbable": true,
+   "name_cn": "涡轮转子",
+   "material": "镍基高温合金 · 16 片叶片",
+   "desc": "【真实原理】第 3 步：高温燃气冲过叶片推动它旋转。涡轮和压气机、发电机在同一根轴上：涡轮的力一部分带压气机，剩下的拿去发电。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P29_Exhaust",
+   "grabbable": true,
+   "name_cn": "排气管",
+   "material": "高温合金 · 接到右上方的排气口",
+   "desc": "【真实原理】第 4 步：做完功的燃气从这里排出机外。排气口开在侧上方，热气不会被风扇吸回去。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P30_Shaft",
+   "grabbable": true,
+   "name_cn": "主轴",
+   "material": "高强度合金钢",
+   "desc": "【真实原理】把发电机、压气机、涡轮串在一起。转速极高，轴必须做\"动平衡\"，偏一点点都会剧烈振动。",
+   "grab": {
+    "type": "box",
+    "center": [
+     10.0,
+     1.6,
+     45.4
+    ],
+    "extent": [
+     0.42,
+     4.4,
+     0.42
+    ]
+   }
+  },
+  {
+   "id": "P31_Bearing_1",
+   "grabbable": true,
+   "name_cn": "轴承",
+   "material": "陶瓷球轴承",
+   "desc": "【真实原理】支撑主轴高速旋转。陶瓷球比钢球轻、耐热，适合十万转级别的转速。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P31_Bearing_2",
+   "grabbable": true,
+   "name_cn": "轴承",
+   "material": "陶瓷球轴承",
+   "desc": "【真实原理】支撑主轴高速旋转。陶瓷球比钢球轻、耐热，适合十万转级别的转速。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P32_TurbineMount",
+   "grabbable": true,
+   "name_cn": "涡轮支架",
+   "material": "钛合金支架",
+   "desc": "【真实原理】把涡轮发电机固定在骨架上，中间有减振垫，涡轮的振动不会传给相机。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P33_Battery",
+   "grabbable": true,
+   "name_cn": "缓冲电池包",
+   "material": "锂电池 · 48 V 6 Ah",
+   "desc": "【真实原理】涡轮加速需要一两秒，风扇却要在几毫秒内改推力。电池负责\"救急\"：突然要大推力时先放电顶上，涡轮跟上后再给电池充回去——油电混动汽车也是这个思路。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P34_UpperFan",
+   "grabbable": true,
+   "name_cn": "上风扇",
+   "material": "7 叶碳纤维桨 · 顺时针",
+   "desc": "【真实原理】和下风扇一起把空气往下压，产生升力。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P35_UpperMotor",
+   "grabbable": true,
+   "name_cn": "上电机",
+   "material": "外转子无刷电机",
+   "desc": "【真实原理】带动上风扇。无刷电机靠电调按顺序给线圈通电，转速可以非常精确地调。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P36_MotorMount",
+   "grabbable": true,
+   "name_cn": "电机支架",
+   "material": "铝合金中柱 + 4 根支臂",
+   "desc": "【真实原理】把上下两个电机固定在涵道正中央，支臂做成薄片，挡风越少越好。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     39.1
+    ],
+    "segments": [
+     [
+      -2.9,
+      2.9,
+      1.3
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P37_LowerMotor",
+   "grabbable": true,
+   "name_cn": "下电机",
+   "material": "外转子无刷电机",
+   "desc": "【真实原理】带动下风扇，和上电机反着转。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P38_LowerFan",
+   "grabbable": true,
+   "name_cn": "下风扇",
+   "material": "5 叶碳纤维桨 · 逆时针",
+   "desc": "【真实原理】为什么要两个反着转的风扇？风扇转起来，机身会被反作用力往反方向拧（直升机为此加了尾桨）。上下两个反转，扭矩互相抵消，机身就不会自转；下风扇还能把上风扇甩出来的\"旋转气流\"拉直，多拿一点推力。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P39_Vane_1",
+   "grabbable": true,
+   "name_cn": "导流舵片",
+   "material": "碳纤维舵片 · 6 片",
+   "desc": "【真实原理】装在涵道出口，偏转往下吹的气流：气流往左偏，机身就受到往右的力。6 片配合就能控制俯仰和横滚。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P39_Vane_2",
+   "grabbable": true,
+   "name_cn": "导流舵片",
+   "material": "碳纤维舵片 · 6 片",
+   "desc": "【真实原理】装在涵道出口，偏转往下吹的气流：气流往左偏，机身就受到往右的力。6 片配合就能控制俯仰和横滚。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P39_Vane_3",
+   "grabbable": true,
+   "name_cn": "导流舵片",
+   "material": "碳纤维舵片 · 6 片",
+   "desc": "【真实原理】装在涵道出口，偏转往下吹的气流：气流往左偏，机身就受到往右的力。6 片配合就能控制俯仰和横滚。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P39_Vane_4",
+   "grabbable": true,
+   "name_cn": "导流舵片",
+   "material": "碳纤维舵片 · 6 片",
+   "desc": "【真实原理】装在涵道出口，偏转往下吹的气流：气流往左偏，机身就受到往右的力。6 片配合就能控制俯仰和横滚。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P39_Vane_5",
+   "grabbable": true,
+   "name_cn": "导流舵片",
+   "material": "碳纤维舵片 · 6 片",
+   "desc": "【真实原理】装在涵道出口，偏转往下吹的气流：气流往左偏，机身就受到往右的力。6 片配合就能控制俯仰和横滚。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P39_Vane_6",
+   "grabbable": true,
+   "name_cn": "导流舵片",
+   "material": "碳纤维舵片 · 6 片",
+   "desc": "【真实原理】装在涵道出口，偏转往下吹的气流：气流往左偏，机身就受到往右的力。6 片配合就能控制俯仰和横滚。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P40_Servo_1",
+   "grabbable": true,
+   "name_cn": "舵机",
+   "material": "数字舵机 · 6 个",
+   "desc": "【真实原理】转动舵片。飞控每秒几百次给它们下指令。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P40_Servo_2",
+   "grabbable": true,
+   "name_cn": "舵机",
+   "material": "数字舵机 · 6 个",
+   "desc": "【真实原理】转动舵片。飞控每秒几百次给它们下指令。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P40_Servo_3",
+   "grabbable": true,
+   "name_cn": "舵机",
+   "material": "数字舵机 · 6 个",
+   "desc": "【真实原理】转动舵片。飞控每秒几百次给它们下指令。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P40_Servo_4",
+   "grabbable": true,
+   "name_cn": "舵机",
+   "material": "数字舵机 · 6 个",
+   "desc": "【真实原理】转动舵片。飞控每秒几百次给它们下指令。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P40_Servo_5",
+   "grabbable": true,
+   "name_cn": "舵机",
+   "material": "数字舵机 · 6 个",
+   "desc": "【真实原理】转动舵片。飞控每秒几百次给它们下指令。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P40_Servo_6",
+   "grabbable": true,
+   "name_cn": "舵机",
+   "material": "数字舵机 · 6 个",
+   "desc": "【真实原理】转动舵片。飞控每秒几百次给它们下指令。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P41_YawNozzle_1",
+   "grabbable": true,
+   "name_cn": "偏航喷口",
+   "material": "小型引气喷口 · 4 个",
+   "desc": "【真实原理】从涵道里引一点高压气从赤道喷出去，左右喷口一开一关，机身就原地转向（偏航）。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P41_YawNozzle_2",
+   "grabbable": true,
+   "name_cn": "偏航喷口",
+   "material": "小型引气喷口 · 4 个",
+   "desc": "【真实原理】从涵道里引一点高压气从赤道喷出去，左右喷口一开一关，机身就原地转向（偏航）。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P41_YawNozzle_3",
+   "grabbable": true,
+   "name_cn": "偏航喷口",
+   "material": "小型引气喷口 · 4 个",
+   "desc": "【真实原理】从涵道里引一点高压气从赤道喷出去，左右喷口一开一关，机身就原地转向（偏航）。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P41_YawNozzle_4",
+   "grabbable": true,
+   "name_cn": "偏航喷口",
+   "material": "小型引气喷口 · 4 个",
+   "desc": "【真实原理】从涵道里引一点高压气从赤道喷出去，左右喷口一开一关，机身就原地转向（偏航）。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P42_ElecTray",
+   "grabbable": true,
+   "name_cn": "电子舱支架",
+   "material": "碳纤维板 + 铜柱",
+   "desc": "【真实原理】电子板一层层叠在这块板上，靠铜柱隔开，方便散热和拆装。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "P43_PowerBoard",
+   "grabbable": true,
+   "name_cn": "电源管理板",
+   "material": "大电流 PCB · 电感 + 电容",
+   "desc": "【真实原理】把发电机的电和电池的电合在一起，分配给风扇电机、舵机、传感器，并管理电池充放电。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P44_ESC_1",
+   "grabbable": true,
+   "name_cn": "电调",
+   "material": "三相 MOSFET 驱动板 · 2 块",
+   "desc": "【真实原理】一块管一个风扇电机：按顺序给电机三相线圈通电，让它转起来，并按飞控的指令调转速。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P44_ESC_2",
+   "grabbable": true,
+   "name_cn": "电调",
+   "material": "三相 MOSFET 驱动板 · 2 块",
+   "desc": "【真实原理】一块管一个风扇电机：按顺序给电机三相线圈通电，让它转起来，并按飞控的指令调转速。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P45_Heatsink",
+   "grabbable": true,
+   "name_cn": "散热片",
+   "material": "铝合金鳍片",
+   "desc": "【真实原理】电调里的 MOSFET 开关大电流会发热，鳍片把热量散到涵道旁边的气流里。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P46_FlightCtrl",
+   "grabbable": true,
+   "name_cn": "飞控板",
+   "material": "主控 MCU + 状态 LED",
+   "desc": "【真实原理】机器人的\"小脑\"。悬停天生不稳定（推力跟着机身一起歪），必须每秒几百次读 IMU、算偏差、调舵片和转速，才能稳稳停在空中。注意\"把重的放下面就稳\"是错觉（钟摆谬误），真正让它稳的是这块板。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P47_IMU",
+   "grabbable": true,
+   "name_cn": "IMU 惯性测量单元",
+   "material": "三轴陀螺仪 + 三轴加速度计",
+   "desc": "【真实原理】感知机身的倾斜和转动。它就像人的内耳前庭：闭上眼也知道自己歪没歪。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P48_Harness",
+   "grabbable": true,
+   "name_cn": "线束",
+   "material": "硅胶软线 · 橙色护套",
+   "desc": "【真实原理】电调到涵道里两台电机的三相动力线。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P49_FrontLens",
+   "grabbable": true,
+   "name_cn": "前镜片",
+   "material": "光学玻璃 · 镀增透膜",
+   "desc": "【真实原理】主眼的第一片镜片，把光线收进来。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P50_Iris",
+   "grabbable": true,
+   "name_cn": "光圈",
+   "material": "8 片钢制叶片",
+   "desc": "【真实原理】叶片收拢或张开，控制进光量：太亮时缩小，暗处放大。和相机、人眼的瞳孔一样。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P51_MidLens",
+   "grabbable": true,
+   "name_cn": "中镜片",
+   "material": "光学玻璃",
+   "desc": "【真实原理】多片镜片组合起来修正色差和畸变，单片镜片做不到边缘也清晰。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P52_RearLens",
+   "grabbable": true,
+   "name_cn": "后镜片",
+   "material": "光学玻璃",
+   "desc": "【真实原理】把光线最终聚焦到图像传感器上。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P53_ImageSensor",
+   "grabbable": true,
+   "name_cn": "图像传感器",
+   "material": "CMOS 传感器板",
+   "desc": "【真实原理】把光变成电信号，就是机器人\"看到\"的画面。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P54_LensHood",
+   "grabbable": true,
+   "name_cn": "遮光罩",
+   "material": "白色复合材料 · 橙色前缘",
+   "desc": "【真实原理】挡住侧面射来的杂光，画面不发白。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "center": [
+     0.0,
+     18.45,
+     38.0
+    ],
+    "segments": [
+     [
+      -0.85,
+      0.85,
+      4.56
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P55_EyeGlow",
+   "grabbable": true,
+   "name_cn": "眼圈光环",
+   "material": "橙色导光环",
+   "desc": "【科幻设定】主眼周围的发光环，让人知道\"它正在看你\"。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "center": [
+     0.0,
+     18.33,
+     38.0
+    ],
+    "segments": [
+     [
+      -0.12,
+      0.12,
+      4.04
+     ]
+    ]
+   }
+  },
+  {
+   "id": "P56_StereoCam_1",
+   "grabbable": true,
+   "name_cn": "立体相机",
+   "material": "广角相机 · 2 个",
+   "desc": "【真实原理】两个相机隔开一段距离拍同一个场景，比较两张图的差别就能算出物体的远近——和人用两只眼睛判断距离一样。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P56_StereoCam_2",
+   "grabbable": true,
+   "name_cn": "立体相机",
+   "material": "广角相机 · 2 个",
+   "desc": "【真实原理】两个相机隔开一段距离拍同一个场景，比较两张图的差别就能算出物体的远近——和人用两只眼睛判断距离一样。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P57_Altimeter_1",
+   "grabbable": true,
+   "name_cn": "测高雷达",
+   "material": "毫米波测距模块 · 2 个",
+   "desc": "【真实原理】朝下测离地高度，悬停时保持高度、降落时对准停机坪都靠它。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P57_Altimeter_2",
+   "grabbable": true,
+   "name_cn": "测高雷达",
+   "material": "毫米波测距模块 · 2 个",
+   "desc": "【真实原理】朝下测离地高度，悬停时保持高度、降落时对准停机坪都靠它。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P58_Antenna_1",
+   "grabbable": true,
+   "name_cn": "天线",
+   "material": "数传 / 图传天线 · 2 根",
+   "desc": "【真实原理】和遥控器、基站通信。两根天线方向不同，机身怎么转都至少有一根信号好。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "P58_Antenna_2",
+   "grabbable": true,
+   "name_cn": "天线",
+   "material": "数传 / 图传天线 · 2 根",
+   "desc": "【真实原理】和遥控器、基站通信。两根天线方向不同，机身怎么转都至少有一根信号好。",
+   "grab": {
+    "type": "pinch"
+   }
+  }
+ ],
+ "parts": [
+  {
+   "name": "P01_Pad",
+   "name_cn": "停机加注坪",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P01_Pad.P01_Pad",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "P02_EquatorFrame",
+   "name_cn": "赤道承力带（含 4 根辐条）",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P02_EquatorFrame.P02_EquatorFrame",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "P03_Duct",
+   "name_cn": "中央涵道",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P03_Duct.P03_Duct",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "P04_EyeHousing",
+   "name_cn": "主眼镜筒",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P04_EyeHousing.P04_EyeHousing",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "P05_UpperPetal_1",
+   "name_cn": "上装甲瓣",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P05_UpperPetal_1.P05_UpperPetal_1",
+   "spin": 0,
+   "unit": "P05_UpperPetal_1",
+   "ex": [
+    [
+     16.534056091308596,
+     -9.545941162109376,
+     19.09188232421875,
+     0.09
+    ]
+   ]
+  },
+  {
+   "name": "P05_UpperPetal_2",
+   "name_cn": "上装甲瓣",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P05_UpperPetal_2.P05_UpperPetal_2",
+   "spin": 0,
+   "unit": "P05_UpperPetal_2",
+   "ex": [
+    [
+     1.1690406536693163e-15,
+     -19.09188232421875,
+     19.09188232421875,
+     0.09
+    ]
+   ]
+  },
+  {
+   "name": "P05_UpperPetal_3",
+   "name_cn": "上装甲瓣",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P05_UpperPetal_3.P05_UpperPetal_3",
+   "spin": 0,
+   "unit": "P05_UpperPetal_3",
+   "ex": [
+    [
+     -16.534056091308596,
+     -9.545941162109376,
+     19.09188232421875,
+     0.09
+    ]
+   ]
+  },
+  {
+   "name": "P05_UpperPetal_4",
+   "name_cn": "上装甲瓣",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P05_UpperPetal_4.P05_UpperPetal_4",
+   "spin": 0,
+   "unit": "P05_UpperPetal_4",
+   "ex": [
+    [
+     -16.534056091308596,
+     9.545941162109376,
+     19.09188232421875,
+     0.09
+    ]
+   ]
+  },
+  {
+   "name": "P05_UpperPetal_5",
+   "name_cn": "上装甲瓣",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P05_UpperPetal_5.P05_UpperPetal_5",
+   "spin": 0,
+   "unit": "P05_UpperPetal_5",
+   "ex": [
+    [
+     -3.507121961007949e-15,
+     19.09188232421875,
+     19.09188232421875,
+     0.09
+    ]
+   ]
+  },
+  {
+   "name": "P05_UpperPetal_6",
+   "name_cn": "上装甲瓣",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P05_UpperPetal_6.P05_UpperPetal_6",
+   "spin": 0,
+   "unit": "P05_UpperPetal_6",
+   "ex": [
+    [
+     16.534056091308596,
+     9.545941162109376,
+     19.09188232421875,
+     0.09
+    ]
+   ]
+  },
+  {
+   "name": "P06_LowerPetal_1",
+   "name_cn": "下装甲瓣",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P06_LowerPetal_1.P06_LowerPetal_1",
+   "spin": 0,
+   "unit": "P06_LowerPetal_1",
+   "ex": [
+    [
+     23.382685902179844,
+     -13.499999999999998,
+     -12.0,
+     0.12
+    ]
+   ]
+  },
+  {
+   "name": "P06_LowerPetal_2",
+   "name_cn": "下装甲瓣",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P06_LowerPetal_2.P06_LowerPetal_2",
+   "spin": 0,
+   "unit": "P06_LowerPetal_2",
+   "ex": [
+    [
+     1.6532731788489269e-15,
+     -27.0,
+     -12.0,
+     0.12
+    ]
+   ]
+  },
+  {
+   "name": "P06_LowerPetal_3",
+   "name_cn": "下装甲瓣",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P06_LowerPetal_3.P06_LowerPetal_3",
+   "spin": 0,
+   "unit": "P06_LowerPetal_3",
+   "ex": [
+    [
+     -23.382685902179844,
+     -13.499999999999998,
+     -12.0,
+     0.12
+    ]
+   ]
+  },
+  {
+   "name": "P06_LowerPetal_4",
+   "name_cn": "下装甲瓣",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P06_LowerPetal_4.P06_LowerPetal_4",
+   "spin": 0,
+   "unit": "P06_LowerPetal_4",
+   "ex": [
+    [
+     -23.382685902179844,
+     13.500000000000004,
+     -12.0,
+     0.12
+    ]
+   ]
+  },
+  {
+   "name": "P06_LowerPetal_5",
+   "name_cn": "下装甲瓣",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P06_LowerPetal_5.P06_LowerPetal_5",
+   "spin": 0,
+   "unit": "P06_LowerPetal_5",
+   "ex": [
+    [
+     -4.9598195365467806e-15,
+     27.0,
+     -12.0,
+     0.12
+    ]
+   ]
+  },
+  {
+   "name": "P06_LowerPetal_6",
+   "name_cn": "下装甲瓣",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P06_LowerPetal_6.P06_LowerPetal_6",
+   "spin": 0,
+   "unit": "P06_LowerPetal_6",
+   "ex": [
+    [
+     23.382685902179837,
+     13.500000000000012,
+     -12.0,
+     0.12
+    ]
+   ]
+  },
+  {
+   "name": "P07_TopGrille",
+   "name_cn": "顶部进气格栅",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P07_TopGrille.P07_TopGrille",
+   "spin": 0,
+   "unit": "P07_TopGrille",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     22.0,
+     0.04
+    ]
+   ]
+  },
+  {
+   "name": "P08_BottomGrille",
+   "name_cn": "底部出风格栅",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P08_BottomGrille.P08_BottomGrille",
+   "spin": 0,
+   "unit": "P08_BottomGrille",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -14.0,
+     0.1
+    ]
+   ]
+  },
+  {
+   "name": "P09_LidarRing",
+   "name_cn": "激光雷达环",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P09_LidarRing.P09_LidarRing",
+   "spin": 0,
+   "unit": "P09_LidarRing",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     16.0,
+     0.07
+    ]
+   ]
+  },
+  {
+   "name": "P10_Halo",
+   "name_cn": "浮游光环",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P10_Halo.P10_Halo",
+   "spin": 0,
+   "unit": "P10_Halo",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.0
+    ]
+   ]
+  },
+  {
+   "name": "P11_LightStrip_1",
+   "name_cn": "赤道灯带",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P11_LightStrip_1.P11_LightStrip_1",
+   "spin": 0,
+   "unit": "P11_LightStrip_1",
+   "ex": [
+    [
+     12.291741482791119,
+     4.232386007943037,
+     0.0,
+     0.05
+    ]
+   ]
+  },
+  {
+   "name": "P11_LightStrip_2",
+   "name_cn": "赤道灯带",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P11_LightStrip_2.P11_LightStrip_2",
+   "spin": 0,
+   "unit": "P11_LightStrip_2",
+   "ex": [
+    [
+     7.960204194457796e-16,
+     -13.0,
+     0.0,
+     0.05
+    ]
+   ]
+  },
+  {
+   "name": "P11_LightStrip_3",
+   "name_cn": "赤道灯带",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P11_LightStrip_3.P11_LightStrip_3",
+   "spin": 0,
+   "unit": "P11_LightStrip_3",
+   "ex": [
+    [
+     -12.291741482791117,
+     4.232386007943037,
+     0.0,
+     0.05
+    ]
+   ]
+  },
+  {
+   "name": "P12_FuelTank_1",
+   "name_cn": "环形燃料舱",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P12_FuelTank_1.P12_FuelTank_1",
+   "spin": 0,
+   "unit": "P12_FuelTank_1",
+   "ex": [
+    [
+     10.0,
+     -0.0,
+     14.0,
+     0.72
+    ]
+   ]
+  },
+  {
+   "name": "P12_FuelTank_2",
+   "name_cn": "环形燃料舱",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P12_FuelTank_2.P12_FuelTank_2",
+   "spin": 0,
+   "unit": "P12_FuelTank_2",
+   "ex": [
+    [
+     6.123233995736766e-16,
+     -10.0,
+     14.0,
+     0.72
+    ]
+   ]
+  },
+  {
+   "name": "P12_FuelTank_3",
+   "name_cn": "环形燃料舱",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P12_FuelTank_3.P12_FuelTank_3",
+   "spin": 0,
+   "unit": "P12_FuelTank_3",
+   "ex": [
+    [
+     -10.0,
+     -1.2246467991473533e-15,
+     14.0,
+     0.72
+    ]
+   ]
+  },
+  {
+   "name": "P13_FillerNeck",
+   "name_cn": "加注管",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P13_FillerNeck.P13_FillerNeck",
+   "spin": 0,
+   "unit": "P13_FillerNeck",
+   "ex": [
+    [
+     6.123233995736766e-16,
+     -10.0,
+     14.0,
+     0.72
+    ],
+    [
+     0.0,
+     0.0,
+     4.5,
+     0.8
+    ]
+   ]
+  },
+  {
+   "name": "P14_FillerCap",
+   "name_cn": "加注口盖",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P14_FillerCap.P14_FillerCap",
+   "spin": 0,
+   "unit": "P14_FillerCap",
+   "ex": [
+    [
+     -2.3792026519775393,
+     -8.879305267333985,
+     7.713451385498047,
+     0.02
+    ]
+   ]
+  },
+  {
+   "name": "P15_LevelSensor",
+   "name_cn": "液位传感器",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P15_LevelSensor.P15_LevelSensor",
+   "spin": 0,
+   "unit": "P15_LevelSensor",
+   "ex": [
+    [
+     -10.0,
+     -1.2246467991473533e-15,
+     14.0,
+     0.72
+    ],
+    [
+     0.0,
+     0.0,
+     4.0,
+     0.82
+    ]
+   ]
+  },
+  {
+   "name": "P16_FuelFilter",
+   "name_cn": "燃油滤清器",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P16_FuelFilter.P16_FuelFilter",
+   "spin": 0,
+   "unit": "P16_FuelFilter",
+   "ex": [
+    [
+     -10.598385284664097,
+     -16.960961923128522,
+     -3.0,
+     0.26
+    ]
+   ]
+  },
+  {
+   "name": "P17_FuelPump",
+   "name_cn": "燃油泵",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P17_FuelPump.P17_FuelPump",
+   "spin": 0,
+   "unit": "P17_FuelPump",
+   "ex": [
+    [
+     1.2246467991473533e-15,
+     -20.0,
+     -3.0,
+     0.26
+    ]
+   ]
+  },
+  {
+   "name": "P18_ShutoffValve",
+   "name_cn": "电磁截止阀",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P18_ShutoffValve.P18_ShutoffValve",
+   "spin": 0,
+   "unit": "P18_ShutoffValve",
+   "ex": [
+    [
+     9.389431255717817,
+     -17.658951857178536,
+     -3.0,
+     0.26
+    ]
+   ]
+  },
+  {
+   "name": "P19_Regulator",
+   "name_cn": "调压阀",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P19_Regulator.P19_Regulator",
+   "spin": 0,
+   "unit": "P19_Regulator",
+   "ex": [
+    [
+     16.96096192312852,
+     -10.598385284664099,
+     -3.0,
+     0.26
+    ]
+   ]
+  },
+  {
+   "name": "P20_FuelLine_1",
+   "name_cn": "油管",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P20_FuelLine_1.P20_FuelLine_1",
+   "spin": 0,
+   "unit": "P20_FuelLine_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -2.5,
+     0.2
+    ],
+    [
+     -7.717838495572295,
+     -15.147110911202255,
+     -3.0,
+     0.3
+    ]
+   ]
+  },
+  {
+   "name": "P20_FuelLine_2",
+   "name_cn": "油管",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P20_FuelLine_2.P20_FuelLine_2",
+   "spin": 0,
+   "unit": "P20_FuelLine_2",
+   "ex": [
+    [
+     -4.685835048888984,
+     -16.34144883095142,
+     -1.0,
+     0.24
+    ]
+   ]
+  },
+  {
+   "name": "P20_FuelLine_3",
+   "name_cn": "油管",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P20_FuelLine_3.P20_FuelLine_3",
+   "spin": 0,
+   "unit": "P20_FuelLine_3",
+   "ex": [
+    [
+     5.253288904374107,
+     -16.16796077701761,
+     -1.0,
+     0.24
+    ]
+   ]
+  },
+  {
+   "name": "P20_FuelLine_4",
+   "name_cn": "油管",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P20_FuelLine_4.P20_FuelLine_4",
+   "spin": 0,
+   "unit": "P20_FuelLine_4",
+   "ex": [
+    [
+     12.020815280171309,
+     -12.020815280171309,
+     -1.0,
+     0.24
+    ]
+   ]
+  },
+  {
+   "name": "P20_FuelLine_5",
+   "name_cn": "油管",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P20_FuelLine_5.P20_FuelLine_5",
+   "spin": 0,
+   "unit": "P20_FuelLine_5",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -20.0,
+     0.28
+    ],
+    [
+     21.250368178359505,
+     -5.694018992255457,
+     0.0,
+     0.5
+    ]
+   ]
+  },
+  {
+   "name": "P20_FuelLine_6",
+   "name_cn": "油管",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P20_FuelLine_6.P20_FuelLine_6",
+   "spin": 0,
+   "unit": "P20_FuelLine_6",
+   "ex": [
+    [
+     7.0710678118654755,
+     -7.0710678118654755,
+     17.5,
+     0.74
+    ]
+   ]
+  },
+  {
+   "name": "P20_FuelLine_7",
+   "name_cn": "油管",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P20_FuelLine_7.P20_FuelLine_7",
+   "spin": 0,
+   "unit": "P20_FuelLine_7",
+   "ex": [
+    [
+     -7.071067811865475,
+     -7.0710678118654755,
+     17.5,
+     0.74
+    ]
+   ]
+  },
+  {
+   "name": "P21_GenStator",
+   "name_cn": "发电机定子",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P21_GenStator.P21_GenStator",
+   "spin": 0,
+   "unit": "P21_GenStator",
+   "ex": [
+    [
+     17.0,
+     -11.0,
+     0.0,
+     0.32
+    ],
+    [
+     0.0,
+     12.0,
+     0.0,
+     0.55
+    ]
+   ]
+  },
+  {
+   "name": "P22_GenRotor",
+   "name_cn": "发电机转子",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P22_GenRotor.P22_GenRotor",
+   "spin": 0,
+   "unit": "P22_GenRotor",
+   "ex": [
+    [
+     17.0,
+     -11.0,
+     0.0,
+     0.32
+    ],
+    [
+     0.0,
+     8.5,
+     4.5,
+     0.6
+    ]
+   ]
+  },
+  {
+   "name": "P23_Intake",
+   "name_cn": "进气口",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P23_Intake.P23_Intake",
+   "spin": 0,
+   "unit": "P23_Intake",
+   "ex": [
+    [
+     17.0,
+     -11.0,
+     0.0,
+     0.32
+    ],
+    [
+     0.0,
+     5.800000000000001,
+     0.0,
+     0.58
+    ]
+   ]
+  },
+  {
+   "name": "P24_Compressor",
+   "name_cn": "压气机叶轮",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P24_Compressor.P24_Compressor",
+   "spin": 0,
+   "unit": "P24_Compressor",
+   "ex": [
+    [
+     17.0,
+     -11.0,
+     0.0,
+     0.32
+    ],
+    [
+     0.0,
+     3.2,
+     4.5,
+     0.62
+    ]
+   ]
+  },
+  {
+   "name": "P25_Combustor",
+   "name_cn": "环形燃烧室",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P25_Combustor.P25_Combustor",
+   "spin": 0,
+   "unit": "P25_Combustor",
+   "ex": [
+    [
+     17.0,
+     -11.0,
+     0.0,
+     0.32
+    ]
+   ]
+  },
+  {
+   "name": "P26_Injectors",
+   "name_cn": "喷油嘴（6 个，带环形油路）",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P26_Injectors.P26_Injectors",
+   "spin": 0,
+   "unit": "P26_Injectors",
+   "ex": [
+    [
+     17.0,
+     -11.0,
+     0.0,
+     0.32
+    ],
+    [
+     4.5,
+     0.0,
+     0.0,
+     0.62
+    ]
+   ]
+  },
+  {
+   "name": "P27_Igniter",
+   "name_cn": "点火器",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P27_Igniter.P27_Igniter",
+   "spin": 0,
+   "unit": "P27_Igniter",
+   "ex": [
+    [
+     17.0,
+     -11.0,
+     0.0,
+     0.32
+    ],
+    [
+     0.0,
+     0.0,
+     6.5,
+     0.64
+    ]
+   ]
+  },
+  {
+   "name": "P28_TurbineWheel",
+   "name_cn": "涡轮转子",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P28_TurbineWheel.P28_TurbineWheel",
+   "spin": 0,
+   "unit": "P28_TurbineWheel",
+   "ex": [
+    [
+     17.0,
+     -11.0,
+     0.0,
+     0.32
+    ],
+    [
+     0.0,
+     -4.2,
+     4.5,
+     0.62
+    ]
+   ]
+  },
+  {
+   "name": "P29_Exhaust",
+   "name_cn": "排气管",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P29_Exhaust.P29_Exhaust",
+   "spin": 0,
+   "unit": "P29_Exhaust",
+   "ex": [
+    [
+     17.0,
+     -11.0,
+     0.0,
+     0.32
+    ],
+    [
+     0.0,
+     -9.5,
+     0.0,
+     0.58
+    ]
+   ]
+  },
+  {
+   "name": "P30_Shaft",
+   "name_cn": "主轴",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P30_Shaft.P30_Shaft",
+   "spin": 0,
+   "unit": "P30_Shaft",
+   "ex": [
+    [
+     17.0,
+     -11.0,
+     0.0,
+     0.32
+    ],
+    [
+     0.0,
+     0.0,
+     9.5,
+     0.66
+    ]
+   ]
+  },
+  {
+   "name": "P31_Bearing_1",
+   "name_cn": "轴承",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P31_Bearing_1.P31_Bearing_1",
+   "spin": 0,
+   "unit": "P31_Bearing_1",
+   "ex": [
+    [
+     17.0,
+     -11.0,
+     0.0,
+     0.32
+    ],
+    [
+     0.0,
+     1.2000000000000002,
+     13.0,
+     0.7
+    ]
+   ]
+  },
+  {
+   "name": "P31_Bearing_2",
+   "name_cn": "轴承",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P31_Bearing_2.P31_Bearing_2",
+   "spin": 0,
+   "unit": "P31_Bearing_2",
+   "ex": [
+    [
+     17.0,
+     -11.0,
+     0.0,
+     0.32
+    ],
+    [
+     0.0,
+     -1.8,
+     13.0,
+     0.7
+    ]
+   ]
+  },
+  {
+   "name": "P32_TurbineMount",
+   "name_cn": "涡轮支架",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P32_TurbineMount.P32_TurbineMount",
+   "spin": 0,
+   "unit": "P32_TurbineMount",
+   "ex": [
+    [
+     17.0,
+     -11.0,
+     0.0,
+     0.32
+    ],
+    [
+     0.0,
+     0.0,
+     -8.0,
+     0.5
+    ]
+   ]
+  },
+  {
+   "name": "P33_Battery",
+   "name_cn": "缓冲电池包",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P33_Battery.P33_Battery",
+   "spin": 0,
+   "unit": "P33_Battery",
+   "ex": [
+    [
+     6.43217750390021,
+     -21.038704631186782,
+     0.0,
+     0.3
+    ]
+   ]
+  },
+  {
+   "name": "P34_UpperFan",
+   "name_cn": "上风扇",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P34_UpperFan.P34_UpperFan",
+   "spin": 0,
+   "unit": "P34_UpperFan",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     20.0,
+     0.4
+    ]
+   ]
+  },
+  {
+   "name": "P35_UpperMotor",
+   "name_cn": "上电机",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P35_UpperMotor.P35_UpperMotor",
+   "spin": 0,
+   "unit": "P35_UpperMotor",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.46
+    ]
+   ]
+  },
+  {
+   "name": "P36_MotorMount",
+   "name_cn": "电机支架",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P36_MotorMount.P36_MotorMount",
+   "spin": 0,
+   "unit": "P36_MotorMount",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     10.5,
+     0.52
+    ]
+   ]
+  },
+  {
+   "name": "P37_LowerMotor",
+   "name_cn": "下电机",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P37_LowerMotor.P37_LowerMotor",
+   "spin": 0,
+   "unit": "P37_LowerMotor",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -10.5,
+     0.62
+    ]
+   ]
+  },
+  {
+   "name": "P38_LowerFan",
+   "name_cn": "下风扇",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P38_LowerFan.P38_LowerFan",
+   "spin": 0,
+   "unit": "P38_LowerFan",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -15.0,
+     0.56
+    ]
+   ]
+  },
+  {
+   "name": "P39_Vane_1",
+   "name_cn": "导流舵片",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P39_Vane_1.P39_Vane_1",
+   "spin": 0,
+   "unit": "P39_Vane_1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -7.0,
+     0.42
+    ],
+    [
+     8.0,
+     -0.0,
+     0.0,
+     0.52
+    ]
+   ]
+  },
+  {
+   "name": "P39_Vane_2",
+   "name_cn": "导流舵片",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P39_Vane_2.P39_Vane_2",
+   "spin": 0,
+   "unit": "P39_Vane_2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -7.0,
+     0.42
+    ],
+    [
+     4.000000000000001,
+     -6.928203230275509,
+     0.0,
+     0.52
+    ]
+   ]
+  },
+  {
+   "name": "P39_Vane_3",
+   "name_cn": "导流舵片",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P39_Vane_3.P39_Vane_3",
+   "spin": 0,
+   "unit": "P39_Vane_3",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -7.0,
+     0.42
+    ],
+    [
+     -3.9999999999999987,
+     -6.9282032302755105,
+     0.0,
+     0.52
+    ]
+   ]
+  },
+  {
+   "name": "P39_Vane_4",
+   "name_cn": "导流舵片",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P39_Vane_4.P39_Vane_4",
+   "spin": 0,
+   "unit": "P39_Vane_4",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -7.0,
+     0.42
+    ],
+    [
+     -8.0,
+     -9.797174393178826e-16,
+     0.0,
+     0.52
+    ]
+   ]
+  },
+  {
+   "name": "P39_Vane_5",
+   "name_cn": "导流舵片",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P39_Vane_5.P39_Vane_5",
+   "spin": 0,
+   "unit": "P39_Vane_5",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -7.0,
+     0.42
+    ],
+    [
+     -4.0000000000000036,
+     6.928203230275509,
+     0.0,
+     0.52
+    ]
+   ]
+  },
+  {
+   "name": "P39_Vane_6",
+   "name_cn": "导流舵片",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P39_Vane_6.P39_Vane_6",
+   "spin": 0,
+   "unit": "P39_Vane_6",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -7.0,
+     0.42
+    ],
+    [
+     4.000000000000001,
+     6.928203230275509,
+     0.0,
+     0.52
+    ]
+   ]
+  },
+  {
+   "name": "P40_Servo_1",
+   "name_cn": "舵机",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P40_Servo_1.P40_Servo_1",
+   "spin": 0,
+   "unit": "P40_Servo_1",
+   "ex": [
+    [
+     15.0,
+     -0.0,
+     0.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "P40_Servo_2",
+   "name_cn": "舵机",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P40_Servo_2.P40_Servo_2",
+   "spin": 0,
+   "unit": "P40_Servo_2",
+   "ex": [
+    [
+     7.500000000000002,
+     -12.99038105676658,
+     0.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "P40_Servo_3",
+   "name_cn": "舵机",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P40_Servo_3.P40_Servo_3",
+   "spin": 0,
+   "unit": "P40_Servo_3",
+   "ex": [
+    [
+     -7.499999999999997,
+     -12.99038105676658,
+     0.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "P40_Servo_4",
+   "name_cn": "舵机",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P40_Servo_4.P40_Servo_4",
+   "spin": 0,
+   "unit": "P40_Servo_4",
+   "ex": [
+    [
+     -15.0,
+     -1.83697019872103e-15,
+     0.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "P40_Servo_5",
+   "name_cn": "舵机",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P40_Servo_5.P40_Servo_5",
+   "spin": 0,
+   "unit": "P40_Servo_5",
+   "ex": [
+    [
+     -7.500000000000007,
+     12.990381056766578,
+     0.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "P40_Servo_6",
+   "name_cn": "舵机",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P40_Servo_6.P40_Servo_6",
+   "spin": 0,
+   "unit": "P40_Servo_6",
+   "ex": [
+    [
+     7.500000000000002,
+     12.99038105676658,
+     0.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "P41_YawNozzle_1",
+   "name_cn": "偏航喷口",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P41_YawNozzle_1.P41_YawNozzle_1",
+   "spin": 0,
+   "unit": "P41_YawNozzle_1",
+   "ex": [
+    [
+     9.123869323730469,
+     -9.123869323730469,
+     -1.584301471710205,
+     0.04
+    ]
+   ]
+  },
+  {
+   "name": "P41_YawNozzle_2",
+   "name_cn": "偏航喷口",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P41_YawNozzle_2.P41_YawNozzle_2",
+   "spin": 0,
+   "unit": "P41_YawNozzle_2",
+   "ex": [
+    [
+     -9.123869323730469,
+     -9.123869323730469,
+     -1.584301471710205,
+     0.04
+    ]
+   ]
+  },
+  {
+   "name": "P41_YawNozzle_3",
+   "name_cn": "偏航喷口",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P41_YawNozzle_3.P41_YawNozzle_3",
+   "spin": 0,
+   "unit": "P41_YawNozzle_3",
+   "ex": [
+    [
+     9.123869323730469,
+     9.123869323730469,
+     -1.584301471710205,
+     0.04
+    ]
+   ]
+  },
+  {
+   "name": "P41_YawNozzle_4",
+   "name_cn": "偏航喷口",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P41_YawNozzle_4.P41_YawNozzle_4",
+   "spin": 0,
+   "unit": "P41_YawNozzle_4",
+   "ex": [
+    [
+     -9.123869323730469,
+     9.123869323730469,
+     -1.584301471710205,
+     0.04
+    ]
+   ]
+  },
+  {
+   "name": "P42_ElecTray",
+   "name_cn": "电子舱支架",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P42_ElecTray.P42_ElecTray",
+   "spin": 0,
+   "unit": "P42_ElecTray",
+   "ex": [
+    [
+     -22.0,
+     0.0,
+     0.0,
+     0.34
+    ],
+    [
+     0.0,
+     0.0,
+     -7.0,
+     0.5
+    ]
+   ]
+  },
+  {
+   "name": "P43_PowerBoard",
+   "name_cn": "电源管理板",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P43_PowerBoard.P43_PowerBoard",
+   "spin": 0,
+   "unit": "P43_PowerBoard",
+   "ex": [
+    [
+     -22.0,
+     0.0,
+     0.0,
+     0.34
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     0.5
+    ]
+   ]
+  },
+  {
+   "name": "P44_ESC_1",
+   "name_cn": "电调",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P44_ESC_1.P44_ESC_1",
+   "spin": 0,
+   "unit": "P44_ESC_1",
+   "ex": [
+    [
+     -22.0,
+     0.0,
+     0.0,
+     0.34
+    ],
+    [
+     0.0,
+     4.0,
+     4.0,
+     0.55
+    ]
+   ]
+  },
+  {
+   "name": "P44_ESC_2",
+   "name_cn": "电调",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P44_ESC_2.P44_ESC_2",
+   "spin": 0,
+   "unit": "P44_ESC_2",
+   "ex": [
+    [
+     -22.0,
+     0.0,
+     0.0,
+     0.34
+    ],
+    [
+     0.0,
+     -4.0,
+     4.0,
+     0.55
+    ]
+   ]
+  },
+  {
+   "name": "P45_Heatsink",
+   "name_cn": "散热片",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P45_Heatsink.P45_Heatsink",
+   "spin": 0,
+   "unit": "P45_Heatsink",
+   "ex": [
+    [
+     -22.0,
+     0.0,
+     0.0,
+     0.34
+    ],
+    [
+     0.0,
+     0.0,
+     8.0,
+     0.58
+    ]
+   ]
+  },
+  {
+   "name": "P46_FlightCtrl",
+   "name_cn": "飞控板",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P46_FlightCtrl.P46_FlightCtrl",
+   "spin": 0,
+   "unit": "P46_FlightCtrl",
+   "ex": [
+    [
+     -22.0,
+     0.0,
+     0.0,
+     0.34
+    ],
+    [
+     0.0,
+     0.0,
+     11.5,
+     0.6
+    ]
+   ]
+  },
+  {
+   "name": "P47_IMU",
+   "name_cn": "IMU 惯性测量单元",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P47_IMU.P47_IMU",
+   "spin": 0,
+   "unit": "P47_IMU",
+   "ex": [
+    [
+     -22.0,
+     0.0,
+     0.0,
+     0.34
+    ],
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.63
+    ]
+   ]
+  },
+  {
+   "name": "P48_Harness",
+   "name_cn": "线束",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P48_Harness.P48_Harness",
+   "spin": 0,
+   "unit": "P48_Harness",
+   "ex": [
+    [
+     -22.0,
+     0.0,
+     0.0,
+     0.34
+    ],
+    [
+     0.0,
+     0.0,
+     -3.0,
+     0.5
+    ]
+   ]
+  },
+  {
+   "name": "P49_FrontLens",
+   "name_cn": "前镜片",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P49_FrontLens.P49_FrontLens",
+   "spin": 0,
+   "unit": "P49_FrontLens",
+   "ex": [
+    [
+     0.0,
+     18.0,
+     0.0,
+     0.14
+    ]
+   ]
+  },
+  {
+   "name": "P50_Iris",
+   "name_cn": "光圈",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P50_Iris.P50_Iris",
+   "spin": 0,
+   "unit": "P50_Iris",
+   "ex": [
+    [
+     0.0,
+     15.0,
+     0.0,
+     0.14
+    ]
+   ]
+  },
+  {
+   "name": "P51_MidLens",
+   "name_cn": "中镜片",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P51_MidLens.P51_MidLens",
+   "spin": 0,
+   "unit": "P51_MidLens",
+   "ex": [
+    [
+     0.0,
+     12.0,
+     0.0,
+     0.14
+    ]
+   ]
+  },
+  {
+   "name": "P52_RearLens",
+   "name_cn": "后镜片",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P52_RearLens.P52_RearLens",
+   "spin": 0,
+   "unit": "P52_RearLens",
+   "ex": [
+    [
+     0.0,
+     9.0,
+     0.0,
+     0.14
+    ]
+   ]
+  },
+  {
+   "name": "P53_ImageSensor",
+   "name_cn": "图像传感器",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P53_ImageSensor.P53_ImageSensor",
+   "spin": 0,
+   "unit": "P53_ImageSensor",
+   "ex": [
+    [
+     0.0,
+     6.0,
+     0.0,
+     0.14
+    ]
+   ]
+  },
+  {
+   "name": "P54_LensHood",
+   "name_cn": "遮光罩",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P54_LensHood.P54_LensHood",
+   "spin": 0,
+   "unit": "P54_LensHood",
+   "ex": [
+    [
+     0.0,
+     20.5,
+     0.0,
+     0.14
+    ]
+   ]
+  },
+  {
+   "name": "P55_EyeGlow",
+   "name_cn": "眼圈光环",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P55_EyeGlow.P55_EyeGlow",
+   "spin": 0,
+   "unit": "P55_EyeGlow",
+   "ex": [
+    [
+     0.0,
+     23.0,
+     0.0,
+     0.14
+    ]
+   ]
+  },
+  {
+   "name": "P56_StereoCam_1",
+   "name_cn": "立体相机",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P56_StereoCam_1.P56_StereoCam_1",
+   "spin": 0,
+   "unit": "P56_StereoCam_1",
+   "ex": [
+    [
+     8.555014038085938,
+     10.949918365478517,
+     1.7061708450317383,
+     0.04
+    ]
+   ]
+  },
+  {
+   "name": "P56_StereoCam_2",
+   "name_cn": "立体相机",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P56_StereoCam_2.P56_StereoCam_2",
+   "spin": 0,
+   "unit": "P56_StereoCam_2",
+   "ex": [
+    [
+     -8.555014038085938,
+     10.949918365478517,
+     1.7061708450317383,
+     0.04
+    ]
+   ]
+  },
+  {
+   "name": "P57_Altimeter_1",
+   "name_cn": "测高雷达",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P57_Altimeter_1.P57_Altimeter_1",
+   "spin": 0,
+   "unit": "P57_Altimeter_1",
+   "ex": [
+    [
+     5.04815902709961,
+     -2.914555931091309,
+     -9.328529357910156,
+     0.16
+    ]
+   ]
+  },
+  {
+   "name": "P57_Altimeter_2",
+   "name_cn": "测高雷达",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P57_Altimeter_2.P57_Altimeter_2",
+   "spin": 0,
+   "unit": "P57_Altimeter_2",
+   "ex": [
+    [
+     -5.04815902709961,
+     2.914555931091309,
+     -9.328529357910156,
+     0.16
+    ]
+   ]
+  },
+  {
+   "name": "P58_Antenna_1",
+   "name_cn": "天线",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P58_Antenna_1.P58_Antenna_1",
+   "spin": 0,
+   "unit": "P58_Antenna_1",
+   "ex": [
+    [
+     1.6890951156616212,
+     -5.198500061035157,
+     13.968626403808594,
+     0.02
+    ]
+   ]
+  },
+  {
+   "name": "P58_Antenna_2",
+   "name_cn": "天线",
+   "mesh": "/Game/Models/OrbBot/orb_bot/StaticMeshes/P58_Antenna_2.P58_Antenna_2",
+   "spin": 0,
+   "unit": "P58_Antenna_2",
+   "ex": [
+    [
+     -1.6890951156616212,
+     -5.198500061035157,
+     13.968626403808594,
+     0.02
+    ]
+   ]
+  }
+ ]
+}

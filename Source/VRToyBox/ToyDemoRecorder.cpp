@@ -35,11 +35,13 @@ namespace
 				Kinds.Add(EToyModelKind::Multimeter);
 			else if (Arg.Equals(TEXT("Server"), ESearchCase::IgnoreCase) || Arg.Equals(TEXT("AIServer"), ESearchCase::IgnoreCase))
 				Kinds.Add(EToyModelKind::Server);
+			else if (Arg.Equals(TEXT("Robot"), ESearchCase::IgnoreCase) || Arg.Equals(TEXT("Orb"), ESearchCase::IgnoreCase))
+				Kinds.Add(EToyModelKind::Orb);
 			else if (Arg.Equals(TEXT("quit"), ESearchCase::IgnoreCase)) bQuit = true;
 		}
 		if (Kinds.Num() == 0)
 		{
-			Kinds = { EToyModelKind::Motor, EToyModelKind::Valve, EToyModelKind::Drone, EToyModelKind::Lathe, EToyModelKind::Multimeter, EToyModelKind::Server };
+			Kinds = { EToyModelKind::Motor, EToyModelKind::Valve, EToyModelKind::Drone, EToyModelKind::Lathe, EToyModelKind::Multimeter, EToyModelKind::Server, EToyModelKind::Orb };
 		}
 		FActorSpawnParameters Params;
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -51,7 +53,7 @@ namespace
 
 	FAutoConsoleCommandWithWorldAndArgs DemoCommand(
 		TEXT("toy.Demo"),
-		TEXT("录 README 演示短片（逐帧截图到 Saved/Demo/<模型>/）。参数：Motor / Valve / Drone / Lathe / Multimeter / Server（不写 = 全部），quit = 录完退出。配合 -benchmark -fps=15"),
+		TEXT("录 README 演示短片（逐帧截图到 Saved/Demo/<模型>/）。参数：Motor / Valve / Drone / Lathe / Multimeter / Server / Robot（不写 = 全部），quit = 录完退出。配合 -benchmark -fps=15"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&StartDemo));
 
 	float Smooth(float X)
