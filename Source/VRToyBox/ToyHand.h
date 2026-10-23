@@ -14,14 +14,16 @@ class UArrowComponent;
 class UMaterialInstanceDynamic;
 class UPoseableMeshComponent;
 class UStaticMeshComponent;
+class UToyDexHandRig;
 class UPrimitiveComponent;
 class USkeletalMesh;
 class UWidgetComponent;
 
 /**
- * 一只手，挂在动作控制器（握把姿态）上。模型用 UE VR 模板自带的 MannyXR 手（Content/XRMannequins），
- * 左右手各用自己的网格；手指不用动画蓝图，而是每帧在"张开"（Idle）和"握拳"（Grasp）两个姿势之间按手指分组插值：
- * 扳机 → 拇指和食指合拢成"捏"；握把 → 中指、无名指、小指（见 TickCurls / ApplyFingerPose）。
+ * 一只手，挂在动作控制器（握把姿态）上。默认模型是五指灵巧手（Content/Models/DexHand，见 UToyDexHandRig，左手是右手的镜像）；
+ * 控制台 toy.HandModel 0 换回 UE VR 模板自带的 MannyXR 手（Content/XRMannequins），左右手各用自己的网格。
+ * 两种手的手指都按手指分组的弯曲程度摆：扳机 → 拇指和食指合拢成"捏"；握把 → 中指、无名指、小指（见 TickCurls / ApplyFingerPose）。
+ * MannyXR 不用动画蓝图，而是每帧在"张开"（Idle）和"握拳"（Grasp）两个姿势之间插值；灵巧手按关节表插值关节角。
  * 捏住东西后，拇指和食指各自只弯到指尖碰到物体表面为止（见 ComputeContactCurls，控制台 toy.FingerContact 0 关掉）。
  *
  * 抓取只看扳机（像拇指食指捏东西）：扳机过 0.6 捏起、低于 0.4 松开；握把完全不参与抓取。
@@ -84,6 +86,10 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<UPoseableMeshComponent> HandMesh;
 
+	/** 五指灵巧手（toy.HandModel 1，默认）。弯曲程度由 ApplyFingerPose 每帧喂进去。 */
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<UToyDexHandRig> DexHand;
+
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<UArrowComponent> GripPoint;
 
@@ -142,6 +148,7 @@ private:
 	void TickHeld(float DeltaSeconds);
 	void TickCurls(float DeltaSeconds);
 	void SetupHandMesh();
+	bool SetupDexHand();
 	void ApplyFingerPose();
 	FVector GetFingerTip(int32 TipBone, int32 PrevBone) const;
 	FVector FingerTipAtCurl(uint8 Group, float Curl, int32 TipBone, int32 PrevBone) const;
@@ -184,6 +191,10 @@ private:
 	/** 捏合点在手 Actor 坐标系里的固定位置（SetupHandMesh 里按"扳机按满"的手势算一次）。 */
 	FVector PinchAnchor = FVector::ZeroVector;
 	bool bHasPinchAnchor = false;
+	/** 现在用的是灵巧手（否则 MannyXR），以及摆手时的 toy.HandModel / toy.DexHandScale（变了就重摆）。 */
+	bool bUseDex = false;
+	int32 AppliedHandModel = -1;
+	float AppliedDexScale = 1.f;
 	bool bCustomInfo = false;
 	float ThumbCurl = 0.f;
 	/** 捏住东西时拇指 / 食指弯到哪里停（指尖碰到物体表面）。抓起后等吸附滑完算一次，零件挂在手上不动，之后不用再算。 */

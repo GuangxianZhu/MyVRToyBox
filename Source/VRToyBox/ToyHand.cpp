@@ -2,6 +2,7 @@
 
 #include "ToyBoxPawn.h"
 #include "ToyCube.h"
+#include "ToyDexHandRig.h"
 #include "ToyGrabbable.h"
 #include "ToyHandCalib.h"
 #include "ToyMenuPanel.h"
@@ -35,6 +36,16 @@ static TAutoConsoleVariable<int32> CVarFingerContact(
 	1,
 	TEXT("1 = 捏住东西时拇指和食指弯到碰到物体表面就停（默认）；0 = 旧的固定捏合弯曲度"));
 
+static TAutoConsoleVariable<int32> CVarHandModel(
+	TEXT("toy.HandModel"),
+	1,
+	TEXT("玩家的手用哪个模型：1 = 五指灵巧手（Content/Models/DexHand，默认），0 = UE VR 模板的 MannyXR 手。可以随时切换"));
+
+static TAutoConsoleVariable<float> CVarDexHandScale(
+	TEXT("toy.DexHandScale"),
+	1.f,
+	TEXT("灵巧手当玩家的手时的缩放（1 = 真实尺寸，手腕到中指尖约 18cm）"));
+
 namespace
 {
 	// 手掌中心放在握把姿态手背一侧 3cm 处（和 VR 校准的旋转支点共用，见 ToyHandCalib），掌心表面在 1.75cm 处
@@ -50,6 +61,10 @@ namespace
 	const TCHAR* IndexCurlAnimPath = TEXT("/Game/XRMannequins/Animations/A_MannequinsXR_IndexCurl_Right.A_MannequinsXR_IndexCurl_Right");
 	// 拇指：模板里没有"拇指扣下"的动画，只有"竖大拇指"（ThumbUp）。把 ThumbUp 相对张开姿势的转动反过来用，拇指就往掌心扣
 	const TCHAR* ThumbUpAnimPath = TEXT("/Game/XRMannequins/Animations/A_MannequinsXR_ThumbUp_Right.A_MannequinsXR_ThumbUp_Right");
+
+	// MannyXR 手扳机按满时食指 / 拇指的弯曲程度（两个指尖刚好碰上）。灵巧手的弯曲程度 1 就是捏合手势，见 SetupDexHand
+	constexpr float MannyPinchIndexCurl = 0.45f;
+	constexpr float MannyPinchThumbCurl = 0.55f;
 
 	// 信息牌：Slate 像素 → 厘米。560 像素宽 ≈ 22cm，手边看正合适
 	constexpr float LabelScale = 0.04f;
@@ -174,6 +189,10 @@ AToyHand::AToyHand()
 	HandMesh->SetupAttachment(Root);
 	HandMesh->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
 
+	// 五指灵巧手（toy.HandModel 1，默认）：部件网格在 InitHand 里按左右手生成
+	DexHand = CreateDefaultSubobject<UToyDexHandRig>(TEXT("DexHand"));
+	DexHand->SetupAttachment(Root);
+
 	// 食指指尖：每帧对到骨骼上（见 ApplyFingerPose）
 	PokeTip = CreateDefaultSubobject<USceneComponent>(TEXT("PokeTip"));
 	PokeTip->SetupAttachment(Root);
@@ -265,6 +284,18 @@ void AToyHand::InitHand(AToyBoxPawn* InPawn, EControllerHand InSide)
 
 void AToyHand::SetupHandMesh()
 {
+	AppliedHandModel = CVarHandModel.GetValueOnGameThread();
+	AppliedDexScale = CVarDexHandScale.GetValueOnGameThread();
+	if (AppliedHandModel == 1 && SetupDexHand())
+	{
+		return;
+	}
+	bUseDex = false;
+	DexHand->SetHandVisible(false);
+	HandMesh->SetVisibility(true);
+	PinchIndexCurl = MannyPinchIndexCurl;
+	PinchThumbCurl = MannyPinchThumbCurl;
+
 	const bool bLeft = Side == EControllerHand::Left;
 	const float Mirror = bLeft ? -1.f : 1.f;
 	USkeletalMesh* Mesh = bLeft ? LeftMesh : RightMesh;
@@ -412,8 +443,59 @@ void AToyHand::SetupHandMesh()
 	UE_LOG(LogTemp, Log, TEXT("ToyBox: %s手捏合点锚定在手坐标 %s"), bLeft ? TEXT("左") : TEXT("右"), *PinchAnchor.ToCompactString());
 }
 
+bool AToyHand::SetupDexHand()
+{
+	const bool bLeft = Side == EControllerHand::Left;
+	const float Mirror = bLeft ? -1.f : 1.f;
+	if (!DexHand->Build(bLeft))
+	{
+		return false;
+	}
+	bUseDex = true;
+	// MannyXR 网格清掉（不只是藏起来）：依赖骨骼的代码（ApplyFingerPose 的骨骼分支等）看到没有骨骼资产就跳过
+	HandMesh->SetSkinnedAssetAndUpdate(nullptr);
+	HandMesh->SetVisibility(false);
+	DexHand->SetHandVisible(true);
+	// 灵巧手的弯曲程度 1 = 关节表里的 pinch 手势，两个指腹正好碰上
+	PinchIndexCurl = 1.f;
+	PinchThumbCurl = 1.f;
+
+	// 和 MannyXR 同样的摆法：手腕 → 中指根 = 手指方向（+X）；手心（模型 +Y）朝 -Y（左手 +Y）；
+	// 手掌中心（手腕和中指根的中点，厚度取掌心中线）放到 (0, ±PalmY, 0)。VR 里再由 ToyHandCalib 绕掌心转到握把姿态上
+	const float Scale = FMath::Clamp(AppliedDexScale, 0.3f, 3.f);
+	const FVector Wrist = DexHand->GetWristModel();
+	const FVector Knuckle = DexHand->GetKnuckleModel();
+	const FVector FingerDir = (Knuckle - Wrist).GetSafeNormal();
+	FVector PalmDir = DexHand->GetPalmDirModel();
+	PalmDir = (PalmDir - FingerDir * (PalmDir | FingerDir)).GetSafeNormal();
+	const FQuat HandInMesh = FRotationMatrix::MakeFromXY(FingerDir, -PalmDir * Mirror).ToQuat();
+	const FQuat MeshInHand = HandInMesh.Inverse();
+	FVector PalmCenter = (Wrist + Knuckle) * 0.5f;
+	PalmCenter.Y = DexHand->GetPalmCenterY();
+	const FVector Target(0.f, Mirror * PalmY, 0.f);
+	DexHand->SetRelativeTransform(FTransform(MeshInHand, Target - MeshInHand.RotateVector(PalmCenter * Scale), FVector(Scale)));
+
+	// 捏合点锚定：pinch 手势下拇指指腹和食指指腹的中点（两个指腹在这里碰上）
+	const FVector PinchWorld = (DexHand->TipAtCurls(UToyDexHandRig::Thumb, UToyDexHandRig::Pad, 1.f, 1.f, 0.f)
+		+ DexHand->TipAtCurls(UToyDexHandRig::Index, UToyDexHandRig::Pad, 1.f, 1.f, 0.f)) * 0.5f;
+	PinchAnchor = GetActorTransform().InverseTransformPosition(PinchWorld);
+	bHasPinchAnchor = true;
+	IndexCurl = 0.f;
+	ThumbCurl = 0.f;
+	ApplyFingerPose();
+	UE_LOG(LogTemp, Log, TEXT("ToyBox: %s手用五指灵巧手，缩放 %.2f，捏合点锚定在手坐标 %s"),
+		bLeft ? TEXT("左") : TEXT("右"), Scale, *PinchAnchor.ToCompactString());
+	return true;
+}
+
 FVector AToyHand::GetFingerDirectionLocal() const
 {
+	if (bUseDex)
+	{
+		const FTransform& Mesh = DexHand->GetComponentTransform();
+		const FVector Dir = Mesh.TransformPosition(DexHand->GetKnuckleModel()) - Mesh.TransformPosition(DexHand->GetWristModel());
+		return GetActorTransform().InverseTransformVectorNoScale(Dir).GetSafeNormal();
+	}
 	if (!HandMesh->GetSkinnedAsset() || WristBoneIndex == INDEX_NONE || MiddleBoneIndex == INDEX_NONE)
 	{
 		return FVector::ForwardVector;
@@ -459,6 +541,13 @@ FVector AToyHand::GetFingerTip(int32 TipBone, int32 PrevBone) const
 
 void AToyHand::ApplyFingerPose()
 {
+	if (bUseDex)
+	{
+		// 灵巧手：食指、拇指按扳机往捏合手势弯，其余三指按握把往握拳弯（关节角线性插值，见 UToyDexHandRig）
+		DexHand->SetCurls(IndexCurl, ThumbCurl, FingerCurl);
+		PokeTip->SetWorldLocation(DexHand->GetTip(UToyDexHandRig::Index, UToyDexHandRig::End));
+		return;
+	}
 	if (!HandMesh->GetSkinnedAsset() || OpenPose.Num() != HandMesh->BoneSpaceTransforms.Num())
 	{
 		return;
@@ -528,6 +617,12 @@ void AToyHand::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	RecordMotion();
+
+	// 控制台切换手模型（toy.HandModel / toy.DexHandScale）：重新摆一次
+	if (CVarHandModel.GetValueOnGameThread() != AppliedHandModel || CVarDexHandScale.GetValueOnGameThread() != AppliedDexScale)
+	{
+		SetupHandMesh();
+	}
 
 	// 抓取只看扳机（拇指食指捏）：按过 PinchThreshold 捏起，松到 ReleaseThreshold 以下放开。握把不参与
 	if (!bTriggerDown && Trigger > PinchThreshold)
@@ -774,6 +869,13 @@ void AToyHand::TickCurls(float DeltaSeconds)
 
 FVector AToyHand::FingerTipAtCurl(uint8 Group, float Curl, int32 TipBone, int32 PrevBone) const
 {
+	if (bUseDex)
+	{
+		// 灵巧手：关节链正向运动学，球心取指尖套中心（离指腹约 0.7cm，和 FingerTipRadius 差不多，球面正好是指腹）
+		const bool bIndex = Group == 1;
+		return DexHand->TipAtCurls(bIndex ? UToyDexHandRig::Index : UToyDexHandRig::Thumb, UToyDexHandRig::Core,
+			bIndex ? Curl : IndexCurl, bIndex ? ThumbCurl : Curl, FingerCurl);
+	}
 	// 和 ApplyFingerPose 同样的插值，但只在内存里算骨骼位置，不动网格（试很多个弯曲度时不用每次刷新骨骼）
 	const USkinnedAsset* Asset = HandMesh->GetSkinnedAsset();
 	const FReferenceSkeleton& Ref = Asset->GetRefSkeleton();
@@ -794,7 +896,7 @@ FVector AToyHand::FingerTipAtCurl(uint8 Group, float Curl, int32 TipBone, int32 
 float AToyHand::FindContactCurl(uint8 Group, float MaxCurl, int32 TipBone, int32 PrevBone) const
 {
 	AActor* Target = HeldActor.Get();
-	if (!Target || TipBone == INDEX_NONE || PrevBone == INDEX_NONE)
+	if (!Target || (!bUseDex && (TipBone == INDEX_NONE || PrevBone == INDEX_NONE)))
 	{
 		return MaxCurl;
 	}
@@ -838,7 +940,8 @@ float AToyHand::FindContactCurl(uint8 Group, float MaxCurl, int32 TipBone, int32
 
 void AToyHand::ComputeContactCurls()
 {
-	if (!CVarFingerContact.GetValueOnGameThread() || !HandMesh->GetSkinnedAsset() || OpenPose.Num() != HandMesh->BoneSpaceTransforms.Num())
+	const bool bMannyReady = HandMesh->GetSkinnedAsset() && OpenPose.Num() == HandMesh->BoneSpaceTransforms.Num();
+	if (!CVarFingerContact.GetValueOnGameThread() || !(bUseDex ? DexHand->IsBuilt() : bMannyReady))
 	{
 		return;
 	}
