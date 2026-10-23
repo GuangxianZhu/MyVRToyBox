@@ -29,7 +29,7 @@ struct FToyScreenBrushes
 namespace
 {
 	const FLinearColor StandColor(0.03f, 0.03f, 0.035f);
-	const FLinearColor DisplayColor(0.02f, 0.05f, 0.12f);
+	const FLinearColor ScreenDisplayColor(0.02f, 0.05f, 0.12f);
 
 	// 屏幕 32 × 22 cm，界面按每厘米 40 像素渲染（1280 × 880）。头显在 50cm 外每厘米只有约 29 个像素，再高也看不出区别
 	constexpr float ScreenW = 32.f;
@@ -133,7 +133,7 @@ AToyTouchScreen::AToyTouchScreen()
 		FVector::ZeroVector, StandColor, FRotator::ZeroRotator);
 	// 显示屏底板：编辑器视口里（界面还没生成）看到的就是它
 	UToyShapeComponent::Create(this, TEXT("Display"), Pivot, EToyShape::Box, FVector(0.4f, ScreenW, ScreenH),
-		FVector(1.2f, 0.f, 0.f), DisplayColor, FRotator::ZeroRotator);
+		FVector(1.2f, 0.f, 0.f), ScreenDisplayColor, FRotator::ZeroRotator);
 
 	// 界面面板：WidgetComponent 的本地单位是像素，缩放 1/40 → 1 像素 = 0.025cm，正好铺满 32 × 22cm。面朝 +X
 	Gui = CreateDefaultSubobject<UWidgetComponent>(TEXT("Gui"));
