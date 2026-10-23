@@ -19,14 +19,21 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/CollisionProfile.h"
 #include "Engine/OverlapResult.h"
+#include "Engine/SkinnedAsset.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
+#include "HAL/IConsoleManager.h"
 #include "Styling/CoreStyle.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
+
+static TAutoConsoleVariable<int32> CVarFingerContact(
+	TEXT("toy.FingerContact"),
+	1,
+	TEXT("1 = 捏住东西时拇指和食指弯到碰到物体表面就停（默认）；0 = 旧的固定捏合弯曲度"));
 
 namespace
 {
@@ -643,6 +650,9 @@ void AToyHand::Grab(AActor* Target)
 	}
 
 	HeldActor = Target;
+	ContactIndexCurl = PinchIndexCurl;
+	ContactThumbCurl = PinchThumbCurl;
+	bContactPending = true;
 	ShowInfo(Target);
 	Pulse(0.7f, 0.08f);
 }
@@ -747,13 +757,96 @@ void AToyHand::TickCurls(float DeltaSeconds)
 {
 	// 弯曲程度 0 = 张开（Idle），1 = 握拳（Grasp）。
 	// 扳机 → 拇指和食指一起合拢到"捏"的姿势（不按扳机时食指伸直，用来戳触屏）；握把 → 中指、无名指、小指。
-	// 捏着东西时拇指食指保持捏合，扳机松一点也不张开（真正松手由 Tick 里的迟滞决定）
-	const float Pinch = HeldActor.IsValid() ? 1.f : Trigger;
+	// 捏着东西时拇指食指保持不动，扳机松一点也不张开（真正松手由 Tick 里的迟滞决定）；
+	// 而且不是固定弯到"捏合"，是各自弯到指尖碰到物体表面为止（ComputeContactCurls，等吸附滑完再算）
+	const bool bHolding = HeldActor.IsValid();
+	if (bHolding && bContactPending && SnapAlpha >= 1.f)
+	{
+		bContactPending = false;
+		ComputeContactCurls();
+	}
 	const float Speed = 20.f;
 	FingerCurl = FMath::FInterpTo(FingerCurl, Grip, DeltaSeconds, Speed);
-	IndexCurl = FMath::FInterpTo(IndexCurl, Pinch * PinchIndexCurl, DeltaSeconds, Speed);
-	ThumbCurl = FMath::FInterpTo(ThumbCurl, Pinch * PinchThumbCurl, DeltaSeconds, Speed);
+	IndexCurl = FMath::FInterpTo(IndexCurl, bHolding ? ContactIndexCurl : Trigger * PinchIndexCurl, DeltaSeconds, Speed);
+	ThumbCurl = FMath::FInterpTo(ThumbCurl, bHolding ? ContactThumbCurl : Trigger * PinchThumbCurl, DeltaSeconds, Speed);
 	ApplyFingerPose();
+}
+
+FVector AToyHand::FingerTipAtCurl(uint8 Group, float Curl, int32 TipBone, int32 PrevBone) const
+{
+	// 和 ApplyFingerPose 同样的插值，但只在内存里算骨骼位置，不动网格（试很多个弯曲度时不用每次刷新骨骼）
+	const USkinnedAsset* Asset = HandMesh->GetSkinnedAsset();
+	const FReferenceSkeleton& Ref = Asset->GetRefSkeleton();
+	const float Weights[4] = { 0.f, Group == 1 ? Curl : IndexCurl, FingerCurl, Group == 3 ? Curl : ThumbCurl };
+	TArray<FTransform> Local;
+	Local.SetNum(OpenPose.Num());
+	for (int32 Index = 0; Index < OpenPose.Num(); ++Index)
+	{
+		Local[Index].Blend(OpenPose[Index], FistPose[Index], Weights[BoneGroup[Index]]);
+	}
+	const TArray<FTransform> CS = ComponentSpace(Ref, Local);
+	const FVector Tip = CS[TipBone].GetLocation();
+	const FVector Prev = CS[PrevBone].GetLocation();
+	// 指尖往外延伸的比例和 GetFingerTip 一致
+	return HandMesh->GetComponentTransform().TransformPosition(Tip + (Tip - Prev) * 0.85f);
+}
+
+float AToyHand::FindContactCurl(uint8 Group, float MaxCurl, int32 TipBone, int32 PrevBone) const
+{
+	AActor* Target = HeldActor.Get();
+	if (!Target || TipBone == INDEX_NONE || PrevBone == INDEX_NONE)
+	{
+		return MaxCurl;
+	}
+	TInlineComponentArray<UStaticMeshComponent*> Meshes(Target);
+	Meshes.RemoveAll([](const UStaticMeshComponent* Mesh) { return !Mesh || !Mesh->IsVisible() || !Mesh->IsCollisionEnabled(); });
+	if (Meshes.Num() == 0)
+	{
+		return MaxCurl;
+	}
+
+	// 指尖从张开弯到 MaxCurl 的路径切成几小段，把指尖当成小球沿每段扫过去，第一次碰到物体的那一段里按命中比例插出弯曲度
+	constexpr int32 Steps = 16;
+	const FCollisionShape Ball = FCollisionShape::MakeSphere(FingerTipRadius);
+	FVector From = FingerTipAtCurl(Group, 0.f, TipBone, PrevBone);
+	for (int32 Step = 1; Step <= Steps; ++Step)
+	{
+		const float Curl = MaxCurl * Step / Steps;
+		const FVector To = FingerTipAtCurl(Group, Curl, TipBone, PrevBone);
+		float BestTime = 2.f;
+		for (UStaticMeshComponent* Mesh : Meshes)
+		{
+			// 零件网格打三角形（复杂碰撞）；方块这类引擎基本形状再打一遍简单碰撞，两者取先碰到的
+			for (const bool bComplex : { true, false })
+			{
+				FHitResult Hit;
+				if (Mesh->SweepComponent(Hit, From, To, FQuat::Identity, Ball, bComplex) && !Hit.bStartPenetrating)
+				{
+					BestTime = FMath::Min(BestTime, Hit.Time);
+				}
+			}
+		}
+		if (BestTime <= 1.f)
+		{
+			return MaxCurl * (Step - 1 + BestTime) / Steps;
+		}
+		From = To;
+	}
+	// 一路都没碰到（物体不在指尖路径上）：照旧弯到捏合
+	return MaxCurl;
+}
+
+void AToyHand::ComputeContactCurls()
+{
+	if (!CVarFingerContact.GetValueOnGameThread() || !HandMesh->GetSkinnedAsset() || OpenPose.Num() != HandMesh->BoneSpaceTransforms.Num())
+	{
+		return;
+	}
+	ContactIndexCurl = FindContactCurl(1, PinchIndexCurl, IndexTipBone, IndexMidBone);
+	ContactThumbCurl = FindContactCurl(3, PinchThumbCurl, ThumbTipBone, ThumbMidBone);
+	UE_LOG(LogTemp, Log, TEXT("ToyBox: %s手捏住 %s，食指弯到 %.2f / %.2f，拇指 %.2f / %.2f"),
+		Side == EControllerHand::Left ? TEXT("左") : TEXT("右"), *GetNameSafe(HeldActor.Get()),
+		ContactIndexCurl, PinchIndexCurl, ContactThumbCurl, PinchThumbCurl);
 }
 
 void AToyHand::TickRangeSphere(float DeltaSeconds)
