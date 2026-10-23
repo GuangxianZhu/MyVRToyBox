@@ -3,7 +3,7 @@
 在编辑器里跑（命令行由 scripts/import_motor.bat、scripts/import_valve.bat 调用）：
     UnrealEditor-Cmd.exe VRToyBox.uproject -run=pythonscript -script=...
 环境变量：
-    MODEL_NAME           模型名，决定资产目录 /Game/Models/<名字> 和下面 MODELS 里的配置（Motor / Valve / Drone / Lathe / Multimeter / AIServer / OrbBot / Engine）
+    MODEL_NAME           模型名，决定资产目录 /Game/Models/<名字> 和下面 MODELS 里的配置（Motor / Valve / Drone / Lathe / Multimeter / AIServer / OrbBot / Engine / DexHand）
     MODEL_GLB            glb 路径（电机兼容旧的 MOTOR_GLB）
     MODEL_MANIFEST_ONLY  =1 时不重新导入资产，只重写 parts.json（兼容旧的 MOTOR_MANIFEST_ONLY）
 
@@ -189,6 +189,25 @@ MODELS = {
         # glb 在 Blender 里已经左右镜像过：模型 +Y 是进气侧（Blender 的 -Y），-X 是正时端，+X 是飞轮
         check={'E28_IntakeManifold': (0, 1, 1), 'E31_ExhaustManifold': (0, -1, 1),
                'E26_TimingCover': (-1, 0, 0), 'E14_Flywheel': (1, 0, 0)},
+    ),
+    'DexHand': dict(
+        info=dict(
+            title='五指灵巧手 · 20 自由度直驱（右手，关节布局参考 Wuji Hand 2 公开 URDF，外形原创）',
+            body='5 根手指 × 4 个关节 = 20 个直驱电机，没有减速器和连杆，外力推手指电机会跟着转（可反向驱动）· 50 个部件\n'
+                 '装配状态：抓任意位置拿起整只手看（手势是"放松"）。点 EXPLODE：法兰、腕部、背盖往后退，掌心硅胶往你这边，'
+                 '五根手指从掌上拔出来、每个关节拉开，电机往手心方向弹出。每个部件都能单独抓。',
+        ),
+        named={},
+        units={
+            'base': dict(name_cn='掌骨架', material='铝合金骨架',
+                         desc='整只手的骨架。四指和拇指的根部电机、背盖、掌心硅胶、腕部模块都固定在它上面。拆手时它不动。'),
+        },
+        rotor=None,
+        # 实物装配后最长的是高度（法兰底到中指尖约 21cm），桌上展示 50cm（约 2.4 倍），最小的 J4 电机直径约 2.6cm
+        length_cm=50.0,
+        # 模型 +Y 是手心（Blender 的 -Y），+X 是拇指，+Z 是指尖
+        check={'H14_Thumb_Tip': (1, 0, 1), 'H03_PalmSkin': (0, 1, 0), 'H02_BackCover': (0, -1, 0),
+               'H32_Middle_Tip': (0, 0, 1)},
     ),
 }
 CONFIG = MODELS.get(MODEL, dict(info=dict(title=MODEL, body=''), named={}, units={}, rotor=None, check={}))

@@ -37,6 +37,7 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 | `导入车床模型.bat` | 车床模型改了才需要：ITBasics 里用 Blender 重新生成并导入（见下文） |
 | `导入万用表模型.bat` | 万用表模型改了才需要：ITBasics 里用 Blender 重新生成并导入（见下文） |
 | `导入发动机模型.bat` | 四缸发动机模型改了才需要：ITBasics 里用 Blender 重新生成并导入（见下文） |
+| `导入灵巧手模型.bat` | 五指灵巧手模型改了才需要：ITBasics 里用 Blender 重新生成并导入（见下文） |
 
 - 引擎不在 `C:\Program Files\Epic Games\UE_5.8` 的话，先设置环境变量 `UE_ROOT` 指向引擎根目录（脚本也会读 Epic 启动器写的注册表）。
 - 更新脚本只在「当前在 main、没有未提交改动、本地没有 main 上没有的提交」时才 `git pull --ff-only`，其他情况只提示不动手，避免把你的改动搞乱。
@@ -64,7 +65,7 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 | --- | --- | --- |
 | ![](docs/screenshots/move_back.jpg) | ![](docs/screenshots/teleport_valid.jpg) | ![](docs/screenshots/teleport_invalid.jpg) |
 
-控制台输入 `toy.Screen <按钮>` 等于戳触屏上那个按钮，可以连着写：`toy.Screen Lathe MoveNear MoveNear Explode`（按钮名：Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Server / Robot / Engine / Hide / Explode / Reset / MoveNear / MoveFar / MoveLeft / MoveRight / Menu），命令行里用 `-ExecCmds=` 也行。`toy.ShowGrabPoints 1` 可以在游戏里看到手和方块的抓点箭头（之后生成的方块生效）。`toy.PalmSnap 1` 切回旧的"手掌贴合"抓法（见「零件抓取」）。`toy.HandPreview 1 / 2 / 3` 在桌面模式下把左手侧着摆到镜头前（张开 / 握拳 / 来回握），用来检查手模型。
+控制台输入 `toy.Screen <按钮>` 等于戳触屏上那个按钮，可以连着写：`toy.Screen Lathe MoveNear MoveNear Explode`（按钮名：Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Server / Robot / Engine / Hand / Hide / Explode / Reset / MoveNear / MoveFar / MoveLeft / MoveRight / Menu），命令行里用 `-ExecCmds=` 也行。`toy.ShowGrabPoints 1` 可以在游戏里看到手和方块的抓点箭头（之后生成的方块生效）。`toy.PalmSnap 1` 切回旧的"手掌贴合"抓法（见「零件抓取」）。`toy.HandPreview 1 / 2 / 3` 在桌面模式下把左手侧着摆到镜头前（张开 / 握拳 / 来回握），用来检查手模型。
 
 ## 手的模型
 
@@ -252,6 +253,29 @@ ITBasics/四缸发动机爆炸图/build_engine.py ──Blender──▶ engine.
 - **摆放复查**（按网格包围盒 + 爆炸位移算）：没有零件低于桌面；离触屏最近的起动机还隔约 11cm；油底壳前沿正好停在桌子前沿；缸盖、排气凸轮轴、承盖架往后越过桌子后沿最多 5cm，但它们悬在离地 117~157cm，不碍事。拆开后发电机正好在左边方块的生成点上，方块会落在发电机上。
 - **体量**：49 个静态网格、约 17 万三角面，`Content/Models/Engine` 7.9MB。⚠️ 还没在头显里看过：第 2 页的 ENGINE 卡片要先点「下页」才看得到。
 
+## 五指灵巧手模型从哪来
+
+| 装配（Blender 预览图） | 爆炸 |
+| --- | --- |
+| ![](docs/screenshots/dexhand_assembled.jpg) | ![](docs/screenshots/dexhand_exploded.jpg) |
+
+```
+ITBasics/五指灵巧手/build_hand.py ──export_ue.py（Blender）──▶ hand_ue.glb ──Tools/import_model.py（MODEL_NAME=DexHand）──▶ Content/Models/DexHand/*.uasset + parts.json
+```
+
+双击 `导入灵巧手模型.bat`（只有模型改了才需要跑）。触屏第 2 页的卡片 `HAND-20`，控制台 `toy.Screen Hand`。
+
+- **模型**：ITBasics 里的 20 自由度直驱右手（5 指 × 4 关节，关节布局参考 Wuji Hand 2 公开 URDF，外形原创），原来是给网页查看器做的，180 个网格零件、按关节分层挂在一起。`export_ue.py` 复用 `build_hand.py` 建模，再按这个工程的约定重新导出，不改原来的网页版。
+- **合并成 50 个部件**：按零件树的叶子合并：每个电机模组（定子壳 + 两个输出环 + 两个端盖）、每节指骨（骨架 + 硅胶指节垫 + 指背盖板 + 螺钉）、指尖（力传感器 + 指尖套）各一个部件。每根手指 9 个（J1~J4 电机、指根轭架、近 / 中 / 远节指骨、指尖）× 5 + 背盖、掌心硅胶、腕部模块、法兰 + 掌骨架（基座）。螺钉、端盖单独抓太小（放大后也就几毫米）。
+- **手势**：放松（`params.json` 的 `poses.rest`）。0 位的拇指是横着伸出去的，不像手。
+- **爆炸**：网页版的偏移是挂在关节父子层级上的（手指根部往外、关节之间拉开、电机往手心弹），导出时沿父链把每一级偏移换成世界坐标，变成几步平移，按层级错开出场：法兰 → 腕部 → 背盖 → 掌心硅胶 → 五根手指依次拔出 → 关节拉开 → 电机弹出 → 指尖。偏移量比网页版大约 2 倍（VR 里要伸手进去捏）；法兰和腕部改成往手背方向退，不往下走（往下会钻进桌面）。虚幻这边只支持平移，所以拆开后每个部件还保持装配时的朝向。
+- **展示尺寸 50cm**：实物装配后约 14 × 9 × 21cm（宽 × 厚 × 高），放大约 2.4 倍，最小的 J4 电机直径约 2.6cm。
+- **桌上的位置**：`DexHandMount` Yaw 90，法兰朝下立在桌上，手心朝着玩家，拇指在右手边。按包围盒 + 爆炸位移算：拆开后最高的中指指尖在离地约 158cm（桌面上方 83cm），法兰往后退到 x≈108（桌子后沿 110），拇指往玩家这边最近到 x≈45，左右在 -34 ~ 30cm 之间，离右边的触屏（y=60）还有约 30cm。
+- **导入方向检查**：拇指指尖在 +X、掌心硅胶在 +Y、背盖在 -Y、中指指尖在 +Z。
+- **导入结果（2026-10-23）**：50 个静态网格（Nanite 全关），共约 17.2 万个三角形，`Content/Models/DexHand` 58 个文件约 6.0MB。抓取单元 50 个（法兰 + 掌骨架是基座），49 个能抓：捏 40、方块 8、圆柱 1。导入方向检查 4 项 OK，没有缺节点的警告。
+- ✅ **抓取体检（桌面模式）**：`toy.GrabAudit Hand` 49 个单元全部捏到。装配截图里手立在桌上、手心朝玩家、拇指在右手边，没有东西钻到桌面下面。爆炸截图里拇指那串零件在镜头里叠在触屏前面（按上面算的离触屏还有约 30cm，没在 3D 里量过），中指那一列最上面的零件被画面上沿切掉。
+- ⚠️ **还没在头显里看过**：爆炸后最高的指尖在桌面上方约 83cm，站着够不够得着待确认。
+
 ## 原理
 
 ### 先猜一下
@@ -335,13 +359,13 @@ ITBasics/四缸发动机爆炸图/build_engine.py ──Blender──▶ engine.
 | 车床 | 67 | 捏 50、圆柱 5、方块 5、贴表面 7（手写 5） |
 | 万用表 | 36 | 捏 22、圆柱 4、方块 3、贴表面 7（手写 2） |
 
-**抓取体检 `toy.GrabAudit`。** 控制台输入 `toy.GrabAudit`（或 `Motor` / `Valve` / `Drone` / `Lathe` / `Multimeter` / `Server` / `Robot` / `Engine`，加 `quit` 跑完退出），会依次摆出模型（先拍一张装配全景 `00_assembled.png`）、爆炸（再拍一张 `00_exploded.png`），用右手按桌面模式的方式（捏合点放在零件上离镜头最近的表面点、扣扳机）把每个单元捏一遍，捏住后手往上提、镜头给一个特写，截图到 `Saved/GrabAudit/<模型>/<序号>_<单元>.png`，并写 `Saved/GrabAudit/summary.csv`。五个模型 180 个单元约 6 分钟跑完（只跑车床或万用表约 1 分钟）。命令行批量跑：
+**抓取体检 `toy.GrabAudit`。** 控制台输入 `toy.GrabAudit`（或 `Motor` / `Valve` / `Drone` / `Lathe` / `Multimeter` / `Server` / `Robot` / `Engine` / `Hand`，加 `quit` 跑完退出），会依次摆出模型（先拍一张装配全景 `00_assembled.png`）、爆炸（再拍一张 `00_exploded.png`），用右手按桌面模式的方式（捏合点放在零件上离镜头最近的表面点、扣扳机）把每个单元捏一遍，捏住后手往上提、镜头给一个特写，截图到 `Saved/GrabAudit/<模型>/<序号>_<单元>.png`，并写 `Saved/GrabAudit/summary.csv`。五个模型 180 个单元约 6 分钟跑完（只跑车床或万用表约 1 分钟）。命令行批量跑：
 
 ```
 UnrealEditor.exe VRToyBox.uproject -game -windowed -ResX=1280 -ResY=720 "-ExecCmds=toy.GrabAudit All quit"
 ```
 
-**录演示动图 `toy.Demo`。** 控制台输入 `toy.Demo`（或 `Motor` / `Valve` / `Drone` / `Lathe` / `Multimeter` / `Server` / `Robot` / `Engine`，加 `quit` 录完退出），每个模型先爆炸一次再装回去、量出两种状态的包围盒，然后逐帧截图到 `Saved/Demo/<模型>/f_0000.png …`：装配停 1 秒 → 爆炸 → 右手从镜头右下方伸过去捏起第二大的零件（最大的一般是机壳）、往上提 → 松手 → 装配回去，镜头按包围盒自动拉远拉近、绕模型慢慢转 24°。要带 `-benchmark -fps=15`（固定步长，截图慢也不掉帧）。README 上面那 6 张 GIF 就是这样录的（10 帧/秒、480 宽、96 色，每张约 3MB）：
+**录演示动图 `toy.Demo`。** 控制台输入 `toy.Demo`（或 `Motor` / `Valve` / `Drone` / `Lathe` / `Multimeter` / `Server` / `Robot` / `Engine` / `Hand`，加 `quit` 录完退出），每个模型先爆炸一次再装回去、量出两种状态的包围盒，然后逐帧截图到 `Saved/Demo/<模型>/f_0000.png …`：装配停 1 秒 → 爆炸 → 右手从镜头右下方伸过去捏起第二大的零件（最大的一般是机壳）、往上提 → 松手 → 装配回去，镜头按包围盒自动拉远拉近、绕模型慢慢转 24°。要带 `-benchmark -fps=15`（固定步长，截图慢也不掉帧）。README 上面那 6 张 GIF 就是这样录的（10 帧/秒、480 宽、96 色，每张约 3MB）：
 
 ```
 UnrealEditor.exe VRToyBox.uproject -game -windowed -ResX=960 -ResY=540 -benchmark -fps=15 -nosound "-ExecCmds=r.MotionBlurQuality 0,toy.Demo quit"

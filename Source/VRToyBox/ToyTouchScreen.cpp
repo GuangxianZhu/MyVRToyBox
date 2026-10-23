@@ -70,6 +70,7 @@ namespace
 		{ EToyModelKind::Server, EToyScreenAction::ToggleServer, TEXT("AI 服务器"), TEXT("SERVER"), TEXT("server"), FLinearColor(0.3f, 0.6f, 0.1f) },
 		{ EToyModelKind::Orb, EToyScreenAction::ToggleOrb, TEXT("漂浮机器人"), TEXT("ORB-1"), TEXT("orb"), FLinearColor(0.95f, 0.4f, 0.05f) },
 		{ EToyModelKind::Engine, EToyScreenAction::ToggleEngine, TEXT("四缸发动机"), TEXT("ENGINE"), TEXT("engine"), FLinearColor(0.8f, 0.15f, 0.12f) },
+		{ EToyModelKind::DexHand, EToyScreenAction::ToggleDexHand, TEXT("五指灵巧手"), TEXT("HAND-20"), TEXT("hand"), FLinearColor(0.95f, 0.5f, 0.1f) },
 	};
 	constexpr int32 ModelCount = UE_ARRAY_COUNT(ModelTable);
 
