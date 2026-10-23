@@ -65,6 +65,7 @@ namespace
 	// MannyXR 手扳机按满时食指 / 拇指的弯曲程度（两个指尖刚好碰上）。灵巧手的弯曲程度 1 就是捏合手势，见 SetupDexHand
 	constexpr float MannyPinchIndexCurl = 0.45f;
 	constexpr float MannyPinchThumbCurl = 0.55f;
+	constexpr float DexPinchOtherCurl = 0.3f;
 
 	// 信息牌：Slate 像素 → 厘米。560 像素宽 ≈ 22cm，手边看正合适
 	constexpr float LabelScale = 0.04f;
@@ -544,7 +545,8 @@ void AToyHand::ApplyFingerPose()
 	if (bUseDex)
 	{
 		// 灵巧手：食指、拇指按扳机往捏合手势弯，其余三指按握把往握拳弯（关节角线性插值，见 UToyDexHandRig）
-		DexHand->SetCurls(IndexCurl, ThumbCurl, FingerCurl);
+		// 捏的时候中指、无名指、小指跟着微微弯一点（握拳的 30%），不然直挺挺的像比"OK"
+		DexHand->SetCurls(IndexCurl, ThumbCurl, FMath::Max(FingerCurl, DexPinchOtherCurl * IndexCurl));
 		PokeTip->SetWorldLocation(DexHand->GetTip(UToyDexHandRig::Index, UToyDexHandRig::End));
 		return;
 	}
