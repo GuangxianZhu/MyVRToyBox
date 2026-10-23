@@ -39,7 +39,7 @@ public:
 	bool IsBuilt() const { return bBuilt; }
 
 	/** 显示 / 隐藏所有部件网格。 */
-	void SetHandVisible(bool bVisible);
+	void SetHandVisible(bool bNewVisible);
 
 	/** 按弯曲程度摆手指（见类注释），会更新部件网格的位置。 */
 	void SetCurls(float InIndexCurl, float InThumbCurl, float InOtherCurl);

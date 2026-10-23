@@ -36,7 +36,7 @@ namespace
 		return Json;
 	}
 
-	FVector ReadVector(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
+	FVector ReadRigVector(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
 	{
 		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
 		if (Object.IsValid() && Object->TryGetArrayField(Field, Values) && Values->Num() == 3)
@@ -103,15 +103,15 @@ bool UToyDexHandRig::Build(bool bInLeft)
 		for (int32 K = 0; K < 4; ++K)
 		{
 			const TSharedPtr<FJsonObject> Joint = (*Chain)[K]->AsObject();
-			Joints[Finger][K].Pivot = ReadVector(Joint, TEXT("pivot")) * S;
-			Joints[Finger][K].Axis = bLeft ? -(ReadVector(Joint, TEXT("axis")) * S).GetSafeNormal() : ReadVector(Joint, TEXT("axis")).GetSafeNormal();
+			Joints[Finger][K].Pivot = ReadRigVector(Joint, TEXT("pivot")) * S;
+			Joints[Finger][K].Axis = bLeft ? -(ReadRigVector(Joint, TEXT("axis")) * S).GetSafeNormal() : ReadRigVector(Joint, TEXT("axis")).GetSafeNormal();
 		}
-		Tips[Finger][Pad] = ReadVector(*Tip, TEXT("pad")) * S;
-		Tips[Finger][End] = ReadVector(*Tip, TEXT("end")) * S;
-		Tips[Finger][Core] = ReadVector(*Tip, TEXT("core")) * S;
+		Tips[Finger][Pad] = ReadRigVector(*Tip, TEXT("pad")) * S;
+		Tips[Finger][End] = ReadRigVector(*Tip, TEXT("end")) * S;
+		Tips[Finger][Core] = ReadRigVector(*Tip, TEXT("core")) * S;
 	}
-	Wrist = ReadVector(Rig, TEXT("wrist")) * S;
-	Knuckle = ReadVector(Rig, TEXT("knuckle")) * S;
+	Wrist = ReadRigVector(Rig, TEXT("wrist")) * S;
+	Knuckle = ReadRigVector(Rig, TEXT("knuckle")) * S;
 	PalmCenterY = static_cast<float>(Rig->GetNumberField(TEXT("palm_center_y")));
 
 	// 部件网格：parts.json 里每个零件一个，掌上不动的（M1 电机、掌骨架、背盖、腕部、法兰……）不在 units 里
@@ -173,13 +173,13 @@ bool UToyDexHandRig::Build(bool bInLeft)
 	return bBuilt;
 }
 
-void UToyDexHandRig::SetHandVisible(bool bVisible)
+void UToyDexHandRig::SetHandVisible(bool bNewVisible)
 {
 	for (UStaticMeshComponent* Component : MeshComponents)
 	{
 		if (Component)
 		{
-			Component->SetVisibility(bVisible);
+			Component->SetVisibility(bNewVisible);
 		}
 	}
 }

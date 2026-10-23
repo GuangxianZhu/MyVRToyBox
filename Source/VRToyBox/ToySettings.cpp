@@ -7,7 +7,7 @@ namespace
 {
 	ToySettings::FSettings GSettings;
 
-	const TCHAR* Section = TEXT("ToyBox.Settings");
+	const TCHAR* SettingsSection = TEXT("ToyBox.Settings");
 
 	constexpr float MoveSpeeds[3] = { 100.f, 150.f, 220.f };
 	constexpr float GrabRadii[3] = { 1.5f, 2.f, 3.f };
@@ -107,12 +107,12 @@ void ToySettings::Load()
 		FSettings Settings = GSettings;
 		int32 Value = 0;
 		bool bValue = false;
-		if (GConfig->GetInt(Section, TEXT("Turn"), Value, GGameUserSettingsIni)) Settings.Turn = static_cast<ETurn>(FMath::Clamp(Value, 0, 2));
-		if (GConfig->GetInt(Section, TEXT("MoveSpeed"), Value, GGameUserSettingsIni)) Settings.MoveSpeed = Value;
-		if (GConfig->GetBool(Section, TEXT("Teleport"), bValue, GGameUserSettingsIni)) Settings.bTeleport = bValue;
-		if (GConfig->GetBool(Section, TEXT("PinchBall"), bValue, GGameUserSettingsIni)) Settings.bPinchBall = bValue;
-		if (GConfig->GetInt(Section, TEXT("GrabSize"), Value, GGameUserSettingsIni)) Settings.GrabSize = Value;
-		if (GConfig->GetInt(Section, TEXT("Resolution"), Value, GGameUserSettingsIni)) Settings.Resolution = Value;
+		if (GConfig->GetInt(SettingsSection, TEXT("Turn"), Value, GGameUserSettingsIni)) Settings.Turn = static_cast<ETurn>(FMath::Clamp(Value, 0, 2));
+		if (GConfig->GetInt(SettingsSection, TEXT("MoveSpeed"), Value, GGameUserSettingsIni)) Settings.MoveSpeed = Value;
+		if (GConfig->GetBool(SettingsSection, TEXT("Teleport"), bValue, GGameUserSettingsIni)) Settings.bTeleport = bValue;
+		if (GConfig->GetBool(SettingsSection, TEXT("PinchBall"), bValue, GGameUserSettingsIni)) Settings.bPinchBall = bValue;
+		if (GConfig->GetInt(SettingsSection, TEXT("GrabSize"), Value, GGameUserSettingsIni)) Settings.GrabSize = Value;
+		if (GConfig->GetInt(SettingsSection, TEXT("Resolution"), Value, GGameUserSettingsIni)) Settings.Resolution = Value;
 		Set(Settings);
 	}
 	Apply();
@@ -125,12 +125,12 @@ void ToySettings::Save()
 	{
 		return;
 	}
-	GConfig->SetInt(Section, TEXT("Turn"), static_cast<int32>(GSettings.Turn), GGameUserSettingsIni);
-	GConfig->SetInt(Section, TEXT("MoveSpeed"), GSettings.MoveSpeed, GGameUserSettingsIni);
-	GConfig->SetBool(Section, TEXT("Teleport"), GSettings.bTeleport, GGameUserSettingsIni);
-	GConfig->SetBool(Section, TEXT("PinchBall"), GSettings.bPinchBall, GGameUserSettingsIni);
-	GConfig->SetInt(Section, TEXT("GrabSize"), GSettings.GrabSize, GGameUserSettingsIni);
-	GConfig->SetInt(Section, TEXT("Resolution"), GSettings.Resolution, GGameUserSettingsIni);
+	GConfig->SetInt(SettingsSection, TEXT("Turn"), static_cast<int32>(GSettings.Turn), GGameUserSettingsIni);
+	GConfig->SetInt(SettingsSection, TEXT("MoveSpeed"), GSettings.MoveSpeed, GGameUserSettingsIni);
+	GConfig->SetBool(SettingsSection, TEXT("Teleport"), GSettings.bTeleport, GGameUserSettingsIni);
+	GConfig->SetBool(SettingsSection, TEXT("PinchBall"), GSettings.bPinchBall, GGameUserSettingsIni);
+	GConfig->SetInt(SettingsSection, TEXT("GrabSize"), GSettings.GrabSize, GGameUserSettingsIni);
+	GConfig->SetInt(SettingsSection, TEXT("Resolution"), GSettings.Resolution, GGameUserSettingsIni);
 	GConfig->Flush(false, GGameUserSettingsIni);
 	UE_LOG(LogTemp, Log, TEXT("ToyBox Settings: %s"), *Describe());
 }
