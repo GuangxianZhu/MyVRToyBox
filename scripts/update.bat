@@ -30,20 +30,13 @@ if /i not "%BRANCH%"=="main" (
   echo [更新] main 有新提交，但你现在在分支 %BRANCH% 上，不自动切换
   exit /b 0
 )
-git diff --quiet
-if errorlevel 1 goto :dirty
-git diff --cached --quiet
-if errorlevel 1 goto :dirty
-
+rem 本地有未提交的改动也照样拉：引擎总会往 DefaultEngine.ini 写 AndroidFileServer 段，以前因为它一直不更新。
+rem git 自己会拦住会覆盖本地改动的拉取，所以这样是安全的
 echo [更新] 发现新版本，正在拉取...
 git pull --ff-only origin main
 if errorlevel 1 (
-  echo [更新] 拉取失败，继续用本地版本
+  echo [更新] 拉取失败（可能是本地改动和新版本改了同一个文件），继续用本地版本。处理完改动后再运行 检查更新.bat
   exit /b 0
 )
 echo [更新] 已更新到最新 main
-exit /b 0
-
-:dirty
-echo [更新] main 有新提交，但你有未提交的改动，先不拉取。处理完改动后再运行 检查更新.bat
 exit /b 0
