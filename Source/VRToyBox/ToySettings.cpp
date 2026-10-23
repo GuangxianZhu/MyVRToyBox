@@ -34,6 +34,7 @@ void ToySettings::Set(const FSettings& Settings)
 	GSettings.MoveSpeed = FMath::Clamp(GSettings.MoveSpeed, 0, 2);
 	GSettings.GrabSize = FMath::Clamp(GSettings.GrabSize, 0, 2);
 	GSettings.Resolution = FMath::Clamp(GSettings.Resolution, 0, 2);
+	GSettings.HandModel = FMath::Clamp(GSettings.HandModel, 0, 1);
 	if (GSettings.Turn >= ETurn::Count)
 	{
 		GSettings.Turn = ETurn::Snap45;
@@ -51,6 +52,7 @@ void ToySettings::ToggleTeleport() { GSettings.bTeleport = !GSettings.bTeleport;
 void ToySettings::TogglePinchBall() { GSettings.bPinchBall = !GSettings.bPinchBall; Changed(); }
 void ToySettings::CycleGrabSize() { GSettings.GrabSize = (GSettings.GrabSize + 1) % 3; Changed(); }
 void ToySettings::CycleResolution() { GSettings.Resolution = (GSettings.Resolution + 1) % 3; Changed(); }
+void ToySettings::ToggleHandModel() { GSettings.HandModel = 1 - GSettings.HandModel; Changed(); }
 
 float ToySettings::SnapTurnDegrees()
 {
@@ -86,6 +88,8 @@ FString ToySettings::GrabSizeLabel()
 	return Names[GSettings.GrabSize];
 }
 
+FString ToySettings::HandModelLabel() { return GSettings.HandModel == 1 ? TEXT("ROBOT") : TEXT("UE HAND"); }
+
 FString ToySettings::ResolutionLabel()
 {
 	return FString::Printf(TEXT("%.0f%%"), ScreenPercentage());
@@ -113,6 +117,7 @@ void ToySettings::Load()
 		if (GConfig->GetBool(SettingsSection, TEXT("PinchBall"), bValue, GGameUserSettingsIni)) Settings.bPinchBall = bValue;
 		if (GConfig->GetInt(SettingsSection, TEXT("GrabSize"), Value, GGameUserSettingsIni)) Settings.GrabSize = Value;
 		if (GConfig->GetInt(SettingsSection, TEXT("Resolution"), Value, GGameUserSettingsIni)) Settings.Resolution = Value;
+		if (GConfig->GetInt(SettingsSection, TEXT("HandModel"), Value, GGameUserSettingsIni)) Settings.HandModel = Value;
 		Set(Settings);
 	}
 	Apply();
@@ -131,13 +136,14 @@ void ToySettings::Save()
 	GConfig->SetBool(SettingsSection, TEXT("PinchBall"), GSettings.bPinchBall, GGameUserSettingsIni);
 	GConfig->SetInt(SettingsSection, TEXT("GrabSize"), GSettings.GrabSize, GGameUserSettingsIni);
 	GConfig->SetInt(SettingsSection, TEXT("Resolution"), GSettings.Resolution, GGameUserSettingsIni);
+	GConfig->SetInt(SettingsSection, TEXT("HandModel"), GSettings.HandModel, GGameUserSettingsIni);
 	GConfig->Flush(false, GGameUserSettingsIni);
 	UE_LOG(LogTemp, Log, TEXT("ToyBox Settings: %s"), *Describe());
 }
 
 FString ToySettings::Describe()
 {
-	return FString::Printf(TEXT("Turn=%s Move=%s(%.0f) Teleport=%s PinchBall=%s Grab=%s(%.1fcm) Res=%s"),
+	return FString::Printf(TEXT("Turn=%s Move=%s(%.0f) Teleport=%s PinchBall=%s Grab=%s(%.1fcm) Res=%s Hand=%s"),
 		*TurnLabel(), *MoveSpeedLabel(), MoveSpeedCm(), *TeleportLabel(), *PinchBallLabel(), *GrabSizeLabel(), GrabRadiusCm(),
-		*ResolutionLabel());
+		*ResolutionLabel(), *HandModelLabel());
 }

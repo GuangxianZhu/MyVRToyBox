@@ -20,8 +20,8 @@ class USkeletalMesh;
 class UWidgetComponent;
 
 /**
- * 一只手，挂在动作控制器（握把姿态）上。默认模型是五指灵巧手（Content/Models/DexHand，见 UToyDexHandRig，左手是右手的镜像）；
- * 控制台 toy.HandModel 0 换回 UE VR 模板自带的 MannyXR 手（Content/XRMannequins），左右手各用自己的网格。
+ * 一只手，挂在动作控制器（握把姿态）上。默认模型是 UE VR 模板自带的 MannyXR 手（Content/XRMannequins，左右手各用自己的网格）；
+ * 设置页 HAND MODEL 选 ROBOT（或控制台 toy.HandModel 1）换成五指灵巧手（Content/Models/DexHand，见 UToyDexHandRig，左手是右手的镜像）。
  * 两种手的手指都按手指分组的弯曲程度摆：扳机 → 拇指和食指合拢成"捏"；握把 → 中指、无名指、小指（见 TickCurls / ApplyFingerPose）。
  * MannyXR 不用动画蓝图，而是每帧在"张开"（Idle）和"握拳"（Grasp）两个姿势之间插值；灵巧手按关节表插值关节角。
  * 捏住东西后，拇指和食指各自只弯到指尖碰到物体表面为止（见 ComputeContactCurls，控制台 toy.FingerContact 0 关掉）。
@@ -86,7 +86,7 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<UPoseableMeshComponent> HandMesh;
 
-	/** 五指灵巧手（toy.HandModel 1，默认）。弯曲程度由 ApplyFingerPose 每帧喂进去。 */
+	/** 五指灵巧手（设置页 HAND MODEL = ROBOT）。弯曲程度由 ApplyFingerPose 每帧喂进去。 */
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<UToyDexHandRig> DexHand;
 

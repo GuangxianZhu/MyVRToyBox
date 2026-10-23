@@ -38,8 +38,8 @@ static TAutoConsoleVariable<int32> CVarFingerContact(
 
 static TAutoConsoleVariable<int32> CVarHandModel(
 	TEXT("toy.HandModel"),
-	1,
-	TEXT("玩家的手用哪个模型：1 = 五指灵巧手（Content/Models/DexHand，默认），0 = UE VR 模板的 MannyXR 手。可以随时切换"));
+	-1,
+	TEXT("玩家的手用哪个模型：-1 = 跟设置页的 HAND MODEL 走（默认），0 = UE VR 模板的 MannyXR 手，1 = 五指灵巧手。可以随时切换"));
 
 static TAutoConsoleVariable<float> CVarDexHandScale(
 	TEXT("toy.DexHandScale"),
@@ -61,6 +61,13 @@ namespace
 	const TCHAR* IndexCurlAnimPath = TEXT("/Game/XRMannequins/Animations/A_MannequinsXR_IndexCurl_Right.A_MannequinsXR_IndexCurl_Right");
 	// 拇指：模板里没有"拇指扣下"的动画，只有"竖大拇指"（ThumbUp）。把 ThumbUp 相对张开姿势的转动反过来用，拇指就往掌心扣
 	const TCHAR* ThumbUpAnimPath = TEXT("/Game/XRMannequins/Animations/A_MannequinsXR_ThumbUp_Right.A_MannequinsXR_ThumbUp_Right");
+
+	/** 现在要用的手模型：控制台 toy.HandModel 设了 0 / 1 就听它的，否则听设置页（ToySettings::HandModel）。 */
+	int32 WantedHandModel()
+	{
+		const int32 Override = CVarHandModel.GetValueOnGameThread();
+		return Override >= 0 ? Override : ToySettings::Get().HandModel;
+	}
 
 	// MannyXR 手扳机按满时食指 / 拇指的弯曲程度（两个指尖刚好碰上）。灵巧手的弯曲程度 1 就是捏合手势，见 SetupDexHand
 	constexpr float MannyPinchIndexCurl = 0.45f;
@@ -285,7 +292,7 @@ void AToyHand::InitHand(AToyBoxPawn* InPawn, EControllerHand InSide)
 
 void AToyHand::SetupHandMesh()
 {
-	AppliedHandModel = CVarHandModel.GetValueOnGameThread();
+	AppliedHandModel = WantedHandModel();
 	AppliedDexScale = CVarDexHandScale.GetValueOnGameThread();
 	if (AppliedHandModel == 1 && SetupDexHand())
 	{
@@ -620,8 +627,8 @@ void AToyHand::Tick(float DeltaSeconds)
 
 	RecordMotion();
 
-	// 控制台切换手模型（toy.HandModel / toy.DexHandScale）：重新摆一次
-	if (CVarHandModel.GetValueOnGameThread() != AppliedHandModel || CVarDexHandScale.GetValueOnGameThread() != AppliedDexScale)
+	// 切换手模型（设置页 HAND MODEL、控制台 toy.HandModel / toy.DexHandScale）：重新摆一次
+	if (WantedHandModel() != AppliedHandModel || CVarDexHandScale.GetValueOnGameThread() != AppliedDexScale)
 	{
 		SetupHandMesh();
 	}
