@@ -22,6 +22,7 @@ class UWidgetComponent;
  * 一只手，挂在动作控制器（握把姿态）上。模型用 UE VR 模板自带的 MannyXR 手（Content/XRMannequins），
  * 左右手各用自己的网格；手指不用动画蓝图，而是每帧在"张开"（Idle）和"握拳"（Grasp）两个姿势之间按手指分组插值：
  * 扳机 → 拇指和食指合拢成"捏"；握把 → 中指、无名指、小指（见 TickCurls / ApplyFingerPose）。
+ * 捏住东西后，拇指和食指各自只弯到指尖碰到物体表面为止（见 ComputeContactCurls，控制台 toy.FingerContact 0 关掉）。
  *
  * 抓取只看扳机（像拇指食指捏东西）：扳机过 0.6 捏起、低于 0.4 松开；握把完全不参与抓取。
  * 捏合点处画一个半透明小球（RangeSphere，半径 = GrabRadius）：平时淡白，有东西进范围变绿，捏住后缩小变淡。
@@ -122,6 +123,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float HoldCurl = 0.6f;
 
+	/** 指尖贴表面时把指尖当成这么粗的球（半径，厘米），沿弯曲路径扫过去碰到物体就停，免得指头陷进表面。 */
+	UPROPERTY(EditAnywhere, Category = "ToyBox")
+	float FingerTipRadius = 0.6f;
+
 	/** 现在有没有捏住东西 / 有没有东西在捏合范围里（范围小球的颜色用，调试也用）。 */
 	bool IsPinchHovering() const { return HoveredActor.IsValid(); }
 
@@ -139,6 +144,9 @@ private:
 	void SetupHandMesh();
 	void ApplyFingerPose();
 	FVector GetFingerTip(int32 TipBone, int32 PrevBone) const;
+	FVector FingerTipAtCurl(uint8 Group, float Curl, int32 TipBone, int32 PrevBone) const;
+	float FindContactCurl(uint8 Group, float MaxCurl, int32 TipBone, int32 PrevBone) const;
+	void ComputeContactCurls();
 	void TickPoke();
 	void RecordMotion();
 	FVector GetThrowVelocity() const;
@@ -178,6 +186,10 @@ private:
 	bool bHasPinchAnchor = false;
 	bool bCustomInfo = false;
 	float ThumbCurl = 0.f;
+	/** 捏住东西时拇指 / 食指弯到哪里停（指尖碰到物体表面）。抓起后等吸附滑完算一次，零件挂在手上不动，之后不用再算。 */
+	float ContactIndexCurl = 0.f;
+	float ContactThumbCurl = 0.f;
+	bool bContactPending = false;
 
 	TWeakObjectPtr<AToyBoxPawn> OwnerPawn;
 	EControllerHand Side = EControllerHand::Right;
