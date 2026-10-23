@@ -3,7 +3,7 @@
 在编辑器里跑（命令行由 scripts/import_motor.bat、scripts/import_valve.bat 调用）：
     UnrealEditor-Cmd.exe VRToyBox.uproject -run=pythonscript -script=...
 环境变量：
-    MODEL_NAME           模型名，决定资产目录 /Game/Models/<名字> 和下面 MODELS 里的配置（Motor / Valve / Drone / Lathe / Multimeter / AIServer / OrbBot）
+    MODEL_NAME           模型名，决定资产目录 /Game/Models/<名字> 和下面 MODELS 里的配置（Motor / Valve / Drone / Lathe / Multimeter / AIServer / OrbBot / Engine）
     MODEL_GLB            glb 路径（电机兼容旧的 MOTOR_GLB）
     MODEL_MANIFEST_ONLY  =1 时不重新导入资产，只重写 parts.json（兼容旧的 MOTOR_MANIFEST_ONLY）
 
@@ -169,6 +169,26 @@ MODELS = {
         length_cm=50.0,
         # 模型 +Y 是主眼（Blender 的 -Y），+X 是涡轮发电机那侧，-X 是电子舱
         check={'P49_FrontLens': (0, 1, 0), 'P21_GenStator': (1, 0, 1), 'P46_FlightCtrl': (-1, 0, 1)},
+    ),
+    'Engine': dict(
+        info=dict(
+            title='直列四缸汽油发动机 · 2.0L 自然吸气 DOHC 16 气门（通用原创，不对应具体车型）',
+            body='缸径 86 × 行程 86 · 1998 mL · 正时链条 · 进气道喷射 · 点火顺序 1-3-4-2 · 49 个部件\n'
+                 '装配状态：抓任意位置拿起整台发动机看。点 EXPLODE 按真实拆机顺序拆开：附件和正时往左、排气和飞轮往右、缸盖往后，'
+                 '下半截（油底壳、主轴承梁、曲轴）像抽屉一样往你这边拉出，活塞和连杆从缸孔往上推出。每个部件都能单独抓。',
+        ),
+        named={},
+        units={
+            'base': dict(name_cn='缸体', material='铝合金压铸 + 铸铁缸套',
+                         desc='发动机的骨架。4 个气缸孔、包着气缸的冷却水套、通向各轴承的油道都铸在里面；'
+                              '下半部分是曲轴箱，5 道隔板托住曲轴。拆发动机时它不动，其他部件都从它上面拆下来。'),
+        },
+        rotor=None,
+        # 实物装配后最长的是高度（油底壳底到点火线圈顶约 67cm），桌上展示 60cm（0.89 倍），活塞直径约 7.7cm
+        length_cm=60.0,
+        # glb 在 Blender 里已经左右镜像过：模型 +Y 是进气侧（Blender 的 -Y），-X 是正时端，+X 是飞轮
+        check={'E28_IntakeManifold': (0, 1, 1), 'E31_ExhaustManifold': (0, -1, 1),
+               'E26_TimingCover': (-1, 0, 0), 'E14_Flywheel': (1, 0, 0)},
     ),
 }
 CONFIG = MODELS.get(MODEL, dict(info=dict(title=MODEL, body=''), named={}, units={}, rotor=None, check={}))

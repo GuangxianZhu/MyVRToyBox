@@ -50,7 +50,7 @@ namespace
 	const FLinearColor GreyButton(0.16f, 0.17f, 0.2f);
 	const FLinearColor MoveButton(0.08f, 0.13f, 0.2f);
 
-	/** 七个模型卡片：模型、按钮动作、中文名、英文代号、导入脚本名（scripts/import_*.bat）、颜色。 */
+	/** 模型卡片（一页 7 个，多了翻页）：模型、按钮动作、中文名、英文代号、导入脚本名（scripts/import_*.bat）、颜色。 */
 	struct FToyModelEntry
 	{
 		EToyModelKind Kind;
@@ -69,6 +69,7 @@ namespace
 		{ EToyModelKind::Multimeter, EToyScreenAction::ToggleMultimeter, TEXT("数字万用表"), TEXT("METER"), TEXT("meter"), FLinearColor(0.85f, 0.65f, 0.05f) },
 		{ EToyModelKind::Server, EToyScreenAction::ToggleServer, TEXT("AI 服务器"), TEXT("SERVER"), TEXT("server"), FLinearColor(0.3f, 0.6f, 0.1f) },
 		{ EToyModelKind::Orb, EToyScreenAction::ToggleOrb, TEXT("漂浮机器人"), TEXT("ORB-1"), TEXT("orb"), FLinearColor(0.95f, 0.4f, 0.05f) },
+		{ EToyModelKind::Engine, EToyScreenAction::ToggleEngine, TEXT("四缸发动机"), TEXT("ENGINE"), TEXT("engine"), FLinearColor(0.8f, 0.15f, 0.12f) },
 	};
 	constexpr int32 ModelCount = UE_ARRAY_COUNT(ModelTable);
 

@@ -19,7 +19,8 @@ enum class EToyModelKind : uint8
 	Lathe,
 	Multimeter,
 	Server,
-	Orb
+	Orb,
+	Engine
 };
 
 /**
@@ -156,7 +157,15 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	FString OrbManifest = TEXT("Models/OrbBot/parts.json");
 
-	/** 模型装配状态下最长边的长度（厘米）。模型清单里写了 length_cm 的以清单为准（万用表 40、AI 服务器 55）。 */
+	/** 直列四缸发动机：Yaw 90，进气侧（模型 +Y）朝着玩家，正时端（模型 -X）在左手边、飞轮在右手边。
+	 *  展示尺寸 60cm（装配后最长的是高度）。往远处挪 6cm：拆开后油底壳抽屉往玩家这边拉出约 35cm，正好停在桌子前沿。 */
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<USceneComponent> EngineMount;
+
+	UPROPERTY(EditAnywhere, Category = "ToyBox")
+	FString EngineManifest = TEXT("Models/Engine/parts.json");
+
+	/** 模型装配状态下最长边的长度（厘米）。模型清单里写了 length_cm 的以清单为准（万用表 40、AI 服务器 55、发动机 60）。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float ModelLengthCm = 50.f;
 

@@ -23,6 +23,7 @@ enum class EToyScreenAction : uint8
 	ToggleMultimeter,
 	ToggleServer,
 	ToggleOrb,
+	ToggleEngine,
 	ToggleExplode,
 	ResetParts,
 	MoveNear,

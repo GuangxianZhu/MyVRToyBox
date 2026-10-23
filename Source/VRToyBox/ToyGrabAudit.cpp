@@ -40,11 +40,13 @@ namespace
 				Kinds.Add(EToyModelKind::Server);
 			else if (Arg.Equals(TEXT("Robot"), ESearchCase::IgnoreCase) || Arg.Equals(TEXT("Orb"), ESearchCase::IgnoreCase))
 				Kinds.Add(EToyModelKind::Orb);
+			else if (Arg.Equals(TEXT("Engine"), ESearchCase::IgnoreCase))
+				Kinds.Add(EToyModelKind::Engine);
 			else if (Arg.Equals(TEXT("quit"), ESearchCase::IgnoreCase)) bQuit = true;
 		}
 		if (Kinds.Num() == 0)
 		{
-			Kinds = { EToyModelKind::Motor, EToyModelKind::Valve, EToyModelKind::Drone, EToyModelKind::Lathe, EToyModelKind::Multimeter, EToyModelKind::Server, EToyModelKind::Orb };
+			Kinds = { EToyModelKind::Motor, EToyModelKind::Valve, EToyModelKind::Drone, EToyModelKind::Lathe, EToyModelKind::Multimeter, EToyModelKind::Server, EToyModelKind::Orb, EToyModelKind::Engine };
 		}
 		FActorSpawnParameters Params;
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -56,7 +58,7 @@ namespace
 
 	FAutoConsoleCommandWithWorldAndArgs GrabAuditCommand(
 		TEXT("toy.GrabAudit"),
-		TEXT("自动把爆炸图的每个抓取单元抓一遍并截图到 Saved/GrabAudit/。参数：Motor / Valve / Drone / Lathe / Multimeter / Server / Robot（不写 = 全部），quit = 跑完退出"),
+		TEXT("自动把爆炸图的每个抓取单元抓一遍并截图到 Saved/GrabAudit/。参数：Motor / Valve / Drone / Lathe / Multimeter / Server / Robot / Engine（不写 = 全部），quit = 跑完退出"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&StartAudit));
 
 	FString CsvField(const FString& Text)
