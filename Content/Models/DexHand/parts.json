@@ -1,0 +1,1951 @@
+{
+ "source": "hand_ue.glb",
+ "model": {
+  "title": "五指灵巧手 · 20 自由度直驱（右手，关节布局参考 Wuji Hand 2 公开 URDF，外形原创）",
+  "body": "5 根手指 × 4 个关节 = 20 个直驱电机，没有减速器和连杆，外力推手指电机会跟着转（可反向驱动）· 50 个部件\n装配状态：抓任意位置拿起整只手看（手势是\"放松\"）。点 EXPLODE：法兰、腕部、背盖往后退，掌心硅胶往你这边，五根手指从掌上拔出来、每个关节拉开，电机往手心方向弹出。每个部件都能单独抓。",
+  "explode_scale": 1.0,
+  "length_cm": 50.0
+ },
+ "units": [
+  {
+   "id": "base",
+   "grabbable": false,
+   "name_cn": "掌骨架",
+   "material": "铝合金骨架",
+   "desc": "整只手的骨架。四指和拇指的根部电机、背盖、掌心硅胶、腕部模块都固定在它上面。拆手时它不动。",
+   "grab": null
+  },
+  {
+   "id": "H02_BackCover",
+   "grabbable": true,
+   "name_cn": "背盖",
+   "material": "铝合金背盖 · 3 条散热槽 + 状态灯条",
+   "desc": "盖住掌内走线。三条散热槽给驱动电路散热，灯条显示工作状态。",
+   "grab": {
+    "type": "box",
+    "center": [
+     -0.56,
+     -1.58,
+     6.2
+    ],
+    "extent": [
+     3.41,
+     0.14,
+     3.0
+    ]
+   }
+  },
+  {
+   "id": "H03_PalmSkin",
+   "grabbable": true,
+   "name_cn": "掌心硅胶",
+   "material": "硅胶软皮 + 大鱼际垫 + 小鱼际垫",
+   "desc": "一层软皮加大鱼际、小鱼际两块凸起。抓东西时变形贴合，增加接触面积和摩擦。",
+   "grab": {
+    "type": "box",
+    "center": [
+     -0.56,
+     1.09,
+     6.21
+    ],
+    "extent": [
+     3.47,
+     0.17,
+     3.05
+    ]
+   }
+  },
+  {
+   "id": "H04_Wrist",
+   "grabbable": true,
+   "name_cn": "腕部模块",
+   "material": "铝合金壳体 · 驱动板 / 主控 / IMU · 以太网 + 电源接口",
+   "desc": "放驱动板、主控和 IMU。20 个关节电机的线都汇到这里，背面是以太网/电源接口和状态灯。",
+   "grab": {
+    "type": "box",
+    "center": [
+     0.0,
+     0.0,
+     1.68
+    ],
+    "extent": [
+     3.0,
+     1.9,
+     1.18
+    ]
+   }
+  },
+  {
+   "id": "H05_Flange",
+   "grabbable": true,
+   "name_cn": "法兰",
+   "material": "铝合金法兰 Ø52 + 定位止口 + M4 螺钉 ×4",
+   "desc": "把手装到机械臂末端。中间的止口负责定心，4 颗 M4 螺钉固定。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     0.15
+    ],
+    "segments": [
+     [
+      -0.35,
+      0.35,
+      2.6
+     ]
+    ]
+   }
+  },
+  {
+   "id": "H06_Thumb_M1",
+   "grabbable": true,
+   "name_cn": "拇指 · J1 根部屈伸电机",
+   "material": "直驱无刷电机 Ø18 · 铝合金定子壳 + 橙色输出环 + 黑色端盖",
+   "desc": "拇指根部第一个关节。拇指的 J1、J2 两个轴互相垂直，像一个万向节，决定拇指能不能转到四指对面去（对掌）。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H07_Thumb_Yoke",
+   "grabbable": true,
+   "name_cn": "拇指 · 指根轭架",
+   "material": "铝合金 CNC",
+   "desc": "J1 的输出件：J1 转动时带着它一起转，上面横着装 J2 侧摆电机。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H08_Thumb_M2",
+   "grabbable": true,
+   "name_cn": "拇指 · J2 侧摆电机",
+   "material": "直驱无刷电机 Ø12 · 铝合金定子壳 + 橙色输出环",
+   "desc": "拇指根部第二个关节，让拇指在手掌平面内外摆动。和 J1 配合，拇指指腹才能正对食指指腹。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H09_Thumb_Proximal",
+   "grabbable": true,
+   "name_cn": "拇指 · 近节指骨",
+   "material": "铝合金指骨 + 硅胶指节垫 + 指背盖板 + M1.6 螺钉 ×4",
+   "desc": "相当于人手的第一掌骨，所以比其他手指的近节短，也更粗。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H10_Thumb_M3",
+   "grabbable": true,
+   "name_cn": "拇指 · J3 中节屈伸电机",
+   "material": "直驱无刷电机 Ø13 · 铝合金定子壳 + 橙色输出环",
+   "desc": "直驱关节：电机转子直接带动下一节，没有减速齿轮和连杆。好处是能反向驱动：外力推手指，电机跟着转，从电流就能估出受力。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H11_Thumb_Middle",
+   "grabbable": true,
+   "name_cn": "拇指 · 中节指骨",
+   "material": "铝合金指骨 + 硅胶指节垫 + 指背盖板 + M1.6 螺钉 ×4",
+   "desc": "第二节指骨，结构和近节一样，只是更短更窄。",
+   "grab": {
+    "type": "box",
+    "center": [
+     5.82,
+     4.1,
+     7.96
+    ],
+    "extent": [
+     0.85,
+     0.88,
+     1.3
+    ]
+   }
+  },
+  {
+   "id": "H12_Thumb_M4",
+   "grabbable": true,
+   "name_cn": "拇指 · J4 远节屈伸电机",
+   "material": "直驱无刷电机 Ø11 · 铝合金定子壳 + 橙色输出环",
+   "desc": "最小的关节电机（Ø11）。人手的远端关节通常和中间关节联动，这里单独一个电机，所以能独立控制。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H13_Thumb_Distal",
+   "grabbable": true,
+   "name_cn": "拇指 · 远节指骨",
+   "material": "铝合金指骨，末端圆头",
+   "desc": "最后一节，末端做成圆头，外面包着指腹。",
+   "grab": {
+    "type": "box",
+    "center": [
+     7.22,
+     5.47,
+     10.5
+    ],
+    "extent": [
+     0.74,
+     0.81,
+     1.33
+    ]
+   }
+  },
+  {
+   "id": "H14_Thumb_Tip",
+   "grabbable": true,
+   "name_cn": "拇指 · 指尖力传感器",
+   "material": "多轴力传感器 + 硅胶指尖套",
+   "desc": "黑色的一圈是多轴力传感器，夹在指骨和硅胶指尖套之间，测接触力的大小和方向。指尖套像顶针一样包住指尖，负责防滑和缓冲，捏东西时总是软的先接触。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H15_Index_M1",
+   "grabbable": true,
+   "name_cn": "食指 · J1 根部屈伸电机",
+   "material": "直驱无刷电机 Ø18 · 铝合金定子壳 + 橙色输出环 + 黑色端盖",
+   "desc": "最大的关节电机（Ø18）。整根手指往手心弯靠它，要扛整根手指的力矩，所以最粗。定子固定在掌里，转子带动指根轭架。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H16_Index_Yoke",
+   "grabbable": true,
+   "name_cn": "食指 · 指根轭架",
+   "material": "铝合金 CNC",
+   "desc": "J1 的输出件：J1 转动时带着它一起转，上面横着装 J2 侧摆电机。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H17_Index_M2",
+   "grabbable": true,
+   "name_cn": "食指 · J2 侧摆电机",
+   "material": "直驱无刷电机 Ø12 · 铝合金定子壳 + 橙色输出环",
+   "desc": "轴线垂直于手掌，让手指左右张开、并拢（±40°）。它装在 J1 后面，所以手指弯下去以后，侧摆方向也跟着转。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H18_Index_Proximal",
+   "grabbable": true,
+   "name_cn": "食指 · 近节指骨",
+   "material": "铝合金指骨 + 硅胶指节垫 + 指背盖板 + M1.6 螺钉 ×4",
+   "desc": "第一节指骨。手心一侧在两端做了斜切，弯到 90° 也不会和前一节相撞；中间贴一块硅胶指节垫。",
+   "grab": {
+    "type": "box",
+    "center": [
+     3.07,
+     0.04,
+     13.3
+    ],
+    "extent": [
+     0.74,
+     0.84,
+     1.49
+    ]
+   }
+  },
+  {
+   "id": "H19_Index_M3",
+   "grabbable": true,
+   "name_cn": "食指 · J3 中节屈伸电机",
+   "material": "直驱无刷电机 Ø13 · 铝合金定子壳 + 橙色输出环",
+   "desc": "直驱关节：电机转子直接带动下一节，没有减速齿轮和连杆。好处是能反向驱动：外力推手指，电机跟着转，从电流就能估出受力。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H20_Index_Middle",
+   "grabbable": true,
+   "name_cn": "食指 · 中节指骨",
+   "material": "铝合金指骨 + 硅胶指节垫 + 指背盖板 + M1.6 螺钉 ×4",
+   "desc": "第二节指骨，结构和近节一样，只是更短更窄。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H21_Index_M4",
+   "grabbable": true,
+   "name_cn": "食指 · J4 远节屈伸电机",
+   "material": "直驱无刷电机 Ø11 · 铝合金定子壳 + 橙色输出环",
+   "desc": "最小的关节电机（Ø11）。人手的远端关节通常和中间关节联动，这里单独一个电机，所以能独立控制。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H22_Index_Distal",
+   "grabbable": true,
+   "name_cn": "食指 · 远节指骨",
+   "material": "铝合金指骨，末端圆头",
+   "desc": "最后一节，末端做成圆头，外面包着指腹。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H23_Index_Tip",
+   "grabbable": true,
+   "name_cn": "食指 · 指尖力传感器",
+   "material": "多轴力传感器 + 硅胶指尖套",
+   "desc": "黑色的一圈是多轴力传感器，夹在指骨和硅胶指尖套之间，测接触力的大小和方向。指尖套像顶针一样包住指尖，负责防滑和缓冲，捏东西时总是软的先接触。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H24_Middle_M1",
+   "grabbable": true,
+   "name_cn": "中指 · J1 根部屈伸电机",
+   "material": "直驱无刷电机 Ø18 · 铝合金定子壳 + 橙色输出环 + 黑色端盖",
+   "desc": "最大的关节电机（Ø18）。整根手指往手心弯靠它，要扛整根手指的力矩，所以最粗。定子固定在掌里，转子带动指根轭架。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H25_Middle_Yoke",
+   "grabbable": true,
+   "name_cn": "中指 · 指根轭架",
+   "material": "铝合金 CNC",
+   "desc": "J1 的输出件：J1 转动时带着它一起转，上面横着装 J2 侧摆电机。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H26_Middle_M2",
+   "grabbable": true,
+   "name_cn": "中指 · J2 侧摆电机",
+   "material": "直驱无刷电机 Ø12 · 铝合金定子壳 + 橙色输出环",
+   "desc": "轴线垂直于手掌，让手指左右张开、并拢（±40°）。它装在 J1 后面，所以手指弯下去以后，侧摆方向也跟着转。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H27_Middle_Proximal",
+   "grabbable": true,
+   "name_cn": "中指 · 近节指骨",
+   "material": "铝合金指骨 + 硅胶指节垫 + 指背盖板 + M1.6 螺钉 ×4",
+   "desc": "第一节指骨。手心一侧在两端做了斜切，弯到 90° 也不会和前一节相撞；中间贴一块硅胶指节垫。",
+   "grab": {
+    "type": "box",
+    "center": [
+     0.41,
+     -0.48,
+     13.82
+    ],
+    "extent": [
+     0.73,
+     0.83,
+     1.47
+    ]
+   }
+  },
+  {
+   "id": "H28_Middle_M3",
+   "grabbable": true,
+   "name_cn": "中指 · J3 中节屈伸电机",
+   "material": "直驱无刷电机 Ø13 · 铝合金定子壳 + 橙色输出环",
+   "desc": "直驱关节：电机转子直接带动下一节，没有减速齿轮和连杆。好处是能反向驱动：外力推手指，电机跟着转，从电流就能估出受力。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H29_Middle_Middle",
+   "grabbable": true,
+   "name_cn": "中指 · 中节指骨",
+   "material": "铝合金指骨 + 硅胶指节垫 + 指背盖板 + M1.6 螺钉 ×4",
+   "desc": "第二节指骨，结构和近节一样，只是更短更窄。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H30_Middle_M4",
+   "grabbable": true,
+   "name_cn": "中指 · J4 远节屈伸电机",
+   "material": "直驱无刷电机 Ø11 · 铝合金定子壳 + 橙色输出环",
+   "desc": "最小的关节电机（Ø11）。人手的远端关节通常和中间关节联动，这里单独一个电机，所以能独立控制。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H31_Middle_Distal",
+   "grabbable": true,
+   "name_cn": "中指 · 远节指骨",
+   "material": "铝合金指骨，末端圆头",
+   "desc": "最后一节，末端做成圆头，外面包着指腹。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H32_Middle_Tip",
+   "grabbable": true,
+   "name_cn": "中指 · 指尖力传感器",
+   "material": "多轴力传感器 + 硅胶指尖套",
+   "desc": "黑色的一圈是多轴力传感器，夹在指骨和硅胶指尖套之间，测接触力的大小和方向。指尖套像顶针一样包住指尖，负责防滑和缓冲，捏东西时总是软的先接触。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H33_Ring_M1",
+   "grabbable": true,
+   "name_cn": "无名指 · J1 根部屈伸电机",
+   "material": "直驱无刷电机 Ø18 · 铝合金定子壳 + 橙色输出环 + 黑色端盖",
+   "desc": "最大的关节电机（Ø18）。整根手指往手心弯靠它，要扛整根手指的力矩，所以最粗。定子固定在掌里，转子带动指根轭架。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H34_Ring_Yoke",
+   "grabbable": true,
+   "name_cn": "无名指 · 指根轭架",
+   "material": "铝合金 CNC",
+   "desc": "J1 的输出件：J1 转动时带着它一起转，上面横着装 J2 侧摆电机。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H35_Ring_M2",
+   "grabbable": true,
+   "name_cn": "无名指 · J2 侧摆电机",
+   "material": "直驱无刷电机 Ø12 · 铝合金定子壳 + 橙色输出环",
+   "desc": "轴线垂直于手掌，让手指左右张开、并拢（±40°）。它装在 J1 后面，所以手指弯下去以后，侧摆方向也跟着转。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H36_Ring_Proximal",
+   "grabbable": true,
+   "name_cn": "无名指 · 近节指骨",
+   "material": "铝合金指骨 + 硅胶指节垫 + 指背盖板 + M1.6 螺钉 ×4",
+   "desc": "第一节指骨。手心一侧在两端做了斜切，弯到 90° 也不会和前一节相撞；中间贴一块硅胶指节垫。",
+   "grab": {
+    "type": "box",
+    "center": [
+     -2.13,
+     -0.12,
+     13.02
+    ],
+    "extent": [
+     0.71,
+     0.81,
+     1.49
+    ]
+   }
+  },
+  {
+   "id": "H37_Ring_M3",
+   "grabbable": true,
+   "name_cn": "无名指 · J3 中节屈伸电机",
+   "material": "直驱无刷电机 Ø13 · 铝合金定子壳 + 橙色输出环",
+   "desc": "直驱关节：电机转子直接带动下一节，没有减速齿轮和连杆。好处是能反向驱动：外力推手指，电机跟着转，从电流就能估出受力。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H38_Ring_Middle",
+   "grabbable": true,
+   "name_cn": "无名指 · 中节指骨",
+   "material": "铝合金指骨 + 硅胶指节垫 + 指背盖板 + M1.6 螺钉 ×4",
+   "desc": "第二节指骨，结构和近节一样，只是更短更窄。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H39_Ring_M4",
+   "grabbable": true,
+   "name_cn": "无名指 · J4 远节屈伸电机",
+   "material": "直驱无刷电机 Ø11 · 铝合金定子壳 + 橙色输出环",
+   "desc": "最小的关节电机（Ø11）。人手的远端关节通常和中间关节联动，这里单独一个电机，所以能独立控制。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H40_Ring_Distal",
+   "grabbable": true,
+   "name_cn": "无名指 · 远节指骨",
+   "material": "铝合金指骨，末端圆头",
+   "desc": "最后一节，末端做成圆头，外面包着指腹。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H41_Ring_Tip",
+   "grabbable": true,
+   "name_cn": "无名指 · 指尖力传感器",
+   "material": "多轴力传感器 + 硅胶指尖套",
+   "desc": "黑色的一圈是多轴力传感器，夹在指骨和硅胶指尖套之间，测接触力的大小和方向。指尖套像顶针一样包住指尖，负责防滑和缓冲，捏东西时总是软的先接触。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H42_Little_M1",
+   "grabbable": true,
+   "name_cn": "小指 · J1 根部屈伸电机",
+   "material": "直驱无刷电机 Ø18 · 铝合金定子壳 + 橙色输出环 + 黑色端盖",
+   "desc": "最大的关节电机（Ø18）。整根手指往手心弯靠它，要扛整根手指的力矩，所以最粗。定子固定在掌里，转子带动指根轭架。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H43_Little_Yoke",
+   "grabbable": true,
+   "name_cn": "小指 · 指根轭架",
+   "material": "铝合金 CNC",
+   "desc": "J1 的输出件：J1 转动时带着它一起转，上面横着装 J2 侧摆电机。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H44_Little_M2",
+   "grabbable": true,
+   "name_cn": "小指 · J2 侧摆电机",
+   "material": "直驱无刷电机 Ø12 · 铝合金定子壳 + 橙色输出环",
+   "desc": "轴线垂直于手掌，让手指左右张开、并拢（±40°）。它装在 J1 后面，所以手指弯下去以后，侧摆方向也跟着转。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H45_Little_Proximal",
+   "grabbable": true,
+   "name_cn": "小指 · 近节指骨",
+   "material": "铝合金指骨 + 硅胶指节垫 + 指背盖板 + M1.6 螺钉 ×4",
+   "desc": "第一节指骨。手心一侧在两端做了斜切，弯到 90° 也不会和前一节相撞；中间贴一块硅胶指节垫。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H46_Little_M3",
+   "grabbable": true,
+   "name_cn": "小指 · J3 中节屈伸电机",
+   "material": "直驱无刷电机 Ø13 · 铝合金定子壳 + 橙色输出环",
+   "desc": "直驱关节：电机转子直接带动下一节，没有减速齿轮和连杆。好处是能反向驱动：外力推手指，电机跟着转，从电流就能估出受力。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H47_Little_Middle",
+   "grabbable": true,
+   "name_cn": "小指 · 中节指骨",
+   "material": "铝合金指骨 + 硅胶指节垫 + 指背盖板 + M1.6 螺钉 ×4",
+   "desc": "第二节指骨，结构和近节一样，只是更短更窄。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H48_Little_M4",
+   "grabbable": true,
+   "name_cn": "小指 · J4 远节屈伸电机",
+   "material": "直驱无刷电机 Ø11 · 铝合金定子壳 + 橙色输出环",
+   "desc": "最小的关节电机（Ø11）。人手的远端关节通常和中间关节联动，这里单独一个电机，所以能独立控制。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H49_Little_Distal",
+   "grabbable": true,
+   "name_cn": "小指 · 远节指骨",
+   "material": "铝合金指骨，末端圆头",
+   "desc": "最后一节，末端做成圆头，外面包着指腹。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "H50_Little_Tip",
+   "grabbable": true,
+   "name_cn": "小指 · 指尖力传感器",
+   "material": "多轴力传感器 + 硅胶指尖套",
+   "desc": "黑色的一圈是多轴力传感器，夹在指骨和硅胶指尖套之间，测接触力的大小和方向。指尖套像顶针一样包住指尖，负责防滑和缓冲，捏东西时总是软的先接触。",
+   "grab": {
+    "type": "pinch"
+   }
+  }
+ ],
+ "parts": [
+  {
+   "name": "H01_PalmFrame",
+   "name_cn": "掌骨架",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H01_PalmFrame.H01_PalmFrame",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "H02_BackCover",
+   "name_cn": "背盖",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H02_BackCover.H02_BackCover",
+   "spin": 0,
+   "unit": "H02_BackCover",
+   "ex": [
+    [
+     0.0,
+     -4.5,
+     0.0,
+     0.16
+    ]
+   ]
+  },
+  {
+   "name": "H03_PalmSkin",
+   "name_cn": "掌心硅胶",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H03_PalmSkin.H03_PalmSkin",
+   "spin": 0,
+   "unit": "H03_PalmSkin",
+   "ex": [
+    [
+     0.0,
+     4.0,
+     0.0,
+     0.24
+    ]
+   ]
+  },
+  {
+   "name": "H04_Wrist",
+   "name_cn": "腕部模块",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H04_Wrist.H04_Wrist",
+   "spin": 0,
+   "unit": "H04_Wrist",
+   "ex": [
+    [
+     0.0,
+     -5.5,
+     0.0,
+     0.08
+    ]
+   ]
+  },
+  {
+   "name": "H05_Flange",
+   "name_cn": "法兰",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H05_Flange.H05_Flange",
+   "spin": 0,
+   "unit": "H05_Flange",
+   "ex": [
+    [
+     0.0,
+     -11.0,
+     0.0,
+     0.0
+    ]
+   ]
+  },
+  {
+   "name": "H06_Thumb_M1",
+   "name_cn": "拇指 · J1 根部屈伸电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H06_Thumb_M1.H06_Thumb_M1",
+   "spin": 0,
+   "unit": "H06_Thumb_M1",
+   "ex": [
+    [
+     4.696000000000001,
+     1.675,
+     -0.375,
+     0.32
+    ],
+    [
+     -0.6150000000000001,
+     1.991,
+     1.191,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H07_Thumb_Yoke",
+   "name_cn": "拇指 · 指根轭架",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H07_Thumb_Yoke.H07_Thumb_Yoke",
+   "spin": 0,
+   "unit": "H07_Thumb_Yoke",
+   "ex": [
+    [
+     4.696000000000001,
+     1.675,
+     -0.375,
+     0.32
+    ]
+   ]
+  },
+  {
+   "name": "H08_Thumb_M2",
+   "name_cn": "拇指 · J2 侧摆电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H08_Thumb_M2.H08_Thumb_M2",
+   "spin": 0,
+   "unit": "H08_Thumb_M2",
+   "ex": [
+    [
+     4.696000000000001,
+     1.675,
+     -0.375,
+     0.32
+    ],
+    [
+     1.529,
+     1.2650000000000001,
+     0.25,
+     0.5
+    ],
+    [
+     -1.765,
+     1.369,
+     0.878,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H09_Thumb_Proximal",
+   "name_cn": "拇指 · 近节指骨",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H09_Thumb_Proximal.H09_Thumb_Proximal",
+   "spin": 0,
+   "unit": "H09_Thumb_Proximal",
+   "ex": [
+    [
+     4.696000000000001,
+     1.675,
+     -0.375,
+     0.32
+    ],
+    [
+     1.529,
+     1.2650000000000001,
+     0.25,
+     0.5
+    ]
+   ]
+  },
+  {
+   "name": "H10_Thumb_M3",
+   "name_cn": "拇指 · J3 中节屈伸电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H10_Thumb_M3.H10_Thumb_M3",
+   "spin": 0,
+   "unit": "H10_Thumb_M3",
+   "ex": [
+    [
+     4.696000000000001,
+     1.675,
+     -0.375,
+     0.32
+    ],
+    [
+     1.529,
+     1.2650000000000001,
+     0.25,
+     0.5
+    ],
+    [
+     1.585,
+     1.159,
+     1.3800000000000001,
+     0.58
+    ],
+    [
+     -1.6840000000000002,
+     0.298,
+     1.6840000000000002,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H11_Thumb_Middle",
+   "name_cn": "拇指 · 中节指骨",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H11_Thumb_Middle.H11_Thumb_Middle",
+   "spin": 0,
+   "unit": "H11_Thumb_Middle",
+   "ex": [
+    [
+     4.696000000000001,
+     1.675,
+     -0.375,
+     0.32
+    ],
+    [
+     1.529,
+     1.2650000000000001,
+     0.25,
+     0.5
+    ],
+    [
+     1.585,
+     1.159,
+     1.3800000000000001,
+     0.58
+    ]
+   ]
+  },
+  {
+   "name": "H12_Thumb_M4",
+   "name_cn": "拇指 · J4 远节屈伸电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H12_Thumb_M4.H12_Thumb_M4",
+   "spin": 0,
+   "unit": "H12_Thumb_M4",
+   "ex": [
+    [
+     4.696000000000001,
+     1.675,
+     -0.375,
+     0.32
+    ],
+    [
+     1.529,
+     1.2650000000000001,
+     0.25,
+     0.5
+    ],
+    [
+     1.585,
+     1.159,
+     1.3800000000000001,
+     0.58
+    ],
+    [
+     1.0710000000000002,
+     1.018,
+     1.891,
+     0.66
+    ],
+    [
+     -2.088,
+     0.0,
+     1.183,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H13_Thumb_Distal",
+   "name_cn": "拇指 · 远节指骨",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H13_Thumb_Distal.H13_Thumb_Distal",
+   "spin": 0,
+   "unit": "H13_Thumb_Distal",
+   "ex": [
+    [
+     4.696000000000001,
+     1.675,
+     -0.375,
+     0.32
+    ],
+    [
+     1.529,
+     1.2650000000000001,
+     0.25,
+     0.5
+    ],
+    [
+     1.585,
+     1.159,
+     1.3800000000000001,
+     0.58
+    ],
+    [
+     1.0710000000000002,
+     1.018,
+     1.891,
+     0.66
+    ]
+   ]
+  },
+  {
+   "name": "H14_Thumb_Tip",
+   "name_cn": "拇指 · 指尖力传感器",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H14_Thumb_Tip.H14_Thumb_Tip",
+   "spin": 0,
+   "unit": "H14_Thumb_Tip",
+   "ex": [
+    [
+     4.696000000000001,
+     1.675,
+     -0.375,
+     0.32
+    ],
+    [
+     1.529,
+     1.2650000000000001,
+     0.25,
+     0.5
+    ],
+    [
+     1.585,
+     1.159,
+     1.3800000000000001,
+     0.58
+    ],
+    [
+     1.0710000000000002,
+     1.018,
+     1.891,
+     0.66
+    ],
+    [
+     0.9140000000000001,
+     0.933,
+     1.77,
+     0.86
+    ]
+   ]
+  },
+  {
+   "name": "H15_Index_M1",
+   "name_cn": "食指 · J1 根部屈伸电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H15_Index_M1.H15_Index_M1",
+   "spin": 0,
+   "unit": "H15_Index_M1",
+   "ex": [
+    [
+     0.859,
+     -0.13,
+     4.924,
+     0.35
+    ],
+    [
+     -0.22400000000000003,
+     2.387,
+     0.10200000000000001,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H16_Index_Yoke",
+   "name_cn": "食指 · 指根轭架",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H16_Index_Yoke.H16_Index_Yoke",
+   "spin": 0,
+   "unit": "H16_Index_Yoke",
+   "ex": [
+    [
+     0.859,
+     -0.13,
+     4.924,
+     0.35
+    ]
+   ]
+  },
+  {
+   "name": "H17_Index_M2",
+   "name_cn": "食指 · J2 侧摆电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H17_Index_M2.H17_Index_M2",
+   "spin": 0,
+   "unit": "H17_Index_M2",
+   "ex": [
+    [
+     0.859,
+     -0.13,
+     4.924,
+     0.35
+    ],
+    [
+     0.32200000000000006,
+     0.15600000000000003,
+     1.968,
+     0.5
+    ],
+    [
+     -0.266,
+     2.381,
+     -0.146,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H18_Index_Proximal",
+   "name_cn": "食指 · 近节指骨",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H18_Index_Proximal.H18_Index_Proximal",
+   "spin": 0,
+   "unit": "H18_Index_Proximal",
+   "ex": [
+    [
+     0.859,
+     -0.13,
+     4.924,
+     0.35
+    ],
+    [
+     0.32200000000000006,
+     0.15600000000000003,
+     1.968,
+     0.5
+    ]
+   ]
+  },
+  {
+   "name": "H19_Index_M3",
+   "name_cn": "食指 · J3 中节屈伸电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H19_Index_M3.H19_Index_M3",
+   "spin": 0,
+   "unit": "H19_Index_M3",
+   "ex": [
+    [
+     0.859,
+     -0.13,
+     4.924,
+     0.35
+    ],
+    [
+     0.32200000000000006,
+     0.15600000000000003,
+     1.968,
+     0.5
+    ],
+    [
+     0.387,
+     0.188,
+     2.361,
+     0.58
+    ],
+    [
+     -0.266,
+     2.381,
+     -0.146,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H20_Index_Middle",
+   "name_cn": "食指 · 中节指骨",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H20_Index_Middle.H20_Index_Middle",
+   "spin": 0,
+   "unit": "H20_Index_Middle",
+   "ex": [
+    [
+     0.859,
+     -0.13,
+     4.924,
+     0.35
+    ],
+    [
+     0.32200000000000006,
+     0.15600000000000003,
+     1.968,
+     0.5
+    ],
+    [
+     0.387,
+     0.188,
+     2.361,
+     0.58
+    ]
+   ]
+  },
+  {
+   "name": "H21_Index_M4",
+   "name_cn": "食指 · J4 远节屈伸电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H21_Index_M4.H21_Index_M4",
+   "spin": 0,
+   "unit": "H21_Index_M4",
+   "ex": [
+    [
+     0.859,
+     -0.13,
+     4.924,
+     0.35
+    ],
+    [
+     0.32200000000000006,
+     0.15600000000000003,
+     1.968,
+     0.5
+    ],
+    [
+     0.387,
+     0.188,
+     2.361,
+     0.58
+    ],
+    [
+     0.323,
+     0.679,
+     2.279,
+     0.66
+    ],
+    [
+     -0.341,
+     2.29,
+     -0.633,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H22_Index_Distal",
+   "name_cn": "食指 · 远节指骨",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H22_Index_Distal.H22_Index_Distal",
+   "spin": 0,
+   "unit": "H22_Index_Distal",
+   "ex": [
+    [
+     0.859,
+     -0.13,
+     4.924,
+     0.35
+    ],
+    [
+     0.32200000000000006,
+     0.15600000000000003,
+     1.968,
+     0.5
+    ],
+    [
+     0.387,
+     0.188,
+     2.361,
+     0.58
+    ],
+    [
+     0.323,
+     0.679,
+     2.279,
+     0.66
+    ]
+   ]
+  },
+  {
+   "name": "H23_Index_Tip",
+   "name_cn": "食指 · 指尖力传感器",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H23_Index_Tip.H23_Index_Tip",
+   "spin": 0,
+   "unit": "H23_Index_Tip",
+   "ex": [
+    [
+     0.859,
+     -0.13,
+     4.924,
+     0.35
+    ],
+    [
+     0.32200000000000006,
+     0.15600000000000003,
+     1.968,
+     0.5
+    ],
+    [
+     0.387,
+     0.188,
+     2.361,
+     0.58
+    ],
+    [
+     0.323,
+     0.679,
+     2.279,
+     0.66
+    ],
+    [
+     0.262,
+     0.8380000000000001,
+     2.0170000000000003,
+     0.86
+    ]
+   ]
+  },
+  {
+   "name": "H24_Middle_M1",
+   "name_cn": "中指 · J1 根部屈伸电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H24_Middle_M1.H24_Middle_M1",
+   "spin": 0,
+   "unit": "H24_Middle_M1",
+   "ex": [
+    [
+     0.10700000000000001,
+     -0.169,
+     4.996,
+     0.38
+    ],
+    [
+     0.003,
+     2.399,
+     0.08100000000000002,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H25_Middle_Yoke",
+   "name_cn": "中指 · 指根轭架",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H25_Middle_Yoke.H25_Middle_Yoke",
+   "spin": 0,
+   "unit": "H25_Middle_Yoke",
+   "ex": [
+    [
+     0.10700000000000001,
+     -0.169,
+     4.996,
+     0.38
+    ]
+   ]
+  },
+  {
+   "name": "H26_Middle_M2",
+   "name_cn": "中指 · J2 侧摆电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H26_Middle_M2.H26_Middle_M2",
+   "spin": 0,
+   "unit": "H26_Middle_M2",
+   "ex": [
+    [
+     0.10700000000000001,
+     -0.169,
+     4.996,
+     0.38
+    ],
+    [
+     0.043000000000000003,
+     0.142,
+     1.995,
+     0.5
+    ],
+    [
+     -0.002,
+     2.394,
+     -0.17,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H27_Middle_Proximal",
+   "name_cn": "中指 · 近节指骨",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H27_Middle_Proximal.H27_Middle_Proximal",
+   "spin": 0,
+   "unit": "H27_Middle_Proximal",
+   "ex": [
+    [
+     0.10700000000000001,
+     -0.169,
+     4.996,
+     0.38
+    ],
+    [
+     0.043000000000000003,
+     0.142,
+     1.995,
+     0.5
+    ]
+   ]
+  },
+  {
+   "name": "H28_Middle_M3",
+   "name_cn": "中指 · J3 中节屈伸电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H28_Middle_M3.H28_Middle_M3",
+   "spin": 0,
+   "unit": "H28_Middle_M3",
+   "ex": [
+    [
+     0.10700000000000001,
+     -0.169,
+     4.996,
+     0.38
+    ],
+    [
+     0.043000000000000003,
+     0.142,
+     1.995,
+     0.5
+    ],
+    [
+     0.051000000000000004,
+     0.17,
+     2.3930000000000002,
+     0.58
+    ],
+    [
+     -0.002,
+     2.394,
+     -0.17,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H29_Middle_Middle",
+   "name_cn": "中指 · 中节指骨",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H29_Middle_Middle.H29_Middle_Middle",
+   "spin": 0,
+   "unit": "H29_Middle_Middle",
+   "ex": [
+    [
+     0.10700000000000001,
+     -0.169,
+     4.996,
+     0.38
+    ],
+    [
+     0.043000000000000003,
+     0.142,
+     1.995,
+     0.5
+    ],
+    [
+     0.051000000000000004,
+     0.17,
+     2.3930000000000002,
+     0.58
+    ]
+   ]
+  },
+  {
+   "name": "H30_Middle_M4",
+   "name_cn": "中指 · J4 远节屈伸电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H30_Middle_M4.H30_Middle_M4",
+   "spin": 0,
+   "unit": "H30_Middle_M4",
+   "ex": [
+    [
+     0.10700000000000001,
+     -0.169,
+     4.996,
+     0.38
+    ],
+    [
+     0.043000000000000003,
+     0.142,
+     1.995,
+     0.5
+    ],
+    [
+     0.051000000000000004,
+     0.17,
+     2.3930000000000002,
+     0.58
+    ],
+    [
+     0.05,
+     0.664,
+     2.306,
+     0.66
+    ],
+    [
+     -0.013000000000000001,
+     2.306,
+     -0.664,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H31_Middle_Distal",
+   "name_cn": "中指 · 远节指骨",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H31_Middle_Distal.H31_Middle_Distal",
+   "spin": 0,
+   "unit": "H31_Middle_Distal",
+   "ex": [
+    [
+     0.10700000000000001,
+     -0.169,
+     4.996,
+     0.38
+    ],
+    [
+     0.043000000000000003,
+     0.142,
+     1.995,
+     0.5
+    ],
+    [
+     0.051000000000000004,
+     0.17,
+     2.3930000000000002,
+     0.58
+    ],
+    [
+     0.05,
+     0.664,
+     2.306,
+     0.66
+    ]
+   ]
+  },
+  {
+   "name": "H32_Middle_Tip",
+   "name_cn": "中指 · 指尖力传感器",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H32_Middle_Tip.H32_Middle_Tip",
+   "spin": 0,
+   "unit": "H32_Middle_Tip",
+   "ex": [
+    [
+     0.10700000000000001,
+     -0.169,
+     4.996,
+     0.38
+    ],
+    [
+     0.043000000000000003,
+     0.142,
+     1.995,
+     0.5
+    ],
+    [
+     0.051000000000000004,
+     0.17,
+     2.3930000000000002,
+     0.58
+    ],
+    [
+     0.05,
+     0.664,
+     2.306,
+     0.66
+    ],
+    [
+     0.044000000000000004,
+     0.8260000000000001,
+     2.038,
+     0.86
+    ]
+   ]
+  },
+  {
+   "name": "H33_Ring_M1",
+   "name_cn": "无名指 · J1 根部屈伸电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H33_Ring_M1.H33_Ring_M1",
+   "spin": 0,
+   "unit": "H33_Ring_M1",
+   "ex": [
+    [
+     -0.549,
+     -0.034999999999999996,
+     4.970000000000001,
+     0.41000000000000003
+    ],
+    [
+     0.15900000000000003,
+     2.394,
+     0.034,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H34_Ring_Yoke",
+   "name_cn": "无名指 · 指根轭架",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H34_Ring_Yoke.H34_Ring_Yoke",
+   "spin": 0,
+   "unit": "H34_Ring_Yoke",
+   "ex": [
+    [
+     -0.549,
+     -0.034999999999999996,
+     4.970000000000001,
+     0.41000000000000003
+    ]
+   ]
+  },
+  {
+   "name": "H35_Ring_M2",
+   "name_cn": "无名指 · J2 侧摆电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H35_Ring_M2.H35_Ring_M2",
+   "spin": 0,
+   "unit": "H35_Ring_M2",
+   "ex": [
+    [
+     -0.549,
+     -0.034999999999999996,
+     4.970000000000001,
+     0.41000000000000003
+    ],
+    [
+     -0.20400000000000001,
+     0.195,
+     1.9800000000000002,
+     0.5
+    ],
+    [
+     0.18600000000000003,
+     2.383,
+     -0.215,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H36_Ring_Proximal",
+   "name_cn": "无名指 · 近节指骨",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H36_Ring_Proximal.H36_Ring_Proximal",
+   "spin": 0,
+   "unit": "H36_Ring_Proximal",
+   "ex": [
+    [
+     -0.549,
+     -0.034999999999999996,
+     4.970000000000001,
+     0.41000000000000003
+    ],
+    [
+     -0.20400000000000001,
+     0.195,
+     1.9800000000000002,
+     0.5
+    ]
+   ]
+  },
+  {
+   "name": "H37_Ring_M3",
+   "name_cn": "无名指 · J3 中节屈伸电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H37_Ring_M3.H37_Ring_M3",
+   "spin": 0,
+   "unit": "H37_Ring_M3",
+   "ex": [
+    [
+     -0.549,
+     -0.034999999999999996,
+     4.970000000000001,
+     0.41000000000000003
+    ],
+    [
+     -0.20400000000000001,
+     0.195,
+     1.9800000000000002,
+     0.5
+    ],
+    [
+     -0.24500000000000002,
+     0.23399999999999999,
+     2.3760000000000003,
+     0.58
+    ],
+    [
+     0.18600000000000003,
+     2.383,
+     -0.215,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H38_Ring_Middle",
+   "name_cn": "无名指 · 中节指骨",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H38_Ring_Middle.H38_Ring_Middle",
+   "spin": 0,
+   "unit": "H38_Ring_Middle",
+   "ex": [
+    [
+     -0.549,
+     -0.034999999999999996,
+     4.970000000000001,
+     0.41000000000000003
+    ],
+    [
+     -0.20400000000000001,
+     0.195,
+     1.9800000000000002,
+     0.5
+    ],
+    [
+     -0.24500000000000002,
+     0.23399999999999999,
+     2.3760000000000003,
+     0.58
+    ]
+   ]
+  },
+  {
+   "name": "H39_Ring_M4",
+   "name_cn": "无名指 · J4 远节屈伸电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H39_Ring_M4.H39_Ring_M4",
+   "spin": 0,
+   "unit": "H39_Ring_M4",
+   "ex": [
+    [
+     -0.549,
+     -0.034999999999999996,
+     4.970000000000001,
+     0.41000000000000003
+    ],
+    [
+     -0.20400000000000001,
+     0.195,
+     1.9800000000000002,
+     0.5
+    ],
+    [
+     -0.24500000000000002,
+     0.23399999999999999,
+     2.3760000000000003,
+     0.58
+    ],
+    [
+     -0.20099999999999998,
+     0.7240000000000001,
+     2.279,
+     0.66
+    ],
+    [
+     0.233,
+     2.282,
+     -0.7040000000000001,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H40_Ring_Distal",
+   "name_cn": "无名指 · 远节指骨",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H40_Ring_Distal.H40_Ring_Distal",
+   "spin": 0,
+   "unit": "H40_Ring_Distal",
+   "ex": [
+    [
+     -0.549,
+     -0.034999999999999996,
+     4.970000000000001,
+     0.41000000000000003
+    ],
+    [
+     -0.20400000000000001,
+     0.195,
+     1.9800000000000002,
+     0.5
+    ],
+    [
+     -0.24500000000000002,
+     0.23399999999999999,
+     2.3760000000000003,
+     0.58
+    ],
+    [
+     -0.20099999999999998,
+     0.7240000000000001,
+     2.279,
+     0.66
+    ]
+   ]
+  },
+  {
+   "name": "H41_Ring_Tip",
+   "name_cn": "无名指 · 指尖力传感器",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H41_Ring_Tip.H41_Ring_Tip",
+   "spin": 0,
+   "unit": "H41_Ring_Tip",
+   "ex": [
+    [
+     -0.549,
+     -0.034999999999999996,
+     4.970000000000001,
+     0.41000000000000003
+    ],
+    [
+     -0.20400000000000001,
+     0.195,
+     1.9800000000000002,
+     0.5
+    ],
+    [
+     -0.24500000000000002,
+     0.23399999999999999,
+     2.3760000000000003,
+     0.58
+    ],
+    [
+     -0.20099999999999998,
+     0.7240000000000001,
+     2.279,
+     0.66
+    ],
+    [
+     -0.16100000000000003,
+     0.879,
+     2.0100000000000002,
+     0.86
+    ]
+   ]
+  },
+  {
+   "name": "H42_Little_M1",
+   "name_cn": "小指 · J1 根部屈伸电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H42_Little_M1.H42_Little_M1",
+   "spin": 0,
+   "unit": "H42_Little_M1",
+   "ex": [
+    [
+     -1.082,
+     0.019000000000000003,
+     4.881,
+     0.44
+    ],
+    [
+     0.31000000000000005,
+     2.379,
+     0.059,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H43_Little_Yoke",
+   "name_cn": "小指 · 指根轭架",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H43_Little_Yoke.H43_Little_Yoke",
+   "spin": 0,
+   "unit": "H43_Little_Yoke",
+   "ex": [
+    [
+     -1.082,
+     0.019000000000000003,
+     4.881,
+     0.44
+    ]
+   ]
+  },
+  {
+   "name": "H44_Little_M2",
+   "name_cn": "小指 · J2 侧摆电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H44_Little_M2.H44_Little_M2",
+   "spin": 0,
+   "unit": "H44_Little_M2",
+   "ex": [
+    [
+     -1.082,
+     0.019000000000000003,
+     4.881,
+     0.44
+    ],
+    [
+     -0.403,
+     0.215,
+     1.947,
+     0.5
+    ],
+    [
+     0.363,
+     2.3649999999999998,
+     -0.18600000000000003,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H45_Little_Proximal",
+   "name_cn": "小指 · 近节指骨",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H45_Little_Proximal.H45_Little_Proximal",
+   "spin": 0,
+   "unit": "H45_Little_Proximal",
+   "ex": [
+    [
+     -1.082,
+     0.019000000000000003,
+     4.881,
+     0.44
+    ],
+    [
+     -0.403,
+     0.215,
+     1.947,
+     0.5
+    ]
+   ]
+  },
+  {
+   "name": "H46_Little_M3",
+   "name_cn": "小指 · J3 中节屈伸电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H46_Little_M3.H46_Little_M3",
+   "spin": 0,
+   "unit": "H46_Little_M3",
+   "ex": [
+    [
+     -1.082,
+     0.019000000000000003,
+     4.881,
+     0.44
+    ],
+    [
+     -0.403,
+     0.215,
+     1.947,
+     0.5
+    ],
+    [
+     -0.484,
+     0.258,
+     2.336,
+     0.58
+    ],
+    [
+     0.363,
+     2.3649999999999998,
+     -0.18600000000000003,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H47_Little_Middle",
+   "name_cn": "小指 · 中节指骨",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H47_Little_Middle.H47_Little_Middle",
+   "spin": 0,
+   "unit": "H47_Little_Middle",
+   "ex": [
+    [
+     -1.082,
+     0.019000000000000003,
+     4.881,
+     0.44
+    ],
+    [
+     -0.403,
+     0.215,
+     1.947,
+     0.5
+    ],
+    [
+     -0.484,
+     0.258,
+     2.336,
+     0.58
+    ]
+   ]
+  },
+  {
+   "name": "H48_Little_M4",
+   "name_cn": "小指 · J4 远节屈伸电机",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H48_Little_M4.H48_Little_M4",
+   "spin": 0,
+   "unit": "H48_Little_M4",
+   "ex": [
+    [
+     -1.082,
+     0.019000000000000003,
+     4.881,
+     0.44
+    ],
+    [
+     -0.403,
+     0.215,
+     1.947,
+     0.5
+    ],
+    [
+     -0.484,
+     0.258,
+     2.336,
+     0.58
+    ],
+    [
+     -0.398,
+     0.7440000000000001,
+     2.247,
+     0.66
+    ],
+    [
+     0.455,
+     2.2600000000000002,
+     -0.668,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "H49_Little_Distal",
+   "name_cn": "小指 · 远节指骨",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H49_Little_Distal.H49_Little_Distal",
+   "spin": 0,
+   "unit": "H49_Little_Distal",
+   "ex": [
+    [
+     -1.082,
+     0.019000000000000003,
+     4.881,
+     0.44
+    ],
+    [
+     -0.403,
+     0.215,
+     1.947,
+     0.5
+    ],
+    [
+     -0.484,
+     0.258,
+     2.336,
+     0.58
+    ],
+    [
+     -0.398,
+     0.7440000000000001,
+     2.247,
+     0.66
+    ]
+   ]
+  },
+  {
+   "name": "H50_Little_Tip",
+   "name_cn": "小指 · 指尖力传感器",
+   "mesh": "/Game/Models/DexHand/hand_ue/StaticMeshes/H50_Little_Tip.H50_Little_Tip",
+   "spin": 0,
+   "unit": "H50_Little_Tip",
+   "ex": [
+    [
+     -1.082,
+     0.019000000000000003,
+     4.881,
+     0.44
+    ],
+    [
+     -0.403,
+     0.215,
+     1.947,
+     0.5
+    ],
+    [
+     -0.484,
+     0.258,
+     2.336,
+     0.58
+    ],
+    [
+     -0.398,
+     0.7440000000000001,
+     2.247,
+     0.66
+    ],
+    [
+     -0.319,
+     0.895,
+     1.984,
+     0.86
+    ]
+   ]
+  }
+ ]
+}
