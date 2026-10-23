@@ -69,7 +69,7 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 
 ## 手的模型
 
-**默认是五指灵巧手**（2026-10-23 起，见下面「灵巧手当玩家的手」）；控制台 `toy.HandModel 0` 随时换回下面这只 MannyXR 手，`toy.HandModel 1` 换回灵巧手。
+**默认是下面这只 MannyXR 手**。主菜单 SETTINGS 页的 `HAND MODEL` 可以换成五指灵巧手（`UE HAND` / `ROBOT`，存进 GameUserSettings.ini，马上生效，见下面「灵巧手当玩家的手」）。灵巧手试过当默认，用户反馈手指太长、捏不准，不如 MannyXR 自然，所以默认还是 MannyXR。控制台 `toy.HandModel 0 / 1` 可以临时强制，`-1` 跟设置走。
 
 | 张开 | 握拳 | 抓转子 |
 | --- | --- | --- |
