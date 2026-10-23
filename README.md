@@ -10,7 +10,7 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 - **挪模型**：触屏右下角的方向键 **推远 / 拉近 / 左移 / 右移**，每按一下把桌上的模型整体挪 10cm（离站立点 55~95cm、左右 -40~+20cm，不会挪出桌面或撞上触屏），方向键中间显示现在离你多远。所有模型共用这个位置，换模型也不会弹回去。默认放在 70cm（以前是 90cm，站着伸手够不着）。
 - **零件抓取查看**：装配状态下抓电机任意位置 = 拿起整台电机；爆炸后每个零件（转子总成、端盖、风扇、螺钉……共 27 个抓取单元）都能单独抓起来看，手边浮出中文信息牌（名字、材料、作用）。松手零件自己飞回原位，拿着靠近原位 5cm 会出现半透明虚影、松手吸回去；触屏 **零件复位** 一键全部复位。
 
-房间、桌子、触屏、方块都是 C++ 用引擎自带的基础形状拼出来的（默认关卡 `L_Studio` 只是放了一个工作室的壳），每一处改动都能在 PR 里看 diff。二进制资产只有：电机、阀门、无人机、车床、万用表、AI 服务器、球形漂浮机器人模型（`Content/Models/Motor`、`Valve`、`Drone`、`Lathe`、`Multimeter`、`AIServer`、`OrbBot`）和虚影 / 高亮用的半透明材质（`Content/Materials/M_ToyGhost`），由脚本生成，见下面「电机模型从哪来」「阀门模型从哪来」「无人机模型从哪来」「车床模型从哪来」「万用表模型从哪来」「AI 服务器模型从哪来」「球形漂浮机器人模型从哪来」；手模型（`Content/XRMannequins`），是从 UE 自带的 VR 模板拷来的，见「手的模型」。
+房间、桌子、触屏、方块都是 C++ 用引擎自带的基础形状拼出来的（默认关卡 `L_Studio` 只是放了一个工作室的壳），每一处改动都能在 PR 里看 diff。二进制资产只有：电机、阀门、无人机、车床、万用表、AI 服务器、球形漂浮机器人、四缸发动机模型（`Content/Models/Motor`、`Valve`、`Drone`、`Lathe`、`Multimeter`、`AIServer`、`OrbBot`、`Engine`）和虚影 / 高亮用的半透明材质（`Content/Materials/M_ToyGhost`），由脚本生成，见下面「电机模型从哪来」「阀门模型从哪来」「无人机模型从哪来」「车床模型从哪来」「万用表模型从哪来」「AI 服务器模型从哪来」「球形漂浮机器人模型从哪来」「四缸发动机模型从哪来」；手模型（`Content/XRMannequins`），是从 UE 自带的 VR 模板拷来的，见「手的模型」。
 
 ## 演示
 
@@ -36,6 +36,7 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 | `导入无人机模型.bat` | 无人机模型改了才需要：ITBasics 里用 Blender 重新生成并导入（见下文） |
 | `导入车床模型.bat` | 车床模型改了才需要：ITBasics 里用 Blender 重新生成并导入（见下文） |
 | `导入万用表模型.bat` | 万用表模型改了才需要：ITBasics 里用 Blender 重新生成并导入（见下文） |
+| `导入发动机模型.bat` | 四缸发动机模型改了才需要：ITBasics 里用 Blender 重新生成并导入（见下文） |
 
 - 引擎不在 `C:\Program Files\Epic Games\UE_5.8` 的话，先设置环境变量 `UE_ROOT` 指向引擎根目录（脚本也会读 Epic 启动器写的注册表）。
 - 更新脚本只在「当前在 main、没有未提交改动、本地没有 main 上没有的提交」时才 `git pull --ff-only`，其他情况只提示不动手，避免把你的改动搞乱。
@@ -63,7 +64,7 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 | --- | --- | --- |
 | ![](docs/screenshots/move_back.jpg) | ![](docs/screenshots/teleport_valid.jpg) | ![](docs/screenshots/teleport_invalid.jpg) |
 
-控制台输入 `toy.Screen <按钮>` 等于戳触屏上那个按钮，可以连着写：`toy.Screen Lathe MoveNear MoveNear Explode`（按钮名：Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Server / Robot / Hide / Explode / Reset / MoveNear / MoveFar / MoveLeft / MoveRight / Menu），命令行里用 `-ExecCmds=` 也行。`toy.ShowGrabPoints 1` 可以在游戏里看到手和方块的抓点箭头（之后生成的方块生效）。`toy.PalmSnap 1` 切回旧的"手掌贴合"抓法（见「零件抓取」）。`toy.HandPreview 1 / 2 / 3` 在桌面模式下把左手侧着摆到镜头前（张开 / 握拳 / 来回握），用来检查手模型。
+控制台输入 `toy.Screen <按钮>` 等于戳触屏上那个按钮，可以连着写：`toy.Screen Lathe MoveNear MoveNear Explode`（按钮名：Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Server / Robot / Engine / Hide / Explode / Reset / MoveNear / MoveFar / MoveLeft / MoveRight / Menu），命令行里用 `-ExecCmds=` 也行。`toy.ShowGrabPoints 1` 可以在游戏里看到手和方块的抓点箭头（之后生成的方块生效）。`toy.PalmSnap 1` 切回旧的"手掌贴合"抓法（见「零件抓取」）。`toy.HandPreview 1 / 2 / 3` 在桌面模式下把左手侧着摆到镜头前（张开 / 握拳 / 来回握），用来检查手模型。
 
 ## 手的模型
 
@@ -230,6 +231,27 @@ ITBasics/球形漂浮机器人爆炸图/build_orb_bot.py ──Blender──▶ 
 - **抓取单元**：93 个（停机坪 + 赤道承力带 + 涵道 + 主眼镜筒是基座），92 个能抓：捏 61、贴表面 19、圆柱 7、方块 5。`toy.GrabAudit Robot` 全部捏到，导入方向检查 3 项 OK。没有手写覆盖。
 - **体量**：96 个静态网格、约 21 万三角面，`Content/Models/OrbBot` 13MB。⚠️ 还没在头显里看过：7 个模型按钮缩到 4.1cm 后的字能不能看清、下半球朝下处在阴影里显得偏灰（材质是白的，工作室没有反射捕获）。
 
+## 四缸发动机模型从哪来
+
+| 装配（Blender 预览图） | 爆炸 |
+| --- | --- |
+| ![](docs/screenshots/engine_assembled.jpg) | ![](docs/screenshots/engine_exploded.jpg) |
+
+```
+ITBasics/四缸发动机爆炸图/build_engine.py ──Blender──▶ engine.glb ──Tools/import_model.py（MODEL_NAME=Engine）──▶ Content/Models/Engine/*.uasset + parts.json
+```
+
+双击 `导入发动机模型.bat`（只有模型改了才需要跑）。
+
+- **模型**：通用的 2.0L 自然吸气直列四缸汽油机（DOHC 16 气门、正时链条、进气道喷射，缸径 86 × 行程 86），不对应具体车型。先和用户确认了零件树和接口参数表，再一个系统一个系统建：49 个部件 = 缸体（基座）+ 48 个能抓的单元。粒度按"拿在手里能讲清楚作用的东西"分：曲轴、4 个活塞、4 根连杆、飞轮、皮带轮、缸盖、两根凸轮轴、凸轮轴承盖架、4 组气门（每组 4 个气门连弹簧和挺柱）、缸垫、正时链条 / 导轨 / 罩盖、气门室盖、4 个点火线圈、4 个火花塞、进气歧管、节气门、油轨、排气歧管、隔热罩、油底壳、主轴承梁、机油泵、机滤、机油尺、水泵、节温器、发电机、起动机、多楔带、张紧轮。原理速记和接口尺寸见 ITBasics 的 `四缸发动机爆炸图/README.md`。
+- **展示尺寸 60cm**：`MODELS['Engine']` 里 `length_cm=60`。装配后最长的一边是高度（油底壳底到点火线圈顶约 67cm），缩放 0.89 倍，活塞直径约 7.7cm。
+- **拆机顺序**：多楔带 → 张紧轮、发电机、水泵、皮带轮 → 起动机、机滤、机油尺（只拔出一半）→ 点火线圈、火花塞 → 节气门、进气歧管、油轨 → 隔热罩、排气歧管 → 正时罩盖、导轨、链条 → 气门室盖 → 承盖架、凸轮轴 → 飞轮 → 缸盖（连气门）→ 缸垫 → 油底壳 → 活塞、连杆从缸孔往上推出 → 机油泵 → 主轴承梁 → 曲轴。
+- **桌上的位置**：`EngineMount` Yaw 90，进气侧朝着玩家，正时端在左手边、飞轮在右手边，比其他模型往远处挪了 6cm。拆开后附件和正时件往左（最远的皮带在桌面左侧约 -68cm）、飞轮和排气往右（离触屏约 13cm）、缸盖和凸轮轴往后，下半截（油底壳、主轴承梁、曲轴）像抽屉一样往玩家这边拉出，油底壳正好停在桌子前沿。最高的凸轮轴承盖架在桌面上方约 81cm。
+- **导出时左右镜像**：Blender 脚本最后把整台发动机沿 X 镜像，这样进气侧朝玩家时正时端才在左手边（不镜像就得让排气侧朝玩家）。镜像后相当于曲轴从前面看逆时针转，静态模型看不出来；气门室盖上的字提前反写了。
+- **抓取单元**：49 个（缸体是基座），48 个能抓：贴表面 26、圆柱 14、方块 7、捏 1。`toy.GrabAudit Engine` 48 个全部捏到，导入方向检查 4 项 OK（进气歧管在 +Y、排气歧管在 -Y、正时罩在 -X、飞轮在 +X）。没有手写覆盖。
+- **摆放复查**（按网格包围盒 + 爆炸位移算）：没有零件低于桌面；离触屏最近的起动机还隔约 11cm；油底壳前沿正好停在桌子前沿；缸盖、排气凸轮轴、承盖架往后越过桌子后沿最多 5cm，但它们悬在离地 117~157cm，不碍事。拆开后发电机正好在左边方块的生成点上，方块会落在发电机上。
+- **体量**：49 个静态网格、约 17 万三角面，`Content/Models/Engine` 7.9MB。⚠️ 还没在头显里看过：第 2 页的 ENGINE 卡片要先点「下页」才看得到。
+
 ## 原理
 
 ### 先猜一下
@@ -313,13 +335,13 @@ ITBasics/球形漂浮机器人爆炸图/build_orb_bot.py ──Blender──▶ 
 | 车床 | 67 | 捏 50、圆柱 5、方块 5、贴表面 7（手写 5） |
 | 万用表 | 36 | 捏 22、圆柱 4、方块 3、贴表面 7（手写 2） |
 
-**抓取体检 `toy.GrabAudit`。** 控制台输入 `toy.GrabAudit`（或 `Motor` / `Valve` / `Drone` / `Lathe` / `Multimeter` / `Server` / `Robot`，加 `quit` 跑完退出），会依次摆出模型（先拍一张装配全景 `00_assembled.png`）、爆炸（再拍一张 `00_exploded.png`），用右手按桌面模式的方式（捏合点放在零件上离镜头最近的表面点、扣扳机）把每个单元捏一遍，捏住后手往上提、镜头给一个特写，截图到 `Saved/GrabAudit/<模型>/<序号>_<单元>.png`，并写 `Saved/GrabAudit/summary.csv`。五个模型 180 个单元约 6 分钟跑完（只跑车床或万用表约 1 分钟）。命令行批量跑：
+**抓取体检 `toy.GrabAudit`。** 控制台输入 `toy.GrabAudit`（或 `Motor` / `Valve` / `Drone` / `Lathe` / `Multimeter` / `Server` / `Robot` / `Engine`，加 `quit` 跑完退出），会依次摆出模型（先拍一张装配全景 `00_assembled.png`）、爆炸（再拍一张 `00_exploded.png`），用右手按桌面模式的方式（捏合点放在零件上离镜头最近的表面点、扣扳机）把每个单元捏一遍，捏住后手往上提、镜头给一个特写，截图到 `Saved/GrabAudit/<模型>/<序号>_<单元>.png`，并写 `Saved/GrabAudit/summary.csv`。五个模型 180 个单元约 6 分钟跑完（只跑车床或万用表约 1 分钟）。命令行批量跑：
 
 ```
 UnrealEditor.exe VRToyBox.uproject -game -windowed -ResX=1280 -ResY=720 "-ExecCmds=toy.GrabAudit All quit"
 ```
 
-**录演示动图 `toy.Demo`。** 控制台输入 `toy.Demo`（或 `Motor` / `Valve` / `Drone` / `Lathe` / `Multimeter` / `Server` / `Robot`，加 `quit` 录完退出），每个模型先爆炸一次再装回去、量出两种状态的包围盒，然后逐帧截图到 `Saved/Demo/<模型>/f_0000.png …`：装配停 1 秒 → 爆炸 → 右手从镜头右下方伸过去捏起第二大的零件（最大的一般是机壳）、往上提 → 松手 → 装配回去，镜头按包围盒自动拉远拉近、绕模型慢慢转 24°。要带 `-benchmark -fps=15`（固定步长，截图慢也不掉帧）。README 上面那 6 张 GIF 就是这样录的（10 帧/秒、480 宽、96 色，每张约 3MB）：
+**录演示动图 `toy.Demo`。** 控制台输入 `toy.Demo`（或 `Motor` / `Valve` / `Drone` / `Lathe` / `Multimeter` / `Server` / `Robot` / `Engine`，加 `quit` 录完退出），每个模型先爆炸一次再装回去、量出两种状态的包围盒，然后逐帧截图到 `Saved/Demo/<模型>/f_0000.png …`：装配停 1 秒 → 爆炸 → 右手从镜头右下方伸过去捏起第二大的零件（最大的一般是机壳）、往上提 → 松手 → 装配回去，镜头按包围盒自动拉远拉近、绕模型慢慢转 24°。要带 `-benchmark -fps=15`（固定步长，截图慢也不掉帧）。README 上面那 6 张 GIF 就是这样录的（10 帧/秒、480 宽、96 色，每张约 3MB）：
 
 ```
 UnrealEditor.exe VRToyBox.uproject -game -windowed -ResX=960 -ResY=540 -benchmark -fps=15 -nosound "-ExecCmds=r.MotionBlurQuality 0,toy.Demo quit"

@@ -1,0 +1,1687 @@
+{
+ "source": "engine.glb",
+ "model": {
+  "title": "直列四缸汽油发动机 · 2.0L 自然吸气 DOHC 16 气门（通用原创，不对应具体车型）",
+  "body": "缸径 86 × 行程 86 · 1998 mL · 正时链条 · 进气道喷射 · 点火顺序 1-3-4-2 · 49 个部件\n装配状态：抓任意位置拿起整台发动机看。点 EXPLODE 按真实拆机顺序拆开：附件和正时往左、排气和飞轮往右、缸盖往后，下半截（油底壳、主轴承梁、曲轴）像抽屉一样往你这边拉出，活塞和连杆从缸孔往上推出。每个部件都能单独抓。",
+  "explode_scale": 1.0,
+  "length_cm": 60.0
+ },
+ "units": [
+  {
+   "id": "base",
+   "grabbable": false,
+   "name_cn": "缸体",
+   "material": "铝合金压铸 + 铸铁缸套",
+   "desc": "发动机的骨架。4 个气缸孔、包着气缸的冷却水套、通向各轴承的油道都铸在里面；下半部分是曲轴箱，5 道隔板托住曲轴。拆发动机时它不动，其他部件都从它上面拆下来。",
+   "grab": null
+  },
+  {
+   "id": "E02_Bedplate",
+   "grabbable": true,
+   "name_cn": "主轴承梁（下曲轴箱）",
+   "material": "铝合金压铸 · 5 道主轴承盖连成一体",
+   "desc": "曲轴夹在缸体和它之间：上下各一片轴瓦，10 颗 M10 螺栓拉紧。把 5 个轴承盖连成一整块梯子形，比单个轴承盖刚性好得多，高转速时曲轴不容易\"甩\"。",
+   "grab": {
+    "type": "box",
+    "center": [
+     0.0,
+     0.0,
+     -4.89
+    ],
+    "extent": [
+     21.5,
+     12.0,
+     2.11
+    ]
+   }
+  },
+  {
+   "id": "E03_OilPan",
+   "grabbable": true,
+   "name_cn": "油底壳",
+   "material": "冲压钢板 · 黑色烤漆",
+   "desc": "发动机的\"油箱\"，装约 4 L 机油。后半部分做深（集油槽），刹车、转弯时机油晃过去，集滤器还泡在油里。最低点有放油螺塞，换机油就是拧开它。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E04_HeadGasket",
+   "grabbable": true,
+   "name_cn": "气缸垫",
+   "material": "多层钢片（MLS）· 表面橡胶涂层",
+   "desc": "夹在缸体和缸盖之间。燃烧时缸内压力有六七十个大气压，它要同时封住燃烧室、冷却液水道和机油油道，互相不能串。\"冲缸垫\"就是这里漏了：冷却液进了燃烧室，排气冒白烟。",
+   "grab": {
+    "type": "box",
+    "center": [
+     0.0,
+     0.0,
+     21.38
+    ],
+    "extent": [
+     21.5,
+     10.4,
+     0.17
+    ]
+   }
+  },
+  {
+   "id": "E05_Crankshaft",
+   "grabbable": true,
+   "name_cn": "曲轴",
+   "material": "锻钢 · 轴颈表面淬火、磨光",
+   "desc": "把活塞的上下运动变成旋转。5 道主轴颈在一条直线上（转动中心），4 个连杆轴颈偏出去 43 mm（行程的一半）。1、4 缸的连杆轴颈朝同一边，2、3 缸朝反方向，所以每转半圈就有一个缸点火（点火顺序 1-3-4-2）。8 块平衡重抵消连杆轴颈甩出去的离心力。",
+   "grab": {
+    "type": "box",
+    "center": [
+     -1.8,
+     -0.0,
+     -0.3
+    ],
+    "extent": [
+     24.6,
+     4.85,
+     7.1
+    ]
+   }
+  },
+  {
+   "id": "E06_Piston1",
+   "grabbable": true,
+   "name_cn": "1 缸活塞",
+   "material": "铝硅合金铸造 · 3 道活塞环 + 活塞销",
+   "desc": "直接承受燃烧压力：最大约 4 吨的力压在它顶上。上两道是气环，封住燃烧气体；第三道是油环，把缸壁上多余的机油刮回油底壳。活塞销把它和连杆连起来，活塞和缸壁之间只有约 0.03 mm 间隙。现在在压缩上止点：火花塞即将点火。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     -13.95,
+     0.0,
+     18.51
+    ],
+    "segments": [
+     [
+      -2.81,
+      2.81,
+      4.29
+     ]
+    ]
+   }
+  },
+  {
+   "id": "E07_Piston2",
+   "grabbable": true,
+   "name_cn": "2 缸活塞",
+   "material": "铝硅合金铸造 · 3 道活塞环 + 活塞销",
+   "desc": "和 1 缸一样的活塞。现在在下止点：2、3 缸的连杆轴颈和 1、4 缸差 180°，1、4 缸在顶上时它们在最底下。2 缸半圈前刚点过火（点火顺序 1-3-4-2 的最后一个），做功行程到底，接下来往上推出废气。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     -4.65,
+     0.0,
+     9.91
+    ],
+    "segments": [
+     [
+      -2.81,
+      2.81,
+      4.29
+     ]
+    ]
+   }
+  },
+  {
+   "id": "E08_Piston3",
+   "grabbable": true,
+   "name_cn": "3 缸活塞",
+   "material": "铝硅合金铸造 · 3 道活塞环 + 活塞销",
+   "desc": "和 1 缸一样的活塞。现在在下止点，正在进气行程结束、马上开始压缩：它是下一个点火的缸（1-3-4-2）。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     4.65,
+     0.0,
+     9.91
+    ],
+    "segments": [
+     [
+      -2.81,
+      2.81,
+      4.29
+     ]
+    ]
+   }
+  },
+  {
+   "id": "E09_Piston4",
+   "grabbable": true,
+   "name_cn": "4 缸活塞",
+   "material": "铝硅合金铸造 · 3 道活塞环 + 活塞销",
+   "desc": "和 1 缸一样，也在上止点，但它是排气行程结束、进气刚开始（进排气门同时微开，叫\"气门重叠\"）。所以 1、4 缸同时到顶，只有一个在点火。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     13.95,
+     0.0,
+     18.51
+    ],
+    "segments": [
+     [
+      -2.81,
+      2.81,
+      4.29
+     ]
+    ]
+   }
+  },
+  {
+   "id": "E10_ConRod1",
+   "grabbable": true,
+   "name_cn": "1 缸连杆",
+   "material": "锻钢 · 工字形截面 · 连杆盖 + 2 颗 M9 螺栓 + 轴瓦",
+   "desc": "小头套活塞销，大头抱住曲轴的连杆轴颈。工字形截面是为了在轻的前提下不被压弯。大头是剖开的：连杆盖用两颗螺栓装上，才能把它装到曲轴上。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E11_ConRod2",
+   "grabbable": true,
+   "name_cn": "2 缸连杆",
+   "material": "锻钢 · 工字形截面 · 连杆盖 + 2 颗 M9 螺栓 + 轴瓦",
+   "desc": "和 1 缸一样的连杆，中心距 139 mm。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E12_ConRod3",
+   "grabbable": true,
+   "name_cn": "3 缸连杆",
+   "material": "锻钢 · 工字形截面 · 连杆盖 + 2 颗 M9 螺栓 + 轴瓦",
+   "desc": "和 1 缸一样的连杆，中心距 139 mm。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E13_ConRod4",
+   "grabbable": true,
+   "name_cn": "4 缸连杆",
+   "material": "锻钢 · 工字形截面 · 连杆盖 + 2 颗 M9 螺栓 + 轴瓦",
+   "desc": "和 1 缸一样的连杆，中心距 139 mm。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E14_Flywheel",
+   "grabbable": true,
+   "name_cn": "飞轮（含齿圈）",
+   "material": "铸铁 · 外圈热套钢齿圈",
+   "desc": "一个很重的圆盘，存住转动的惯量：四缸每半圈才点一次火，靠它把转速\"抹平\"。外圈的齿圈给起动机的小齿轮啮合；后面就是离合器（手动挡）或变矩器（自动挡）。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     24.35,
+     0.0,
+     -0.0
+    ],
+    "segments": [
+     [
+      -1.55,
+      1.55,
+      14.2
+     ]
+    ]
+   }
+  },
+  {
+   "id": "E15_CrankPulley",
+   "grabbable": true,
+   "name_cn": "曲轴减振皮带轮",
+   "material": "铸铁轮毂 + 橡胶环 + 外圈 6 槽带轮",
+   "desc": "前端带动多楔带，驱动发电机和水泵。轮毂和外圈之间夹一圈橡胶：曲轴长、每次点火都被\"拧\"一下，会扭转振动，外圈的惯量和橡胶一起把这个振动吸收掉，不然曲轴会疲劳断裂。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     -28.7,
+     0.0,
+     0.0
+    ],
+    "segments": [
+     [
+      -2.5,
+      2.5,
+      7.5
+     ]
+    ]
+   }
+  },
+  {
+   "id": "E16_CylinderHead",
+   "grabbable": true,
+   "name_cn": "缸盖",
+   "material": "铝合金铸造 · 压装气门座圈和气门导管",
+   "desc": "燃烧室的\"屋顶\"。每缸 2 个进气道（朝前，接进气歧管）和 2 个排气道（朝后，接排气歧管），中间是火花塞孔；气门挺柱孔和凸轮轴的下半个轴承座也在它上面。10 颗缸盖螺栓穿过它拧进缸体。",
+   "grab": {
+    "type": "box",
+    "center": [
+     0.0,
+     0.0,
+     27.65
+    ],
+    "extent": [
+     21.5,
+     11.5,
+     6.15
+    ]
+   }
+  },
+  {
+   "id": "E17_CamIntake",
+   "grabbable": true,
+   "name_cn": "进气凸轮轴（含链轮）",
+   "material": "冷硬铸铁 / 钢 · 凸轮表面淬火",
+   "desc": "8 个凸轮按顺序顶开 8 个进气门。它由正时链条带动，转速是曲轴的一半：四冲程每个缸转两圈才进一次气。凸轮的形状（升程多高、开多久）就决定了发动机\"性格\"。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     -2.5,
+     5.8,
+     35.0
+    ],
+    "segments": [
+     [
+      -22.5,
+      22.5,
+      5.6
+     ]
+    ]
+   }
+  },
+  {
+   "id": "E18_CamExhaust",
+   "grabbable": true,
+   "name_cn": "排气凸轮轴（含链轮）",
+   "material": "冷硬铸铁 / 钢 · 凸轮表面淬火",
+   "desc": "顶开 8 个排气门，同样是曲轴转速的一半。进、排两根各管一边，就是 DOHC（双顶置凸轮轴）。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     -2.5,
+     -5.8,
+     35.0
+    ],
+    "segments": [
+     [
+      -22.5,
+      22.5,
+      5.6
+     ]
+    ]
+   }
+  },
+  {
+   "id": "E19_CamLadder",
+   "grabbable": true,
+   "name_cn": "凸轮轴承盖架",
+   "material": "铝合金 · 10 个轴承盖连成梯子形",
+   "desc": "把两根凸轮轴压在缸盖上：缸盖是轴承座的下半个，它是上半个，中间只留一层油膜。连成一整块比 10 个单独的盖好装、刚性好。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E20_Valves1",
+   "grabbable": true,
+   "name_cn": "1 缸气门组",
+   "material": "2 进气门 + 2 排气门 · 气门弹簧 · 弹簧座 · 液压挺柱",
+   "desc": "凸轮压下挺柱，气门就往下打开；凸轮转过去，弹簧把气门拉回关闭。进气门（Φ34）比排气门（Φ29）大：吸进来比推出去难。液压挺柱自动补偿间隙，不用定期调气门。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E21_Valves2",
+   "grabbable": true,
+   "name_cn": "2 缸气门组",
+   "material": "2 进气门 + 2 排气门 · 气门弹簧 · 弹簧座 · 液压挺柱",
+   "desc": "和 1 缸一样的 4 个气门。每缸 4 气门，一共 16 气门（16V）。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E22_Valves3",
+   "grabbable": true,
+   "name_cn": "3 缸气门组",
+   "material": "2 进气门 + 2 排气门 · 气门弹簧 · 弹簧座 · 液压挺柱",
+   "desc": "和 1 缸一样的 4 个气门。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E23_Valves4",
+   "grabbable": true,
+   "name_cn": "4 缸气门组",
+   "material": "2 进气门 + 2 排气门 · 气门弹簧 · 弹簧座 · 液压挺柱",
+   "desc": "和 1 缸一样的 4 个气门。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E24_TimingChain",
+   "grabbable": true,
+   "name_cn": "正时链条",
+   "material": "套筒滚子链 · 节距 8 mm",
+   "desc": "把曲轴和两根凸轮轴\"锁\"在一起：曲轴链轮 21 齿、凸轮轴链轮 42 齿，曲轴转两圈凸轮轴转一圈。它要是跳了齿，气门开关的时刻就错了，严重时活塞会撞上气门。链条终身免换，皮带要定期换。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E25_ChainGuides",
+   "grabbable": true,
+   "name_cn": "链条张紧器与导轨",
+   "material": "液压张紧器 + 尼龙导轨板",
+   "desc": "链条用久了会拉长。张紧器用机油压力顶住导轨，一直把链条压紧，不让它甩、不让它跳齿；另一边的固定导轨让链条走直线、少拍打。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E26_TimingCover",
+   "grabbable": true,
+   "name_cn": "正时罩盖",
+   "material": "铝合金压铸",
+   "desc": "把正时链条盖起来，里面是飞溅的机油在润滑链条。中间的孔装曲轴前油封，曲轴从这里伸出来带皮带轮。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E27_ValveCover",
+   "grabbable": true,
+   "name_cn": "气门室盖（含机油加注盖）",
+   "material": "玻纤增强尼龙 · 橡胶密封条",
+   "desc": "盖住凸轮轴和气门机构，挡住里面飞溅的机油。顶上的黄盖子是加机油的口；4 个圆孔插点火线圈。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E28_IntakeManifold",
+   "grabbable": true,
+   "name_cn": "进气歧管",
+   "material": "玻纤增强尼龙 · 稳压腔 + 4 根歧管",
+   "desc": "空气从节气门进到稳压腔，再分成 4 根一样长的管子送到各缸。管子做得长，进气有惯性，能在气门关闭前多\"塞\"进一点空气，中低转速扭矩更大。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E29_ThrottleBody",
+   "grabbable": true,
+   "name_cn": "节气门体",
+   "material": "铝合金 · 电子节气门（电机 + 位置传感器）",
+   "desc": "踩油门其实是在开这片阀片：开得越大进气越多，ECU 按进气量配喷油量，发动机就越有劲。现在是电机驱动，油门踏板只是个传感器。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E30_FuelRail",
+   "grabbable": true,
+   "name_cn": "油轨与喷油器",
+   "material": "不锈钢油轨 + 4 个电磁喷油器",
+   "desc": "油轨里是约 3.5 个大气压的汽油。ECU 给喷油器通电几毫秒，针阀抬起，汽油雾化后喷进进气道，和空气混合后进入气缸。通电时间越长，喷得越多。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E31_ExhaustManifold",
+   "grabbable": true,
+   "name_cn": "排气歧管",
+   "material": "球墨铸铁",
+   "desc": "把 4 个缸的废气收集到一起，送去三元催化器。排气温度可到 800 ℃以上，所以用耐热的铸铁，刚熄火时它会发红。4 根管子长度相近，各缸排气不互相\"顶\"。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E32_HeatShield",
+   "grabbable": true,
+   "name_cn": "排气隔热罩",
+   "material": "冲压铝板 · 压出加强筋",
+   "desc": "挡住排气歧管的热辐射，保护上面的线束、塑料件和旁边的零件。和歧管之间留一层空气隔热。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E33_Coil1",
+   "grabbable": true,
+   "name_cn": "1 缸点火线圈",
+   "material": "笔式点火线圈（每缸一个）",
+   "desc": "其实是一个变压器：初级几百匝、次级上万匝。ECU 突然切断初级电流，磁场崩塌，次级感应出约 3 万伏高压，经下面的橡胶护套送到火花塞。一缸一个，不需要分电器和高压线。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E34_Coil2",
+   "grabbable": true,
+   "name_cn": "2 缸点火线圈",
+   "material": "笔式点火线圈",
+   "desc": "和 1 缸一样的点火线圈。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E35_Coil3",
+   "grabbable": true,
+   "name_cn": "3 缸点火线圈",
+   "material": "笔式点火线圈",
+   "desc": "和 1 缸一样的点火线圈。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E36_Coil4",
+   "grabbable": true,
+   "name_cn": "4 缸点火线圈",
+   "material": "笔式点火线圈",
+   "desc": "和 1 缸一样的点火线圈。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E37_SparkPlug1",
+   "grabbable": true,
+   "name_cn": "1 缸火花塞",
+   "material": "M12 × 1.25 · 陶瓷绝缘体 + 镍合金电极",
+   "desc": "拧在燃烧室顶部正中间。几万伏的电压击穿电极之间约 0.8 mm 的间隙，跳出火花点燃混合气。白色陶瓷把高压和外壳（接地）隔开。点火时刻在上止点前十几度：火焰烧开需要时间。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     -13.95,
+     0.0,
+     26.7
+    ],
+    "segments": [
+     [
+      -4.17,
+      4.17,
+      0.8
+     ]
+    ]
+   }
+  },
+  {
+   "id": "E38_SparkPlug2",
+   "grabbable": true,
+   "name_cn": "2 缸火花塞",
+   "material": "M12 × 1.25 · 陶瓷绝缘体 + 镍合金电极",
+   "desc": "和 1 缸一样的火花塞。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     -4.65,
+     0.0,
+     26.7
+    ],
+    "segments": [
+     [
+      -4.17,
+      4.17,
+      0.8
+     ]
+    ]
+   }
+  },
+  {
+   "id": "E39_SparkPlug3",
+   "grabbable": true,
+   "name_cn": "3 缸火花塞",
+   "material": "M12 × 1.25 · 陶瓷绝缘体 + 镍合金电极",
+   "desc": "和 1 缸一样的火花塞。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     4.65,
+     0.0,
+     26.7
+    ],
+    "segments": [
+     [
+      -4.17,
+      4.17,
+      0.8
+     ]
+    ]
+   }
+  },
+  {
+   "id": "E40_SparkPlug4",
+   "grabbable": true,
+   "name_cn": "4 缸火花塞",
+   "material": "M12 × 1.25 · 陶瓷绝缘体 + 镍合金电极",
+   "desc": "和 1 缸一样的火花塞。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     13.95,
+     0.0,
+     26.7
+    ],
+    "segments": [
+     [
+      -4.17,
+      4.17,
+      0.8
+     ]
+    ]
+   }
+  },
+  {
+   "id": "E41_OilPump",
+   "grabbable": true,
+   "name_cn": "机油泵与集滤器",
+   "material": "铝合金泵体 + 钢转子 · 钢网集滤器",
+   "desc": "曲轴用一根小链条带动它。集滤器的口泡在油底壳最低处，泵把机油吸上来，以三四个大气压压进缸体油道，送到曲轴、凸轮轴的每个轴承和液压挺柱。机油压力灯亮就是这里出了问题。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E42_OilFilter",
+   "grabbable": true,
+   "name_cn": "机油滤清器",
+   "material": "钢壳 · 纸质滤芯 · 旁通阀",
+   "desc": "机油从泵出来先过它，滤掉磨下来的金属屑和积碳，再进主油道。每次换机油一起换。",
+   "grab": {
+    "type": "box",
+    "center": [
+     -2.0,
+     17.73,
+     1.72
+    ],
+    "extent": [
+     3.84,
+     5.83,
+     4.39
+    ]
+   }
+  },
+  {
+   "id": "E43_Dipstick",
+   "grabbable": true,
+   "name_cn": "机油尺",
+   "material": "弹簧钢片 + 黄色拉环",
+   "desc": "拔出来擦干净、插回去、再拔出来看：油迹在尺头两个刻度之间就对。太少会烧瓦，太多会被曲轴搅起泡沫。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E44_WaterPump",
+   "grabbable": true,
+   "name_cn": "水泵（含皮带轮）",
+   "material": "铝合金泵体 + 叶轮",
+   "desc": "多楔带带着它转，里面的叶轮把冷却液推进缸体水套，绕着气缸和燃烧室吸热，再经节温器去散热器。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     -27.8,
+     -6.0,
+     15.0
+    ],
+    "segments": [
+     [
+      -1.8,
+      1.8,
+      5.0
+     ]
+    ]
+   }
+  },
+  {
+   "id": "E45_Thermostat",
+   "grabbable": true,
+   "name_cn": "节温器壳",
+   "material": "铝合金 · 内装蜡式节温器",
+   "desc": "里面的蜡块受热膨胀推开阀门：冷车时关着，冷却液只在发动机里小循环，升温快；到约 90 ℃才打开，冷却液去散热器大循环。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "E46_Alternator",
+   "grabbable": true,
+   "name_cn": "发电机",
+   "material": "铝壳 · 爪极转子 + 三相定子 + 整流器 + 调节器",
+   "desc": "皮带带它转，转速是曲轴的 2.7 倍。发出的三相交流电经二极管整流成直流，稳成约 14 V，给蓄电池充电、给全车用电器供电。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "center": [
+     -19.85,
+     19.5,
+     4.0
+    ],
+    "segments": [
+     [
+      -10.05,
+      10.05,
+      6.2
+     ]
+    ]
+   }
+  },
+  {
+   "id": "E47_Starter",
+   "grabbable": true,
+   "name_cn": "起动机",
+   "material": "直流串励电机 + 电磁开关 + 单向离合器",
+   "desc": "拧钥匙时电磁开关把小齿轮推出去咬住飞轮齿圈，同时接通电机大电流（一两百安），带着曲轴转起来。着车后单向离合器打滑，小齿轮退回，不会被发动机反拖。",
+   "grab": {
+    "type": "box",
+    "center": [
+     15.1,
+     17.5,
+     -4.64
+    ],
+    "extent": [
+     7.5,
+     3.56,
+     4.89
+    ]
+   }
+  },
+  {
+   "id": "E48_Belt",
+   "grabbable": true,
+   "name_cn": "多楔带",
+   "material": "三元乙丙橡胶 · 6 楔",
+   "desc": "一根带子绕过曲轴皮带轮、发电机、水泵和张紧轮，一次带动全部附件。楔形槽增大接触面积，比一根三角带传的力大得多。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "E49_Tensioner",
+   "grabbable": true,
+   "name_cn": "皮带张紧轮",
+   "material": "钢摆臂 + 扭簧 + 塑料带轮",
+   "desc": "扭簧推着摆臂，带轮一直压在多楔带上，保持合适的张紧力：太松会打滑尖叫，太紧会伤轴承。",
+   "grab": {
+    "type": "box",
+    "center": [
+     -27.5,
+     9.0,
+     14.0
+    ],
+    "extent": [
+     1.5,
+     2.9,
+     3.25
+    ]
+   }
+  }
+ ],
+ "parts": [
+  {
+   "name": "E01_Block",
+   "name_cn": "缸体",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E01_Block.E01_Block",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "E02_Bedplate",
+   "name_cn": "主轴承梁（下曲轴箱）",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E02_Bedplate.E02_Bedplate",
+   "spin": 0,
+   "unit": "E02_Bedplate",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -4.0,
+     0.84
+    ],
+    [
+     0.0,
+     29.0,
+     7.0,
+     0.88
+    ]
+   ]
+  },
+  {
+   "name": "E03_OilPan",
+   "name_cn": "油底壳",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E03_OilPan.E03_OilPan",
+   "spin": 0,
+   "unit": "E03_OilPan",
+   "ex": [
+    [
+     0.0,
+     29.0,
+     0.0,
+     0.66
+    ]
+   ]
+  },
+  {
+   "name": "E04_HeadGasket",
+   "name_cn": "气缸垫",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E04_HeadGasket.E04_HeadGasket",
+   "spin": 0,
+   "unit": "E04_HeadGasket",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     32.800000000000004,
+     0.62
+    ]
+   ]
+  },
+  {
+   "name": "E05_Crankshaft",
+   "name_cn": "曲轴",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E05_Crankshaft.E05_Crankshaft",
+   "spin": 0,
+   "unit": "E05_Crankshaft",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -8.0,
+     0.9
+    ],
+    [
+     0.0,
+     29.0,
+     0.0,
+     0.94
+    ],
+    [
+     0.0,
+     0.0,
+     25.0,
+     0.99
+    ]
+   ]
+  },
+  {
+   "name": "E06_Piston1",
+   "name_cn": "1 缸活塞",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E06_Piston1.E06_Piston1",
+   "spin": 0,
+   "unit": "E06_Piston1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     29.400000000000002,
+     0.74
+    ]
+   ]
+  },
+  {
+   "name": "E07_Piston2",
+   "name_cn": "2 缸活塞",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E07_Piston2.E07_Piston2",
+   "spin": 0,
+   "unit": "E07_Piston2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     38.0,
+     0.75
+    ]
+   ]
+  },
+  {
+   "name": "E08_Piston3",
+   "name_cn": "3 缸活塞",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E08_Piston3.E08_Piston3",
+   "spin": 0,
+   "unit": "E08_Piston3",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     38.0,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "E09_Piston4",
+   "name_cn": "4 缸活塞",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E09_Piston4.E09_Piston4",
+   "spin": 0,
+   "unit": "E09_Piston4",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     29.400000000000002,
+     0.77
+    ]
+   ]
+  },
+  {
+   "name": "E10_ConRod1",
+   "name_cn": "1 缸连杆",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E10_ConRod1.E10_ConRod1",
+   "spin": 0,
+   "unit": "E10_ConRod1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     22.400000000000002,
+     0.8
+    ]
+   ]
+  },
+  {
+   "name": "E11_ConRod2",
+   "name_cn": "2 缸连杆",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E11_ConRod2.E11_ConRod2",
+   "spin": 0,
+   "unit": "E11_ConRod2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     31.0,
+     0.81
+    ]
+   ]
+  },
+  {
+   "name": "E12_ConRod3",
+   "name_cn": "3 缸连杆",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E12_ConRod3.E12_ConRod3",
+   "spin": 0,
+   "unit": "E12_ConRod3",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     31.0,
+     0.8200000000000001
+    ]
+   ]
+  },
+  {
+   "name": "E13_ConRod4",
+   "name_cn": "4 缸连杆",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E13_ConRod4.E13_ConRod4",
+   "spin": 0,
+   "unit": "E13_ConRod4",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     22.400000000000002,
+     0.8300000000000001
+    ]
+   ]
+  },
+  {
+   "name": "E14_Flywheel",
+   "name_cn": "飞轮（含齿圈）",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E14_Flywheel.E14_Flywheel",
+   "spin": 0,
+   "unit": "E14_Flywheel",
+   "ex": [
+    [
+     17.0,
+     0.0,
+     0.0,
+     0.5
+    ]
+   ]
+  },
+  {
+   "name": "E15_CrankPulley",
+   "name_cn": "曲轴减振皮带轮",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E15_CrankPulley.E15_CrankPulley",
+   "spin": 0,
+   "unit": "E15_CrankPulley",
+   "ex": [
+    [
+     -27.0,
+     0.0,
+     0.0,
+     0.07
+    ]
+   ]
+  },
+  {
+   "name": "E16_CylinderHead",
+   "name_cn": "缸盖",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E16_CylinderHead.E16_CylinderHead",
+   "spin": 0,
+   "unit": "E16_CylinderHead",
+   "ex": [
+    [
+     0.0,
+     -30.0,
+     4.0,
+     0.52
+    ]
+   ]
+  },
+  {
+   "name": "E17_CamIntake",
+   "name_cn": "进气凸轮轴（含链轮）",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E17_CamIntake.E17_CamIntake",
+   "spin": 0,
+   "unit": "E17_CamIntake",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     24.6,
+     0.44
+    ],
+    [
+     0.0,
+     -30.0,
+     0.0,
+     0.5
+    ]
+   ]
+  },
+  {
+   "name": "E18_CamExhaust",
+   "name_cn": "排气凸轮轴（含链轮）",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E18_CamExhaust.E18_CamExhaust",
+   "spin": 0,
+   "unit": "E18_CamExhaust",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     24.6,
+     0.46
+    ],
+    [
+     0.0,
+     -30.0,
+     0.0,
+     0.5
+    ]
+   ]
+  },
+  {
+   "name": "E19_CamLadder",
+   "name_cn": "凸轮轴承盖架",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E19_CamLadder.E19_CamLadder",
+   "spin": 0,
+   "unit": "E19_CamLadder",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     31.5,
+     0.4
+    ],
+    [
+     0.0,
+     -30.0,
+     0.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "E20_Valves1",
+   "name_cn": "1 缸气门组",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E20_Valves1.E20_Valves1",
+   "spin": 0,
+   "unit": "E20_Valves1",
+   "ex": [
+    [
+     0.0,
+     -30.0,
+     4.0,
+     0.52
+    ],
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.58
+    ]
+   ]
+  },
+  {
+   "name": "E21_Valves2",
+   "name_cn": "2 缸气门组",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E21_Valves2.E21_Valves2",
+   "spin": 0,
+   "unit": "E21_Valves2",
+   "ex": [
+    [
+     0.0,
+     -30.0,
+     4.0,
+     0.52
+    ],
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.59
+    ]
+   ]
+  },
+  {
+   "name": "E22_Valves3",
+   "name_cn": "3 缸气门组",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E22_Valves3.E22_Valves3",
+   "spin": 0,
+   "unit": "E22_Valves3",
+   "ex": [
+    [
+     0.0,
+     -30.0,
+     4.0,
+     0.52
+    ],
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.6
+    ]
+   ]
+  },
+  {
+   "name": "E23_Valves4",
+   "name_cn": "4 缸气门组",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E23_Valves4.E23_Valves4",
+   "spin": 0,
+   "unit": "E23_Valves4",
+   "ex": [
+    [
+     0.0,
+     -30.0,
+     4.0,
+     0.52
+    ],
+    [
+     0.0,
+     0.0,
+     15.0,
+     0.61
+    ]
+   ]
+  },
+  {
+   "name": "E24_TimingChain",
+   "name_cn": "正时链条",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E24_TimingChain.E24_TimingChain",
+   "spin": 0,
+   "unit": "E24_TimingChain",
+   "ex": [
+    [
+     -6.0,
+     0.0,
+     0.0,
+     0.28
+    ]
+   ]
+  },
+  {
+   "name": "E25_ChainGuides",
+   "name_cn": "链条张紧器与导轨",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E25_ChainGuides.E25_ChainGuides",
+   "spin": 0,
+   "unit": "E25_ChainGuides",
+   "ex": [
+    [
+     -11.0,
+     0.0,
+     0.0,
+     0.24
+    ]
+   ]
+  },
+  {
+   "name": "E26_TimingCover",
+   "name_cn": "正时罩盖",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E26_TimingCover.E26_TimingCover",
+   "spin": 0,
+   "unit": "E26_TimingCover",
+   "ex": [
+    [
+     -16.0,
+     0.0,
+     0.0,
+     0.18
+    ]
+   ]
+  },
+  {
+   "name": "E27_ValveCover",
+   "name_cn": "气门室盖（含机油加注盖）",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E27_ValveCover.E27_ValveCover",
+   "spin": 0,
+   "unit": "E27_ValveCover",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     12.0,
+     0.3
+    ],
+    [
+     44.0,
+     -20.0,
+     9.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "E28_IntakeManifold",
+   "name_cn": "进气歧管",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E28_IntakeManifold.E28_IntakeManifold",
+   "spin": 0,
+   "unit": "E28_IntakeManifold",
+   "ex": [
+    [
+     0.0,
+     12.0,
+     0.0,
+     0.22
+    ],
+    [
+     0.0,
+     0.0,
+     26.0,
+     0.27
+    ]
+   ]
+  },
+  {
+   "name": "E29_ThrottleBody",
+   "name_cn": "节气门体",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E29_ThrottleBody.E29_ThrottleBody",
+   "spin": 0,
+   "unit": "E29_ThrottleBody",
+   "ex": [
+    [
+     -6.0,
+     0.0,
+     0.0,
+     0.14
+    ],
+    [
+     0.0,
+     12.0,
+     26.0,
+     0.2
+    ]
+   ]
+  },
+  {
+   "name": "E30_FuelRail",
+   "name_cn": "油轨与喷油器",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E30_FuelRail.E30_FuelRail",
+   "spin": 0,
+   "unit": "E30_FuelRail",
+   "ex": [
+    [
+     0.0,
+     12.0,
+     0.0,
+     0.32
+    ],
+    [
+     0.0,
+     0.0,
+     6.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "E31_ExhaustManifold",
+   "name_cn": "排气歧管",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E31_ExhaustManifold.E31_ExhaustManifold",
+   "spin": 0,
+   "unit": "E31_ExhaustManifold",
+   "ex": [
+    [
+     0.0,
+     -7.0,
+     0.0,
+     0.13
+    ],
+    [
+     44.0,
+     0.0,
+     0.0,
+     0.18
+    ]
+   ]
+  },
+  {
+   "name": "E32_HeatShield",
+   "name_cn": "排气隔热罩",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E32_HeatShield.E32_HeatShield",
+   "spin": 0,
+   "unit": "E32_HeatShield",
+   "ex": [
+    [
+     0.0,
+     -7.0,
+     4.0,
+     0.11
+    ],
+    [
+     44.0,
+     0.0,
+     18.0,
+     0.16
+    ]
+   ]
+  },
+  {
+   "name": "E33_Coil1",
+   "name_cn": "1 缸点火线圈",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E33_Coil1.E33_Coil1",
+   "spin": 0,
+   "unit": "E33_Coil1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     20.0,
+     0.1
+    ],
+    [
+     -50.0,
+     8.0,
+     0.0,
+     0.14
+    ]
+   ]
+  },
+  {
+   "name": "E34_Coil2",
+   "name_cn": "2 缸点火线圈",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E34_Coil2.E34_Coil2",
+   "spin": 0,
+   "unit": "E34_Coil2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     20.0,
+     0.11
+    ],
+    [
+     -50.0,
+     8.0,
+     0.0,
+     0.15000000000000002
+    ]
+   ]
+  },
+  {
+   "name": "E35_Coil3",
+   "name_cn": "3 缸点火线圈",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E35_Coil3.E35_Coil3",
+   "spin": 0,
+   "unit": "E35_Coil3",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     20.0,
+     0.12000000000000001
+    ],
+    [
+     -50.0,
+     8.0,
+     0.0,
+     0.16
+    ]
+   ]
+  },
+  {
+   "name": "E36_Coil4",
+   "name_cn": "4 缸点火线圈",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E36_Coil4.E36_Coil4",
+   "spin": 0,
+   "unit": "E36_Coil4",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     20.0,
+     0.13
+    ],
+    [
+     -50.0,
+     8.0,
+     0.0,
+     0.17
+    ]
+   ]
+  },
+  {
+   "name": "E37_SparkPlug1",
+   "name_cn": "1 缸火花塞",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E37_SparkPlug1.E37_SparkPlug1",
+   "spin": 0,
+   "unit": "E37_SparkPlug1",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     20.0,
+     0.2
+    ],
+    [
+     -50.0,
+     -4.0,
+     0.0,
+     0.26
+    ]
+   ]
+  },
+  {
+   "name": "E38_SparkPlug2",
+   "name_cn": "2 缸火花塞",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E38_SparkPlug2.E38_SparkPlug2",
+   "spin": 0,
+   "unit": "E38_SparkPlug2",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     20.0,
+     0.21000000000000002
+    ],
+    [
+     -50.0,
+     -4.0,
+     0.0,
+     0.27
+    ]
+   ]
+  },
+  {
+   "name": "E39_SparkPlug3",
+   "name_cn": "3 缸火花塞",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E39_SparkPlug3.E39_SparkPlug3",
+   "spin": 0,
+   "unit": "E39_SparkPlug3",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     20.0,
+     0.22
+    ],
+    [
+     -50.0,
+     -4.0,
+     0.0,
+     0.28
+    ]
+   ]
+  },
+  {
+   "name": "E40_SparkPlug4",
+   "name_cn": "4 缸火花塞",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E40_SparkPlug4.E40_SparkPlug4",
+   "spin": 0,
+   "unit": "E40_SparkPlug4",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     20.0,
+     0.23
+    ],
+    [
+     -50.0,
+     -4.0,
+     0.0,
+     0.29000000000000004
+    ]
+   ]
+  },
+  {
+   "name": "E41_OilPump",
+   "name_cn": "机油泵与集滤器",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E41_OilPump.E41_OilPump",
+   "spin": 0,
+   "unit": "E41_OilPump",
+   "ex": [
+    [
+     -26.0,
+     0.0,
+     0.0,
+     0.84
+    ]
+   ]
+  },
+  {
+   "name": "E42_OilFilter",
+   "name_cn": "机油滤清器",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E42_OilFilter.E42_OilFilter",
+   "spin": 0,
+   "unit": "E42_OilFilter",
+   "ex": [
+    [
+     -0.0,
+     5.196152496337891,
+     -3.0,
+     0.08
+    ],
+    [
+     33.0,
+     0.0,
+     8.0,
+     0.15
+    ]
+   ]
+  },
+  {
+   "name": "E43_Dipstick",
+   "name_cn": "机油尺",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E43_Dipstick.E43_Dipstick",
+   "spin": 0,
+   "unit": "E43_Dipstick",
+   "ex": [
+    [
+     0.0,
+     0.8,
+     20.0,
+     0.02
+    ]
+   ]
+  },
+  {
+   "name": "E44_WaterPump",
+   "name_cn": "水泵（含皮带轮）",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E44_WaterPump.E44_WaterPump",
+   "spin": 0,
+   "unit": "E44_WaterPump",
+   "ex": [
+    [
+     -27.0,
+     0.0,
+     0.0,
+     0.06
+    ]
+   ]
+  },
+  {
+   "name": "E45_Thermostat",
+   "name_cn": "节温器壳",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E45_Thermostat.E45_Thermostat",
+   "spin": 0,
+   "unit": "E45_Thermostat",
+   "ex": [
+    [
+     13.0,
+     0.0,
+     4.0,
+     0.12
+    ]
+   ]
+  },
+  {
+   "name": "E46_Alternator",
+   "name_cn": "发电机",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E46_Alternator.E46_Alternator",
+   "spin": 0,
+   "unit": "E46_Alternator",
+   "ex": [
+    [
+     -27.0,
+     6.0,
+     0.0,
+     0.05
+    ]
+   ]
+  },
+  {
+   "name": "E47_Starter",
+   "name_cn": "起动机",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E47_Starter.E47_Starter",
+   "spin": 0,
+   "unit": "E47_Starter",
+   "ex": [
+    [
+     20.0,
+     6.0,
+     0.0,
+     0.1
+    ]
+   ]
+  },
+  {
+   "name": "E48_Belt",
+   "name_cn": "多楔带",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E48_Belt.E48_Belt",
+   "spin": 0,
+   "unit": "E48_Belt",
+   "ex": [
+    [
+     -38.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   ]
+  },
+  {
+   "name": "E49_Tensioner",
+   "name_cn": "皮带张紧轮",
+   "mesh": "/Game/Models/Engine/engine/StaticMeshes/E49_Tensioner.E49_Tensioner",
+   "spin": 0,
+   "unit": "E49_Tensioner",
+   "ex": [
+    [
+     -27.0,
+     0.0,
+     0.0,
+     0.04
+    ]
+   ]
+  }
+ ]
+}
