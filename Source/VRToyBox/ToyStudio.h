@@ -20,7 +20,8 @@ enum class EToyModelKind : uint8
 	Multimeter,
 	Server,
 	Orb,
-	Engine
+	Engine,
+	DexHand
 };
 
 /**
@@ -165,7 +166,15 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	FString EngineManifest = TEXT("Models/Engine/parts.json");
 
-	/** 模型装配状态下最长边的长度（厘米）。模型清单里写了 length_cm 的以清单为准（万用表 40、AI 服务器 55、发动机 60）。 */
+	/** 五指灵巧手（右手）：法兰朝下立在桌上，Yaw 90 让手心（模型 +Y）朝着玩家，拇指在玩家右手边。
+	 *  展示尺寸 50cm（装配后最长的是高度，实物约 21cm）。拆开后手指往上、电机往玩家这边弹，背盖、腕部、法兰往后退。 */
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<USceneComponent> DexHandMount;
+
+	UPROPERTY(EditAnywhere, Category = "ToyBox")
+	FString DexHandManifest = TEXT("Models/DexHand/parts.json");
+
+	/** 模型装配状态下最长边的长度（厘米）。模型清单里写了 length_cm 的以清单为准（万用表 40、AI 服务器 55、发动机 60、灵巧手 50）。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float ModelLengthCm = 50.f;
 

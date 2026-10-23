@@ -10,7 +10,7 @@ class AToyExplodedModel;
 class AToyPartUnit;
 
 /**
- * 调试命令 toy.Demo [Motor|Valve|Drone|Lathe|Multimeter|Server|Robot|Engine ...] [quit]：录 README 用的演示短片（逐帧截图，之后用 ffmpeg 拼成 GIF）。
+ * 调试命令 toy.Demo [Motor|Valve|Drone|Lathe|Multimeter|Server|Robot|Engine|Hand ...] [quit]：录 README 用的演示短片（逐帧截图，之后用 ffmpeg 拼成 GIF）。
  *
  * 每个模型：摆出来 → 等着色器编译完 → 开始逐帧截图到 Saved/Demo/<模型>/f_0000.png …：
  *   装配停一会 → 爆炸 → 右手从镜头这边伸过去捏起一个零件、往上提，信息牌浮出来 → 松手，零件飞回 → 装配回去。
