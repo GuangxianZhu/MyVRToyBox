@@ -7,6 +7,7 @@
 #include "ToyTouchScreen.h"
 #include "Components/ChildActorComponent.h"
 #include "Components/PointLightComponent.h"
+#include "Components/SkyLightComponent.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "HAL/IConsoleManager.h"
@@ -74,6 +75,28 @@ namespace
 	FAutoConsoleCommandWithWorldAndArgs ScreenCommandRef(TEXT("toy.Screen"),
 		TEXT("和戳触屏按钮一样：toy.Screen Lathe MoveNear MoveNear Explode（可以连着写几个）"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&ScreenCommand));
+
+	// 调试命令 toy.SkyLight [强度]：改天光强度（0 = 关，对比用），不带参数就只重新抓一次房间。
+	// 抓的时候桌上摆着的模型也会被抓进环境里，所以最好在桌上没模型时用
+	void SkyLightCommand(const TArray<FString>& Args, UWorld* World)
+	{
+		for (TActorIterator<AToyStudio> It(World); It; ++It)
+		{
+			if (USkyLightComponent* Sky = It->SkyLight)
+			{
+				if (Args.Num() > 0)
+				{
+					Sky->SetIntensity(FMath::Max(0.f, FCString::Atof(*Args[0])));
+				}
+				Sky->RecaptureSky();
+				UE_LOG(LogTemp, Log, TEXT("ToyBox: 天光强度 %.2f，已重新抓取房间"), Sky->Intensity);
+			}
+		}
+	}
+
+	FAutoConsoleCommandWithWorldAndArgs SkyLightCommandRef(TEXT("toy.SkyLight"),
+		TEXT("天光强度：toy.SkyLight 1（默认）/ 0（关）；不带参数 = 重新抓一次房间"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&SkyLightCommand));
 }
 
 AToyStudio::AToyStudio()
@@ -134,6 +157,20 @@ AToyStudio::AToyStudio()
 	UToyShapeComponent* Bulb = UToyShapeComponent::Create(this, TEXT("LampShade"), Root, EToyShape::Cylinder,
 		FVector(40.f, 40.f, 4.f), FVector(TableX, 0.f, RoomHeight - 2.f), FLinearColor(1.f, 0.95f, 0.85f), FRotator::ZeroRotator);
 	Bulb->SetCastShadow(false);
+
+	// 天光：开局在桌子上方抓一次房间（被灯照亮的墙、地板、天花板、灯罩）当环境。
+	// 金属（金属度 1）没有漫反射，颜色全靠反射周围；以前房间里没有天光也没有反射捕获（前向渲染、Lumen 关着），
+	// 金属只能反射一片黑，所以 ITBasics 的模型都把金属度压在 0.55 以下，结果看起来像喷了漆的塑料。
+	// 顺带给房间一点环境光（相当于一次反弹），阴影里不再死黑。离天光 90cm 以内的东西（桌上的模型）不抓进环境。
+	// 可移动天光开局抓一次就不再抓，几乎不花帧率；toy.SkyLight 调强度
+	SkyLight = CreateDefaultSubobject<USkyLightComponent>(TEXT("SkyLight"));
+	SkyLight->SetupAttachment(Root);
+	SkyLight->SetRelativeLocation(FVector(TableX, 0.f, 180.f));
+	SkyLight->SetMobility(EComponentMobility::Movable);
+	SkyLight->SourceType = ESkyLightSourceType::SLS_CapturedScene;
+	SkyLight->SkyDistanceThreshold = 90.f;
+	SkyLight->bLowerHemisphereIsBlack = false;      // 地板也要抓进来，不然零件底面反射的是黑的
+	SkyLight->Intensity = 1.f;
 
 	// 方块出生点：桌面左手边靠前的角落（UE 里 +Y 是右边），离桌面 15cm 落下（桌面中间留给电机）
 	SpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("SpawnPoint"));
@@ -222,6 +259,12 @@ void AToyStudio::BeginPlay()
 			Mount->AttachToComponent(ModelAnchor, FAttachmentTransformRules::KeepRelativeTransform);
 			Mount->SetRelativeLocation(FVector::ZeroVector);
 		}
+	}
+
+	// 天光注册时本来就会排队抓一次，这里再要一次，保证抓的是灯都亮了、桌上还没摆模型的房间
+	if (SkyLight)
+	{
+		SkyLight->RecaptureSky();
 	}
 
 	// 触屏是构造时建好的子 Actor（编辑器里也看得见），这里只接上回调

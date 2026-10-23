@@ -8,6 +8,7 @@
 class AToyCube;
 class AToyMenuPanel;
 class UChildActorComponent;
+class USkyLightComponent;
 class AToyExplodedModel;
 
 /** 桌上能摆出来的爆炸图模型。一次只摆一个，换模型时先收起原来的，所以不会互相重叠。 */
@@ -88,6 +89,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<USceneComponent> ScreenMount;
+
+	/** 天光：开局抓一次房间当环境，金属零件靠它才有东西可反射（见构造函数里的说明）。 */
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<USkyLightComponent> SkyLight;
 
 	/** 触屏：作为子 Actor 在构造时就建出来（编辑器视口里看得见），BeginPlay 时接上按钮回调。 */
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
