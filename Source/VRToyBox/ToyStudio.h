@@ -21,7 +21,8 @@ enum class EToyModelKind : uint8
 	Server,
 	Orb,
 	Engine,
-	DexHand
+	DexHand,
+	Etcher
 };
 
 /**
@@ -174,7 +175,15 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	FString DexHandManifest = TEXT("Models/DexHand/parts.json");
 
-	/** 模型装配状态下最长边的长度（厘米）。模型清单里写了 length_cm 的以清单为准（万用表 40、AI 服务器 55、发动机 60、灵巧手 50）。 */
+	/** 干法刻蚀机（ICP 工艺腔 PM1）：Yaw 90 让闸阀（模型 +Y）朝着玩家，气体盒、分子泵在玩家右手边。
+	 *  展示尺寸 60cm（装配后最长的是高度，实物约 1.7m）。拆开后源组件退到后面排一排，腔里的件摆到左边，晶圆飘到闸阀上方。 */
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<USceneComponent> EtcherMount;
+
+	UPROPERTY(EditAnywhere, Category = "ToyBox")
+	FString EtcherManifest = TEXT("Models/Etcher/parts.json");
+
+	/** 模型装配状态下最长边的长度（厘米）。模型清单里写了 length_cm 的以清单为准（万用表 40、AI 服务器 55、发动机 60、灵巧手 50、刻蚀机 60）。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float ModelLengthCm = 50.f;
 

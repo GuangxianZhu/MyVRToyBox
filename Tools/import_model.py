@@ -3,7 +3,7 @@
 在编辑器里跑（命令行由 scripts/import_motor.bat、scripts/import_valve.bat 调用）：
     UnrealEditor-Cmd.exe VRToyBox.uproject -run=pythonscript -script=...
 环境变量：
-    MODEL_NAME           模型名，决定资产目录 /Game/Models/<名字> 和下面 MODELS 里的配置（Motor / Valve / Drone / Lathe / Multimeter / AIServer / OrbBot / Engine / DexHand）
+    MODEL_NAME           模型名，决定资产目录 /Game/Models/<名字> 和下面 MODELS 里的配置（Motor / Valve / Drone / Lathe / Multimeter / AIServer / OrbBot / Engine / DexHand / Etcher）
     MODEL_GLB            glb 路径（电机兼容旧的 MOTOR_GLB）
     MODEL_MANIFEST_ONLY  =1 时不重新导入资产，只重写 parts.json（兼容旧的 MOTOR_MANIFEST_ONLY）
 
@@ -208,6 +208,27 @@ MODELS = {
         # 模型 +Y 是手心（Blender 的 -Y），+X 是拇指，+Z 是指尖
         check={'H14_Thumb_Tip': (1, 0, 1), 'H03_PalmSkin': (0, 1, 0), 'H02_BackCover': (0, -1, 0),
                'H32_Middle_Tip': (0, 0, 1)},
+    ),
+    'Etcher': dict(
+        info=dict(
+            title='干法刻蚀机 · ICP 工艺腔 PM1（通用原创，不对应具体机型）',
+            body='感应耦合等离子体（ICP）刻多晶硅栅极 · 13.56 MHz 源功率 + 偏压 · Cl2 / HBr / O2 · 300 mm 晶圆 · 20 个部件\n'
+                 '装配状态：抓任意位置拿起整个工艺腔看。点 EXPLODE 按开腔保养的顺序拆开：顶上的屏蔽罩、源匹配器、线圈、喷嘴、介质窗提起来放到后面；'
+                 '气体盒、光谱仪、真空计往外拿开，闸阀门往你这边；内衬、约束环、晶圆、边缘环、绝缘环、静电卡盘、升降针从腔里往上抽出放到左边；'
+                 '腔底下的偏压匹配器、摆阀、分子泵往外拉出。每个部件都能单独抓。',
+        ),
+        named={},
+        units={
+            'base': dict(name_cn='腔体 + 机架',
+                         material='阳极氧化铝腔体（内壁氧化钇涂层）· 闸阀口 · 铝型材机架 · 冷却水管 / 高压线 / 背氦管',
+                         desc='铝做的真空容器，内壁有耐等离子体涂层（如氧化钇），减少腐蚀和掉颗粒。底下是铝型材机架和调平脚，'
+                              '冷却水管、高压线、背氦管沿机架走。拆工艺腔时它不动，其他部件都从它上面拆下来。'),
+        },
+        rotor=None,
+        # 实物（不含射频电源柜）高约 1.65m，桌上展示 60cm（约 0.36 倍），300mm 晶圆约 11cm
+        length_cm=60.0,
+        # 模型 +Y 是闸阀那面（Blender 的 -Y，朝玩家），+X 是气体盒、分子泵那侧，-X 是光谱仪
+        check={'K09_SlitDoor': (0, 1, 1), 'K06_GasBox': (1, 0, 0), 'K07_OES': (-1, 0, 0), 'K19_Turbo': (1, 0, 0)},
     ),
 }
 CONFIG = MODELS.get(MODEL, dict(info=dict(title=MODEL, body=''), named={}, units={}, rotor=None, check={}))
