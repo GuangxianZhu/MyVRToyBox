@@ -1,0 +1,872 @@
+{
+ "source": "etcher_ue.glb",
+ "model": {
+  "title": "干法刻蚀机 · ICP 工艺腔 PM1（通用原创，不对应具体机型）",
+  "body": "感应耦合等离子体（ICP）刻多晶硅栅极 · 13.56 MHz 源功率 + 偏压 · Cl2 / HBr / O2 · 300 mm 晶圆 · 20 个部件\n装配状态：抓任意位置拿起整个工艺腔看。点 EXPLODE 按开腔保养的顺序拆开：顶上的屏蔽罩、源匹配器、线圈、喷嘴、介质窗提起来放到后面；气体盒、光谱仪、真空计往外拿开，闸阀门往你这边；内衬、约束环、晶圆、边缘环、绝缘环、静电卡盘、升降针从腔里往上抽出放到左边；腔底下的偏压匹配器、摆阀、分子泵往外拉出。每个部件都能单独抓。",
+  "explode_scale": 1.0,
+  "length_cm": 60.0
+ },
+ "units": [
+  {
+   "id": "base",
+   "grabbable": false,
+   "name_cn": "腔体 + 机架",
+   "material": "阳极氧化铝腔体（内壁氧化钇涂层）· 闸阀口 · 铝型材机架 · 冷却水管 / 高压线 / 背氦管",
+   "desc": "铝做的真空容器，内壁有耐等离子体涂层（如氧化钇），减少腐蚀和掉颗粒。底下是铝型材机架和调平脚，冷却水管、高压线、背氦管沿机架走。拆工艺腔时它不动，其他部件都从它上面拆下来。",
+   "grab": null
+  },
+  {
+   "id": "K01_RFCover",
+   "grabbable": true,
+   "name_cn": "射频屏蔽罩",
+   "material": "白色喷粉铝罩 · 散热格栅",
+   "desc": "罩住线圈，不让射频辐射到外面。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.44,
+     0.0,
+     135.0
+    ],
+    "segments": [
+     [
+      -11.5,
+      11.5,
+      35.44
+     ]
+    ]
+   }
+  },
+  {
+   "id": "K02_SourceMatch",
+   "grabbable": true,
+   "name_cn": "源匹配器",
+   "material": "喷粉铝箱 + 透明前窗 · 2 个真空可变电容 + 步进电机 · 铜电感",
+   "desc": "里面有两个可变电容，自动调到\"阻抗匹配\"，让电源的功率都送进等离子体，反射回来的接近 0。",
+   "grab": {
+    "type": "box",
+    "center": [
+     -0.0,
+     -0.05,
+     156.15
+    ],
+    "extent": [
+     18.3,
+     13.75,
+     9.15
+    ]
+   }
+  },
+  {
+   "id": "K03_Coil",
+   "grabbable": true,
+   "name_cn": "平面线圈",
+   "material": "镀银铜带（方截面）· 内外两组 · 陶瓷支撑梳",
+   "desc": "通 13.56 MHz 射频电流，交变磁场在腔里感应出电场，把电子加速、撞电离气体分子（电感耦合，ICP）。功率越大，等离子体越浓。分内外两组，调两组的功率比可以调中心和边缘的均匀性。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     -0.67,
+     0.0,
+     134.6
+    ],
+    "segments": [
+     [
+      -10.8,
+      10.8,
+      25.72
+     ]
+    ]
+   }
+  },
+  {
+   "id": "K04_Nozzle",
+   "grabbable": true,
+   "name_cn": "中心进气喷嘴",
+   "material": "氧化铝陶瓷喷嘴 + 不锈钢接头",
+   "desc": "工艺气体从陶瓷窗中心喷进腔里。",
+   "grab": {
+    "type": "pinch"
+   }
+  },
+  {
+   "id": "K05_Window",
+   "grabbable": true,
+   "name_cn": "陶瓷介质窗",
+   "material": "氧化铝陶瓷 Ø690 × 35 mm + O 形圈",
+   "desc": "让线圈的电磁场透进腔里，同时把气体和等离子体挡在里面。用氧化铝陶瓷：不导电、耐腐蚀。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     121.62
+    ],
+    "segments": [
+     [
+      -1.88,
+      1.88,
+      34.5
+     ]
+    ]
+   }
+  },
+  {
+   "id": "K06_GasBox",
+   "grabbable": true,
+   "name_cn": "气体盒",
+   "material": "喷粉钣金箱 + 透明前窗 · 4 路质量流量计 + 气动阀 + 过滤器",
+   "desc": "每路气体一个质量流量计（MFC），精确控制流量；还有阀门和过滤器。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "K07_OES",
+   "grabbable": true,
+   "name_cn": "观察窗 + 光谱仪（OES）",
+   "material": "石英观察窗 + 光纤 + 光谱仪",
+   "desc": "一直看着等离子体发的光。多晶硅刻穿时，含硅产物的谱线会突然变暗，用它判断\"终点\"。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "K08_Gauges",
+   "grabbable": true,
+   "name_cn": "真空计（电容薄膜规）",
+   "material": "电容薄膜真空计 ×2",
+   "desc": "测腔压，读数和气体种类无关。摆阀按它的读数调开度。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "K09_SlitDoor",
+   "grabbable": true,
+   "name_cn": "闸阀门",
+   "material": "铝门板 + 氟橡胶密封圈",
+   "desc": "工艺腔和传输腔之间的门。刻蚀时关着，腐蚀性气体跑不到传输腔里。",
+   "grab": {
+    "type": "box",
+    "center": [
+     0.0,
+     45.65,
+     96.0
+    ],
+    "extent": [
+     21.0,
+     1.15,
+     6.25
+    ]
+   }
+  },
+  {
+   "id": "K10_Liner",
+   "grabbable": true,
+   "name_cn": "内衬",
+   "material": "阳极氧化铝 + 氧化钇涂层（消耗件，脏了整个换下来洗）",
+   "desc": "可以拆下来的保护套。脏了整个换下来清洗，不用清洗腔体本身。消耗件。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     101.75
+    ],
+    "segments": [
+     [
+      -14.75,
+      14.75,
+      31.4
+     ]
+    ]
+   }
+  },
+  {
+   "id": "K11_Baffle",
+   "grabbable": true,
+   "name_cn": "约束环（挡板）",
+   "material": "阳极氧化铝 · 一圈导流槽（消耗件）",
+   "desc": "把等离子体限制在晶圆上方，气体从缝隙流向下面的排气口。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     86.66
+    ],
+    "segments": [
+     [
+      -0.67,
+      0.67,
+      30.0
+     ]
+    ]
+   }
+  },
+  {
+   "id": "K12_Wafer",
+   "grabbable": true,
+   "name_cn": "晶圆",
+   "material": "300 mm 硅片 · 4 nm 栅氧 + 100 nm 多晶硅 + 60 nm 宽光刻胶线条",
+   "desc": "300 mm 硅片，上面是 4 nm 栅氧 + 100 nm 多晶硅，再上面是 60 nm 宽的光刻胶线条。刻完剩下的多晶硅就是晶体管的栅极。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.05,
+     0.0,
+     95.05
+    ],
+    "segments": [
+     [
+      -0.16,
+      0.16,
+      15.02
+     ]
+    ]
+   }
+  },
+  {
+   "id": "K13_EdgeRing",
+   "grabbable": true,
+   "name_cn": "边缘环",
+   "material": "单晶硅（消耗件，被等离子体慢慢吃掉，按射频小时更换）",
+   "desc": "套在晶圆外圈，让晶圆边缘上方的电场和中间一样平，边缘也能刻直。会被等离子体慢慢吃掉，是消耗件。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     94.4
+    ],
+    "segments": [
+     [
+      -0.8,
+      0.8,
+      18.5
+     ]
+    ]
+   }
+  },
+  {
+   "id": "K14_InsRing",
+   "grabbable": true,
+   "name_cn": "绝缘环",
+   "material": "石英（消耗件）",
+   "desc": "石英做的，把带射频的卡盘和接地的腔体隔开。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     88.3
+    ],
+    "segments": [
+     [
+      -5.3,
+      5.3,
+      19.0
+     ]
+    ]
+   }
+  },
+  {
+   "id": "K15_ESC",
+   "grabbable": true,
+   "name_cn": "静电卡盘",
+   "material": "氧化铝陶瓷顶层（双极吸附电极 + 4 区加热层）+ 铝底座（冷却液螺旋水道、背氦沟槽）",
+   "desc": "陶瓷里埋着电极，加高压用静电把晶圆吸平；底座通冷却液控温，晶圆背面通氦气导热。它也是下电极，偏压从这里加上去。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     77.45
+    ],
+    "segments": [
+     [
+      -17.46,
+      17.46,
+      16.8
+     ]
+    ]
+   }
+  },
+  {
+   "id": "K16_LiftPins",
+   "grabbable": true,
+   "name_cn": "升降针 ×3",
+   "material": "氧化铝陶瓷针 ×3 + 不锈钢波纹管 + 顶升轭",
+   "desc": "把晶圆顶起来，机械手的叉子才能伸到晶圆下面接送。",
+   "grab": {
+    "type": "cylinder",
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     77.22
+    ],
+    "segments": [
+     [
+      -17.42,
+      17.42,
+      11.5
+     ]
+    ]
+   }
+  },
+  {
+   "id": "K17_BiasMatch",
+   "grabbable": true,
+   "name_cn": "偏压匹配器",
+   "material": "喷粉铝箱 + 散热格栅 · 铜带接到卡盘",
+   "desc": "把偏压射频送到卡盘上。偏压决定离子打到晶圆上的能量。",
+   "grab": {
+    "type": "box",
+    "center": [
+     -22.1,
+     -17.0,
+     60.0
+    ],
+    "extent": [
+     11.1,
+     11.0,
+     9.0
+    ]
+   }
+  },
+  {
+   "id": "K18_PendulumValve",
+   "grabbable": true,
+   "name_cn": "摆阀",
+   "material": "铝阀体 + 不锈钢阀板 + 驱动电机",
+   "desc": "一块会摆动的阀板，调节抽气口开多大，把腔压稳在设定值。",
+   "grab": {
+    "type": "surface"
+   }
+  },
+  {
+   "id": "K19_Turbo",
+   "grabbable": true,
+   "name_cn": "分子泵",
+   "material": "铝外壳 + 散热片 · 多级叶片转子 · 控制器 · 前级波纹管",
+   "desc": "转子每分钟几万转，把气体分子\"打\"向出口，把腔抽到高真空。后面还接着干泵和尾气处理（在楼下）。",
+   "grab": {
+    "type": "surface"
+   }
+  }
+ ],
+ "parts": [
+  {
+   "name": "K00_Base",
+   "name_cn": "腔体 + 机架",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K00_Base.K00_Base",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "K01_RFCover",
+   "name_cn": "射频屏蔽罩",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K01_RFCover.K01_RFCover",
+   "spin": 0,
+   "unit": "K01_RFCover",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     40.0,
+     0.08
+    ],
+    [
+     42.0,
+     -72.0,
+     0.0,
+     0.18
+    ],
+    [
+     0.0,
+     0.0,
+     -28.0,
+     0.28
+    ]
+   ]
+  },
+  {
+   "name": "K02_SourceMatch",
+   "name_cn": "源匹配器",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K02_SourceMatch.K02_SourceMatch",
+   "spin": 0,
+   "unit": "K02_SourceMatch",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     55.0,
+     0.0
+    ],
+    [
+     110.0,
+     -72.0,
+     0.0,
+     0.1
+    ],
+    [
+     0.0,
+     0.0,
+     -40.0,
+     0.2
+    ]
+   ]
+  },
+  {
+   "name": "K03_Coil",
+   "name_cn": "平面线圈",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K03_Coil.K03_Coil",
+   "spin": 0,
+   "unit": "K03_Coil",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     40.0,
+     0.16
+    ],
+    [
+     -30.0,
+     -72.0,
+     0.0,
+     0.26
+    ],
+    [
+     0.0,
+     0.0,
+     -30.0,
+     0.36
+    ]
+   ]
+  },
+  {
+   "name": "K04_Nozzle",
+   "name_cn": "中心进气喷嘴",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K04_Nozzle.K04_Nozzle",
+   "spin": 0,
+   "unit": "K04_Nozzle",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     55.0,
+     0.22
+    ],
+    [
+     -30.0,
+     -72.0,
+     0.0,
+     0.32
+    ],
+    [
+     0.0,
+     0.0,
+     -13.0,
+     0.42000000000000004
+    ]
+   ]
+  },
+  {
+   "name": "K05_Window",
+   "name_cn": "陶瓷介质窗",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K05_Window.K05_Window",
+   "spin": 0,
+   "unit": "K05_Window",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     40.0,
+     0.25
+    ],
+    [
+     -100.0,
+     -72.0,
+     0.0,
+     0.35
+    ],
+    [
+     0.0,
+     0.0,
+     -30.0,
+     0.45
+    ]
+   ]
+  },
+  {
+   "name": "K06_GasBox",
+   "name_cn": "气体盒",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K06_GasBox.K06_GasBox",
+   "spin": 0,
+   "unit": "K06_GasBox",
+   "ex": [
+    [
+     55.0,
+     0.0,
+     0.0,
+     0.02
+    ]
+   ]
+  },
+  {
+   "name": "K07_OES",
+   "name_cn": "观察窗 + 光谱仪（OES）",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K07_OES.K07_OES",
+   "spin": 0,
+   "unit": "K07_OES",
+   "ex": [
+    [
+     -45.0,
+     0.0,
+     0.0,
+     0.1
+    ]
+   ]
+  },
+  {
+   "name": "K08_Gauges",
+   "name_cn": "真空计（电容薄膜规）",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K08_Gauges.K08_Gauges",
+   "spin": 0,
+   "unit": "K08_Gauges",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     10.0,
+     0.1
+    ],
+    [
+     20.0,
+     0.0,
+     0.0,
+     0.16
+    ]
+   ]
+  },
+  {
+   "name": "K09_SlitDoor",
+   "name_cn": "闸阀门",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K09_SlitDoor.K09_SlitDoor",
+   "spin": 0,
+   "unit": "K09_SlitDoor",
+   "ex": [
+    [
+     0.0,
+     20.0,
+     0.0,
+     0.12
+    ]
+   ]
+  },
+  {
+   "name": "K10_Liner",
+   "name_cn": "内衬",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K10_Liner.K10_Liner",
+   "spin": 0,
+   "unit": "K10_Liner",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     43.0,
+     0.52
+    ],
+    [
+     -162.0,
+     -12.0,
+     0.0,
+     0.62
+    ],
+    [
+     0.0,
+     0.0,
+     -75.0,
+     0.72
+    ]
+   ]
+  },
+  {
+   "name": "K11_Baffle",
+   "name_cn": "约束环（挡板）",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K11_Baffle.K11_Baffle",
+   "spin": 0,
+   "unit": "K11_Baffle",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     44.0,
+     0.56
+    ],
+    [
+     -162.0,
+     50.0,
+     0.0,
+     0.66
+    ],
+    [
+     0.0,
+     0.0,
+     -95.0,
+     0.76
+    ]
+   ]
+  },
+  {
+   "name": "K12_Wafer",
+   "name_cn": "晶圆",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K12_Wafer.K12_Wafer",
+   "spin": 0,
+   "unit": "K12_Wafer",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     45.0,
+     0.45
+    ],
+    [
+     0.0,
+     55.0,
+     0.0,
+     0.55
+    ],
+    [
+     0.0,
+     0.0,
+     -5.0,
+     0.65
+    ]
+   ]
+  },
+  {
+   "name": "K13_EdgeRing",
+   "name_cn": "边缘环",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K13_EdgeRing.K13_EdgeRing",
+   "spin": 0,
+   "unit": "K13_EdgeRing",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     36.4,
+     0.6
+    ],
+    [
+     -105.0,
+     50.0,
+     0.0,
+     0.7
+    ],
+    [
+     0.0,
+     0.0,
+     -90.0,
+     0.8
+    ]
+   ]
+  },
+  {
+   "name": "K14_InsRing",
+   "name_cn": "绝缘环",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K14_InsRing.K14_InsRing",
+   "spin": 0,
+   "unit": "K14_InsRing",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     47.0,
+     0.64
+    ],
+    [
+     -105.0,
+     -12.0,
+     0.0,
+     0.74
+    ],
+    [
+     0.0,
+     0.0,
+     -90.0,
+     0.8400000000000001
+    ]
+   ]
+  },
+  {
+   "name": "K15_ESC",
+   "name_cn": "静电卡盘",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K15_ESC.K15_ESC",
+   "spin": 0,
+   "unit": "K15_ESC",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     70.0,
+     0.68
+    ],
+    [
+     -60.0,
+     -12.0,
+     0.0,
+     0.78
+    ],
+    [
+     0.0,
+     0.0,
+     -100.0,
+     0.8800000000000001
+    ]
+   ]
+  },
+  {
+   "name": "K16_LiftPins",
+   "name_cn": "升降针 ×3",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K16_LiftPins.K16_LiftPins",
+   "spin": 0,
+   "unit": "K16_LiftPins",
+   "ex": [
+    [
+     0.0,
+     0.0,
+     -25.0,
+     0.74
+    ],
+    [
+     -60.0,
+     0.0,
+     0.0,
+     0.82
+    ],
+    [
+     0.0,
+     50.0,
+     0.0,
+     0.9
+    ]
+   ]
+  },
+  {
+   "name": "K17_BiasMatch",
+   "name_cn": "偏压匹配器",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K17_BiasMatch.K17_BiasMatch",
+   "spin": 0,
+   "unit": "K17_BiasMatch",
+   "ex": [
+    [
+     -45.0,
+     0.0,
+     0.0,
+     0.3
+    ],
+    [
+     0.0,
+     -30.0,
+     0.0,
+     0.4
+    ]
+   ]
+  },
+  {
+   "name": "K18_PendulumValve",
+   "name_cn": "摆阀",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K18_PendulumValve.K18_PendulumValve",
+   "spin": 0,
+   "unit": "K18_PendulumValve",
+   "ex": [
+    [
+     60.0,
+     0.0,
+     0.0,
+     0.34
+    ],
+    [
+     0.0,
+     0.0,
+     5.0,
+     0.44
+    ]
+   ]
+  },
+  {
+   "name": "K19_Turbo",
+   "name_cn": "分子泵",
+   "mesh": "/Game/Models/Etcher/etcher_ue/StaticMeshes/K19_Turbo.K19_Turbo",
+   "spin": 0,
+   "unit": "K19_Turbo",
+   "ex": [
+    [
+     55.0,
+     0.0,
+     0.0,
+     0.42
+    ],
+    [
+     0.0,
+     45.0,
+     0.0,
+     0.52
+    ]
+   ]
+  }
+ ]
+}
