@@ -750,10 +750,6 @@ void AToyEtcherRig::UpdateParticles(float Dt)
 				Adsorbed += 1.f;
 				bDead = true;
 			}
-			if (Pt.P.Y < 0.76f)
-			{
-				bDead = true;
-			}
 		}
 		else if (Pt.Type == Ion)
 		{
@@ -819,6 +815,17 @@ void AToyEtcherRig::UpdateParticles(float Dt)
 		{
 			Pt.P.Y = YW;
 			Pt.V.Y = FMath::Abs(Pt.V.Y) * 0.5f;
+		}
+		// 约束环（高 0.865）只放中性气体过去，电子碰到就弹回去。网页版没有这条，电子会从抽气区一路掉出腔外
+		if (Pt.Type == Electron && Pt.P.Y < 0.865f)
+		{
+			Pt.P.Y = 0.865f;
+			Pt.V.Y = FMath::Abs(Pt.V.Y);
+		}
+		// 腔底（0.76）以下算被分子泵抽走。网页版先判再挪，粒子会在腔底下面多画一帧，一暂停就一直停在腔外；VR 版挪完再判
+		if (Pt.P.Y < 0.76f)
+		{
+			bDead = true;
 		}
 		if (bDead)
 		{
