@@ -276,9 +276,10 @@ void AToyTouchScreen::BuildItems()
 	Add(EToyScreenAction::EtchBoards, PixelRect(50.f, 740.f, 520.f, 90.f), GreyButton, EtchTabStructure);
 	// 流程：左边 15 步的列表（不是按钮），右边开始 / 下一步、自动 / 暂停 / 复位、倍速，下面平台小地图和状态
 	Add(EToyScreenAction::EtchNext, PixelRect(430.f, 160.f, 420.f, 120.f), EtchGo, EtchTabFlow);
-	Add(EToyScreenAction::EtchAuto, PixelRect(430.f, 296.f, 130.f, 80.f), GreyButton, EtchTabFlow);
-	Add(EToyScreenAction::EtchPause, PixelRect(575.f, 296.f, 130.f, 80.f), GreyButton, EtchTabFlow);
-	Add(EToyScreenAction::EtchReset, PixelRect(720.f, 296.f, 130.f, 80.f), GreyButton, EtchTabFlow);
+	// "自动：关"四个字要一行放下，自动键宽一点
+	Add(EToyScreenAction::EtchAuto, PixelRect(430.f, 296.f, 170.f, 80.f), GreyButton, EtchTabFlow);
+	Add(EToyScreenAction::EtchPause, PixelRect(610.f, 296.f, 115.f, 80.f), GreyButton, EtchTabFlow);
+	Add(EToyScreenAction::EtchReset, PixelRect(735.f, 296.f, 115.f, 80.f), GreyButton, EtchTabFlow);
 	for (int32 Speed = 0; Speed < AToyEtcherRig::SpeedCount; ++Speed)
 	{
 		Add(EToyScreenAction::EtchSpeed, PixelRect(430.f + Speed * 105.f, 392.f, 95.f, 70.f), MoveButton, EtchTabFlow, Speed);
@@ -522,7 +523,7 @@ TSharedRef<SWidget> AToyTouchScreen::BuildGui()
 				SNew(SBorder)
 				.BorderImage(bCard ? &B.Card : &B.Swatch)
 				.BorderBackgroundColor_Lambda(Live(Weak, &AToyTouchScreen::ItemColor, FSlateColor(DisabledColor), Index))
-				.Padding(FMargin(10.f))
+				.Padding(ItemPadding(Index))
 				.HAlign(HAlign_Center)
 				.VAlign(VAlign_Center)
 				[
@@ -615,7 +616,7 @@ TSharedRef<SWidget> AToyTouchScreen::BuildItemContent(int32 Index)
 		.Text_Lambda(Live(Weak, &AToyTouchScreen::ItemLabel, FText(), Index))
 		.Font(Font(ItemFontSize(Index)))
 		.Justification(ETextJustify::Center)
-		.WrapTextAt(static_cast<float>(Item.Rect.GetSize().X) - 28.f)
+		.WrapTextAt(static_cast<float>(Item.Rect.GetSize().X) - 8.f - 2.f * ItemPadding(Index).Left)
 		.ColorAndOpacity_Lambda(TextColorOf);
 }
 
@@ -626,11 +627,17 @@ int32 AToyTouchScreen::ItemFontSize(int32 Index) const
 	{
 	case EToyScreenAction::EtchNext:      return 26;
 	case EToyScreenAction::EtchSpeed:     return 24;
-	case EToyScreenAction::EtchPreset:    return 18;
+	case EToyScreenAction::EtchPreset:    return 16;
 	case EToyScreenAction::EtchFieldDown:
-	case EToyScreenAction::EtchFieldUp:   return 32;
+	case EToyScreenAction::EtchFieldUp:   return 24;
 	default:                              return Item.Rect.GetSize().Y >= 110.f ? 28 : 22;
 	}
+}
+
+FMargin AToyTouchScreen::ItemPadding(int32 Index) const
+{
+	// 矮按钮（配方的 - +、自动、预置配方、翻页）上下只留 2 像素，不然字的下半截被切掉
+	return Items[Index].Rect.GetSize().Y < 100.f ? FMargin(6.f, 2.f) : FMargin(10.f);
 }
 
 AToyEtcherRig* AToyTouchScreen::GetRig() const

@@ -175,7 +175,7 @@ namespace
 			};
 		}
 
-		/** 摆镜头 → 等两帧画面稳定 → 截图 → 等它写完 */
+		/** 摆镜头 → 等 2.5 秒让自动曝光追上新画面（近看暗面板后再拍全景会发白）→ 截图 → 等它写完 */
 		FStep Shot(const TCHAR* Name, TFunction<void()> AimFn)
 		{
 			return [this, Name, AimFn](float T)
@@ -186,7 +186,7 @@ namespace
 					bFlagA = true;
 					return false;
 				}
-				if (!bFlagB && T > 0.3f)
+				if (!bFlagB && T > 2.5f)
 				{
 					FScreenshotRequest::RequestScreenshot(OutDir / FString(Name) + TEXT(".png"), false, false);
 					bFlagB = true;
@@ -195,7 +195,7 @@ namespace
 					UE_LOG(LogTemp, Log, TEXT("ToyBox: EtchShots %s · %s"), Name, R ? *R->StatusLine().ToString() : TEXT("没有刻蚀机"));
 					return false;
 				}
-				return bFlagB && T > 0.8f;
+				return bFlagB && T > 3.f;
 			};
 		}
 
@@ -292,8 +292,8 @@ namespace
 			Steps.Add(Shot(TEXT("05_etch_overview"), Overview));
 			Steps.Add(Shot(TEXT("06_etch_chamber"), [this]() { Aim(AnchorPoint(FVector(-26.f, -24.f, 62.f)), AnchorPoint(FVector(14.f, -54.f, 42.f)), 70.f); }));
 			Steps.Add(Shot(TEXT("07_etch_small_glow"), [this]() { Aim(AnchorPoint(FVector(-37.f, 5.f, 63.f)), AnchorPoint(FVector(0.f, 0.f, 36.f)), 70.f); }));
-			Steps.Add(Shot(TEXT("08_info_board"), [this]() { AimAtBoard(RigBoard(TEXT("InfoBoard")), 55.f, 65.f); }));
-			Steps.Add(Shot(TEXT("09_profile_board"), [this]() { AimAtBoard(RigBoard(TEXT("ProfileBoard")), 38.f, 55.f); }));
+			Steps.Add(Shot(TEXT("08_info_board"), [this]() { AimAtBoard(RigBoard(TEXT("InfoBoard")), 60.f, 65.f); }));
+			Steps.Add(Shot(TEXT("09_profile_board"), [this]() { AimAtBoard(RigBoard(TEXT("ProfileBoard")), 50.f, 55.f); }));
 			Steps.Add(Shot(TEXT("10_screen_flow_etching"), ScreenTab(2)));
 			Steps.Add(Do([this]() { SetPaused(false); }));
 
@@ -301,7 +301,7 @@ namespace
 			Steps.Add(WaitUntil(TEXT("标准配方跑完"), [this]() { const AToyEtcherRig* R = Rig(); return R && R->GetProcess().bDone; }));
 			Steps.Add(Wait(0.5f));
 			Steps.Add(Shot(TEXT("11_done_overview"), Overview));
-			Steps.Add(Shot(TEXT("12_result_board"), [this]() { AimAtBoard(RigBoard(TEXT("ResultBoard")), 42.f, 55.f); }));
+			Steps.Add(Shot(TEXT("12_result_board"), [this]() { AimAtBoard(RigBoard(TEXT("ResultBoard")), 52.f, 55.f); }));
 			Steps.Add(Shot(TEXT("13_screen_result"), ScreenTab(4)));
 			Steps.Add(Shot(TEXT("14_screen_recipe"), ScreenTab(3)));
 			Steps.Add(Shot(TEXT("15_screen_structure"), ScreenTab(1)));
@@ -318,8 +318,8 @@ namespace
 			}));
 			Steps.Add(WaitUntil(TEXT("偏压太高跑完"), [this]() { const AToyEtcherRig* R = Rig(); return R && R->GetProcess().bDone; }));
 			Steps.Add(Wait(0.5f));
-			Steps.Add(Shot(TEXT("16_hibias_result_board"), [this]() { AimAtBoard(RigBoard(TEXT("ResultBoard")), 42.f, 55.f); }));
-			Steps.Add(Shot(TEXT("17_hibias_profile"), [this]() { AimAtBoard(RigBoard(TEXT("ProfileBoard")), 38.f, 55.f); }));
+			Steps.Add(Shot(TEXT("16_hibias_result_board"), [this]() { AimAtBoard(RigBoard(TEXT("ResultBoard")), 52.f, 55.f); }));
+			Steps.Add(Shot(TEXT("17_hibias_profile"), [this]() { AimAtBoard(RigBoard(TEXT("ProfileBoard")), 50.f, 55.f); }));
 
 			// 拆开：放大腔收起来；这时按开始，讲解板提示先组装回去
 			Steps.Add(Do([this]()
@@ -339,7 +339,7 @@ namespace
 				}
 			}));
 			Steps.Add(Shot(TEXT("18_exploded_overview"), Overview));
-			Steps.Add(Shot(TEXT("19_need_assemble"), [this]() { AimAtBoard(RigBoard(TEXT("InfoBoard")), 55.f, 65.f); }));
+			Steps.Add(Shot(TEXT("19_need_assemble"), [this]() { AimAtBoard(RigBoard(TEXT("InfoBoard")), 60.f, 65.f); }));
 			Steps.Add(Do([this]()
 			{
 				if (AToyStudio* S = Studio.Get())

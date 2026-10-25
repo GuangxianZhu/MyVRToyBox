@@ -186,6 +186,8 @@ AToyEtcherRig::AToyEtcherRig()
 	// 半透明的件（Setup 时换材质）：介质窗、约束环
 	MagWindow = NewMesh(TEXT("MagWindow"), MagRoot, CylinderMesh, FVector(0.69 * K, 0.69 * K, 2.1), FVector(0.f, 0.f, 27.15f));
 	MagBaffle = NewMesh(TEXT("MagBaffle"), MagRoot, CylinderMesh, FVector(0.60 * K, 0.60 * K, 0.6), FVector(0.f, 0.f, 6.f));
+	// 腔底（网页坐标 Y = 0.76，粒子到这里就算被分子泵抽走）：约束环下面的抽气区也围起来，粒子不会看着像掉出腔外
+	MagFloor = NewMesh(TEXT("MagFloor"), MagRoot, CylinderMesh, FVector(0.61 * K, 0.61 * K, 0.5), FVector(0.f, 0.f, 0.25f));
 	// 内衬只画背面半圈（17 条竖板），前面敞开看里面；线圈是四圈铜带（小方块拼的）
 	MagLiner = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("MagLiner"));
 	MagLiner->SetupAttachment(MagRoot);
@@ -359,6 +361,7 @@ void AToyEtcherRig::BuildMaterials()
 	if (UMaterialInstanceDynamic* Baffle = MakeMid(Ghost, FLinearColor(0.4f, 0.45f, 0.5f) * 3.f, 0.3f))
 	{
 		MagBaffle->SetMaterial(0, Baffle);
+		MagFloor->SetMaterial(0, Baffle);
 	}
 	if (UMaterialInstanceDynamic* Copper = MakeMid(Lit, FLinearColor(0.75f, 0.35f, 0.12f), 1.f))
 	{
@@ -392,18 +395,23 @@ void AToyEtcherRig::BuildMaterials()
 		}
 	}
 
-	// 内衬竖板：背面半圈，半径 0.29m，从约束环（0.865）到介质窗（1.195）
+	// 内衬竖板：背面半圈，半径 0.29m，从约束环（0.865）到介质窗（1.195）；下面接一圈腔壁（半径 0.30m）围住抽气区，一直到腔底（0.76）
 	const double K = MagK;
-	const float LinerR = static_cast<float>(0.29 * K);
-	const float LinerZ0 = static_cast<float>((0.865 - MagY0) * K);
-	const float LinerZ1 = static_cast<float>((1.195 - MagY0) * K);
-	for (int32 Index = 0; Index <= 16; ++Index)
+	auto AddStaves = [this, K](double Radius, double Y0, double Y1)
 	{
-		const float Angle = -90.f + 180.f * Index / 16.f;
-		const float Rad = FMath::DegreesToRadians(Angle);
-		const FVector Location(LinerR * FMath::Cos(Rad), LinerR * FMath::Sin(Rad), (LinerZ0 + LinerZ1) * 0.5f);
-		MagLiner->AddInstance(FTransform(FRotator(0.f, Angle, 0.f), Location, FVector(0.4f, 3.5f, LinerZ1 - LinerZ0) / 100.f));
-	}
+		const float R = static_cast<float>(Radius * K);
+		const float Z0 = static_cast<float>((Y0 - MagY0) * K);
+		const float Z1 = static_cast<float>((Y1 - MagY0) * K);
+		for (int32 Index = 0; Index <= 16; ++Index)
+		{
+			const float Angle = -90.f + 180.f * Index / 16.f;
+			const float Rad = FMath::DegreesToRadians(Angle);
+			const FVector Location(R * FMath::Cos(Rad), R * FMath::Sin(Rad), (Z0 + Z1) * 0.5f);
+			MagLiner->AddInstance(FTransform(FRotator(0.f, Angle, 0.f), Location, FVector(0.4f, 3.5f, Z1 - Z0) / 100.f));
+		}
+	};
+	AddStaves(0.29, 0.865, 1.195);
+	AddStaves(0.305, MagY0, 0.865);
 	// 线圈：介质窗上面四圈，内两圈、外两圈
 	const float CoilZ = static_cast<float>((1.245 - MagY0) * K);
 	for (const float RingR : { 0.09f, 0.12f, 0.20f, 0.235f })

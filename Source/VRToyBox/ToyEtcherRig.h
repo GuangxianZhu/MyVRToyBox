@@ -233,6 +233,8 @@ private:
 	UPROPERTY()
 	TObjectPtr<UStaticMeshComponent> MagBaffle;
 	UPROPERTY()
+	TObjectPtr<UStaticMeshComponent> MagFloor;
+	UPROPERTY()
 	TObjectPtr<UInstancedStaticMeshComponent> MagLiner;
 	UPROPERTY()
 	TObjectPtr<UInstancedStaticMeshComponent> MagCoil;

@@ -187,6 +187,8 @@ float ToyEtchUI::ProfileSurface(const AToyEtcherRig& Rig, float X)
 void SToyEtchProfile::Construct(const FArguments& InArgs)
 {
 	Rig = InArgs._Rig;
+	// 离子从画面上沿外面飞进来，不裁掉会画到上面的标题上
+	SetClipping(EWidgetClipping::ClipToBounds);
 }
 
 FVector2D SToyEtchProfile::ComputeDesiredSize(float) const
@@ -289,7 +291,12 @@ int32 SToyEtchProfile::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	{
 		if (Pt.bIon)
 		{
-			Paint.Lines({ At(X(Pt.X), Pt.Y), At(X(Pt.X - Pt.VX * 0.02f), Pt.Y - Pt.VY * 0.02f) }, IonColor, 1.2f * Scale);
+			// 尾巴也不超出剖面图上沿（控件比剖面图大的时候，裁剪管不到上面那条空白）
+			if (Pt.Y > 0.f)
+			{
+				const float TailY = FMath::Max(0.f, Pt.Y - Pt.VY * 0.02f);
+				Paint.Lines({ At(X(Pt.X), Pt.Y), At(X(Pt.X - Pt.VX * 0.02f), TailY) }, IonColor, 1.2f * Scale);
+			}
 		}
 		else
 		{

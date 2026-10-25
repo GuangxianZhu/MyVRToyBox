@@ -9,6 +9,7 @@ class AToyStudio;
 class SWidget;
 class UBoxComponent;
 class UWidgetComponent;
+struct FMargin;
 struct FSlateColor;
 struct FToyScreenBrushes;
 
@@ -195,6 +196,7 @@ private:
 	FText DistanceText() const;
 	FText ItemLabel(int32 Index) const;
 	int32 ItemFontSize(int32 Index) const;
+	FMargin ItemPadding(int32 Index) const;
 
 	TWeakObjectPtr<AToyStudio> Studio;
 	TWeakObjectPtr<AToyEtcherRig> EtchRig;
