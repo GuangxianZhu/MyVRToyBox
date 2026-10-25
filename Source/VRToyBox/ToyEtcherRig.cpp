@@ -188,6 +188,8 @@ AToyEtcherRig::AToyEtcherRig()
 	MagBaffle = NewMesh(TEXT("MagBaffle"), MagRoot, CylinderMesh, FVector(0.60 * K, 0.60 * K, 0.6), FVector(0.f, 0.f, 6.f));
 	// 腔底（网页坐标 Y = 0.76，粒子到这里就算被分子泵抽走）：约束环下面的抽气区也围起来，粒子不会看着像掉出腔外
 	MagFloor = NewMesh(TEXT("MagFloor"), MagRoot, CylinderMesh, FVector(0.61 * K, 0.61 * K, 0.5), FVector(0.f, 0.f, 0.25f));
+	// 抽气区（腔底到约束环之间）整圈罩一层很淡的壁：内衬前半圈是敞开的，不罩的话往泵里流的粒子看着像飘在卡盘下面、腔外头
+	MagPumpWall = NewMesh(TEXT("MagPumpWall"), MagRoot, CylinderMesh, FVector(0.61 * K, 0.61 * K, 5.1), FVector(0.f, 0.f, 3.1f));
 	// 内衬只画背面半圈（17 条竖板），前面敞开看里面；线圈是四圈铜带（小方块拼的）
 	MagLiner = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("MagLiner"));
 	MagLiner->SetupAttachment(MagRoot);
@@ -353,6 +355,10 @@ void AToyEtcherRig::BuildMaterials()
 	if (UMaterialInstanceDynamic* Liner = MakeMid(Ghost, FLinearColor(0.35f, 0.5f, 0.65f) * 4.f, 0.14f))
 	{
 		MagLiner->SetMaterial(0, Liner);
+	}
+	if (UMaterialInstanceDynamic* PumpWall = MakeMid(Ghost, FLinearColor(0.35f, 0.5f, 0.65f) * 4.f, 0.1f))
+	{
+		MagPumpWall->SetMaterial(0, PumpWall);
 	}
 	if (UMaterialInstanceDynamic* Window = MakeMid(Ghost, FLinearColor(0.9f, 0.9f, 0.95f) * 4.f, 0.2f))
 	{

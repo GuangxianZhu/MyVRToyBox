@@ -235,6 +235,8 @@ private:
 	UPROPERTY()
 	TObjectPtr<UStaticMeshComponent> MagFloor;
 	UPROPERTY()
+	TObjectPtr<UStaticMeshComponent> MagPumpWall;
+	UPROPERTY()
 	TObjectPtr<UInstancedStaticMeshComponent> MagLiner;
 	UPROPERTY()
 	TObjectPtr<UInstancedStaticMeshComponent> MagCoil;
