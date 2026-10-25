@@ -319,7 +319,10 @@ ITBasics/干法刻蚀机/web/etch_core.js ──tools/export_core.mjs（Node）�
   - `ToyEtchCore`（C++）逐行照 `etch_core.js` 翻译，控制台 `toy.EtchSelfTest` 逐组对答案：稳态量（速率、离子能量、选择比……）相对误差 ≤ 1e-6，刻蚀过程（深度、钻蚀、栅氧、光刻胶、光谱）≤ 1e-4，终点时间允许差一步（0.05 秒），5 项判定必须一样。云端用 g++ 单独编译对过一遍：65/65 一致（加 `-ffast-math` 也一致）。
   - 改公式的顺序：先改 `etch_core.js` → 跑 `export_core.mjs` → 照着改 `ToyEtchCore.cpp` → 跑导入 bat 拷 json → `toy.EtchSelfTest` 全过。
 - **还没做的**：触屏上的原理讲解页、腔里的等离子体 / 粒子动画、配方实验（下一阶段，演示模式）；新场景、1:1 机台和机台触屏（仿真 fab 模式）。
-- ⏳ **待在 PC 上导入**：`toy.GrabAudit Etcher`（19 个能抓的单元）、`toy.EtchSelfTest`（65 组）。
+- **导入结果（2026-10-25）**：20 个静态网格（Nanite 全关），共约 7.9 万个三角形，`Content/Models/Etcher` 55 个文件约 5.4MB。抓取单元 20 个（腔体 + 机架是基座），19 个能抓：圆柱 10、贴表面 5、方块 3、捏 1。导入方向检查 4 项 OK，没有缺节点的警告，没有手写覆盖。
+- ✅ **工艺模型对答案**：`toy.EtchSelfTest` 65/65 组和网页版一致；讲解文字读到 15 步、32 个零件、5 个预置配方、8 个配方参数。
+- ✅ **抓取体检（桌面模式）**：`toy.GrabAudit Etcher` 19 个单元全部捏到。装配截图里工艺腔立在桌上、闸阀门正对镜头、气体盒在右后方、光谱仪在左边；拆开后没有零件钻到桌面下面，分子泵、摆阀、气体盒停在触屏左边，没撞进触屏。腔体上半截和最左边的内衬、约束环超出了体检截图的画面（取景问题）。
+- ⚠️ **还没在头显里看过**：拆开后最左边的内衬在离站立点约 84cm 的左侧，站着够不够得着待确认；第 2 页的 ETCHER 卡片要先点「下页」才看得到。
 
 ## 原理
 
@@ -404,7 +407,7 @@ ITBasics/干法刻蚀机/web/etch_core.js ──tools/export_core.mjs（Node）�
 | 车床 | 67 | 捏 50、圆柱 5、方块 5、贴表面 7（手写 5） |
 | 万用表 | 36 | 捏 22、圆柱 4、方块 3、贴表面 7（手写 2） |
 
-**抓取体检 `toy.GrabAudit`。** 控制台输入 `toy.GrabAudit`（或 `Motor` / `Valve` / `Drone` / `Lathe` / `Multimeter` / `Server` / `Robot` / `Engine` / `Hand`，加 `quit` 跑完退出），会依次摆出模型（先拍一张装配全景 `00_assembled.png`）、爆炸（再拍一张 `00_exploded.png`），用右手按桌面模式的方式（捏合点放在零件上离镜头最近的表面点、扣扳机）把每个单元捏一遍，捏住后手往上提、镜头给一个特写，截图到 `Saved/GrabAudit/<模型>/<序号>_<单元>.png`，并写 `Saved/GrabAudit/summary.csv`。五个模型 180 个单元约 6 分钟跑完（只跑车床或万用表约 1 分钟）。命令行批量跑：
+**抓取体检 `toy.GrabAudit`。** 控制台输入 `toy.GrabAudit`（或 `Motor` / `Valve` / `Drone` / `Lathe` / `Multimeter` / `Server` / `Robot` / `Engine` / `Hand` / `Etcher`，加 `quit` 跑完退出），会依次摆出模型（先拍一张装配全景 `00_assembled.png`）、爆炸（再拍一张 `00_exploded.png`），用右手按桌面模式的方式（捏合点放在零件上离镜头最近的表面点、扣扳机）把每个单元捏一遍，捏住后手往上提、镜头给一个特写，截图到 `Saved/GrabAudit/<模型>/<序号>_<单元>.png`，并写 `Saved/GrabAudit/summary.csv`。五个模型 180 个单元约 6 分钟跑完（只跑车床或万用表约 1 分钟）。命令行批量跑：
 
 ```
 UnrealEditor.exe VRToyBox.uproject -game -windowed -ResX=1280 -ResY=720 "-ExecCmds=toy.GrabAudit All quit"
