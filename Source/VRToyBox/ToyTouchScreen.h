@@ -25,6 +25,7 @@ enum class EToyScreenAction : uint8
 	ToggleOrb,
 	ToggleEngine,
 	ToggleDexHand,
+	ToggleEtcher,
 	ToggleExplode,
 	ResetParts,
 	MoveNear,
