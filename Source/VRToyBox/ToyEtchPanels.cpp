@@ -101,8 +101,14 @@ namespace
 	{
 		switch (Series)
 		{
-		case 0: return FString::Printf(Value >= 10 ? TEXT("%.0f") : Value >= 1 ? TEXT("%.1f") : TEXT("%.2f"), Value);
-		case 1: return FString::Printf(Value < 1 ? TEXT("%.2f") : TEXT("%.1f"), Value);
+		// Printf 的格式串必须是编译期常量，不能用三目选格式
+		case 0:
+			if (Value >= 10) { return FString::Printf(TEXT("%.0f"), Value); }
+			if (Value >= 1) { return FString::Printf(TEXT("%.1f"), Value); }
+			return FString::Printf(TEXT("%.2f"), Value);
+		case 1:
+			if (Value < 1) { return FString::Printf(TEXT("%.2f"), Value); }
+			return FString::Printf(TEXT("%.1f"), Value);
 		case 5: return FString::Printf(TEXT("%.2f"), Value);
 		default: return FString::Printf(TEXT("%.0f"), Value);
 		}
