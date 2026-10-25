@@ -1,5 +1,7 @@
 #include "ToyTouchScreen.h"
 
+#include "ToyEtchPanels.h"
+#include "ToyEtcherRig.h"
 #include "ToyShapeComponent.h"
 #include "ToyStudio.h"
 #include "Algo/Find.h"
@@ -103,16 +105,33 @@ namespace
 		return FCoreStyle::GetDefaultFontStyle(bBold ? "Bold" : "Regular", Size);
 	}
 
-	/** 把触屏的一个 const 成员函数包成 Slate 每帧读值的 lambda；触屏没了就返回 Fallback。 */
-	template <typename R, typename... TParams, typename... TArgs>
-	auto Live(TWeakObjectPtr<AToyTouchScreen> Weak, R (AToyTouchScreen::*Getter)(TParams...) const, R Fallback, TArgs... Args)
+	/** 把触屏（或刻蚀机演示）的一个 const 成员函数包成 Slate 每帧读值的 lambda；对象没了就返回 Fallback。 */
+	template <typename TObject, typename R, typename... TParams, typename... TArgs>
+	auto Live(TWeakObjectPtr<TObject> Weak, R (TObject::*Getter)(TParams...) const, R Fallback, TArgs... Args)
 	{
 		return [Weak, Getter, Fallback, Args...]() -> R
 		{
-			const AToyTouchScreen* Screen = Weak.Get();
-			return Screen ? (Screen->*Getter)(Args...) : Fallback;
+			const TObject* Object = Weak.Get();
+			return Object ? (Object->*Getter)(Args...) : Fallback;
 		};
 	}
+
+	// ---------- 刻蚀机页签 ----------
+	// 页签栏 96~150 占掉原来"模型"小标题那一行；页签下面 160~860 是页签的内容，右边那块（当前模型、爆炸、挪动）不变
+	const TCHAR* const EtchTabNames[] = { TEXT("模型"), TEXT("结构"), TEXT("流程"), TEXT("配方"), TEXT("结果") };
+	constexpr int32 EtchTabCount = UE_ARRAY_COUNT(EtchTabNames);
+	constexpr int32 EtchTabModels = 0;
+	constexpr int32 EtchTabStructure = 1;
+	constexpr int32 EtchTabFlow = 2;
+	constexpr int32 EtchTabRecipe = 3;
+	constexpr int32 EtchTabResult = 4;
+	/** "桌上不是刻蚀机时才显示"（原来的"模型"小标题），给 OnTab 用 */
+	constexpr int32 NoEtcherTab = -2;
+	// 配方页：8 个参数、5 个预置（多了不显示）
+	constexpr int32 EtchFieldRows = 8;
+	constexpr int32 EtchPresetSlots = 5;
+	const FLinearColor EtchGo(0.04f, 0.25f, 0.1f);
+	const FLinearColor EtchPresetColor(0.14f, 0.1f, 0.26f);
 }
 
 AToyTouchScreen::AToyTouchScreen()
@@ -210,30 +229,34 @@ void AToyTouchScreen::BuildItems()
 	//   顶栏 0~90：标题、提示、右上角菜单
 	//   左 30~850：模型卡片 4 × 2（150~630），方块两个大按钮（700~840）
 	//   右 870~1260：当前模型（爆炸 / 复位）和挪动方向键
+	// 桌上摆着刻蚀机时，左边 96~150 是页签栏，上面这些模型卡片、方块按钮只在"模型"页签里，其余页签见下面
 	Items.Reset();
-	auto Add = [this](EToyScreenAction Action, const FBox2D& Rect, const FLinearColor& Color, int32 InPage = INDEX_NONE, int32 InModel = INDEX_NONE)
+	auto Add = [this](EToyScreenAction Action, const FBox2D& Rect, const FLinearColor& Color, int32 InTab = INDEX_NONE, int32 InParam = 0) -> FToyScreenItem&
 	{
 		FToyScreenItem& Item = Items.AddDefaulted_GetRef();
 		Item.Action = Action;
 		Item.Rect = Rect;
 		Item.Color = Color;
-		Item.Page = InPage;
-		Item.Model = InModel;
+		Item.Tab = InTab;
+		Item.Param = InParam;
+		return Item;
 	};
 
 	Add(EToyScreenAction::OpenMenu, PixelRect(1090.f, 18.f, 170.f, 60.f), GreyButton);
 
 	for (int32 Index = 0; Index < ModelCount; ++Index)
 	{
-		Add(ModelTable[Index].Action, CardRect(Index % ModelsPerPage), Scaled(ModelTable[Index].Color, 0.22f), Index / ModelsPerPage, Index);
+		FToyScreenItem& Card = Add(ModelTable[Index].Action, CardRect(Index % ModelsPerPage), Scaled(ModelTable[Index].Color, 0.22f), EtchTabModels);
+		Card.Page = Index / ModelsPerPage;
+		Card.Model = Index;
 	}
-	Add(EToyScreenAction::HideModel, CardRect(ModelsPerPage), GreyButton);
+	Add(EToyScreenAction::HideModel, CardRect(ModelsPerPage), GreyButton, EtchTabModels);
 	// 翻页箭头：模型超过 7 个才出现（IsItemVisible）
-	Add(EToyScreenAction::PrevPage, PixelRect(690.f, 96.f, 74.f, 46.f), GreyButton);
-	Add(EToyScreenAction::NextPage, PixelRect(776.f, 96.f, 74.f, 46.f), GreyButton);
+	Add(EToyScreenAction::PrevPage, PixelRect(690.f, 96.f, 74.f, 46.f), GreyButton, EtchTabModels);
+	Add(EToyScreenAction::NextPage, PixelRect(776.f, 96.f, 74.f, 46.f), GreyButton, EtchTabModels);
 
-	Add(EToyScreenAction::SpawnCube, PixelRect(30.f, 700.f, 400.f, 140.f), FLinearColor(0.04f, 0.25f, 0.1f));
-	Add(EToyScreenAction::ClearCubes, PixelRect(450.f, 700.f, 400.f, 140.f), FLinearColor(0.3f, 0.06f, 0.05f));
+	Add(EToyScreenAction::SpawnCube, PixelRect(30.f, 700.f, 400.f, 140.f), FLinearColor(0.04f, 0.25f, 0.1f), EtchTabModels);
+	Add(EToyScreenAction::ClearCubes, PixelRect(450.f, 700.f, 400.f, 140.f), FLinearColor(0.3f, 0.06f, 0.05f), EtchTabModels);
 
 	Add(EToyScreenAction::ToggleExplode, PixelRect(890.f, 236.f, 350.f, 120.f), FLinearColor(0.34f, 0.2f, 0.02f));
 	Add(EToyScreenAction::ResetParts, PixelRect(890.f, 372.f, 350.f, 96.f), GreyButton);
@@ -243,6 +266,37 @@ void AToyTouchScreen::BuildItems()
 	Add(EToyScreenAction::MoveLeft, PixelRect(890.f, 640.f, 110.f, 100.f), MoveButton);
 	Add(EToyScreenAction::MoveRight, PixelRect(1130.f, 640.f, 110.f, 100.f), MoveButton);
 	Add(EToyScreenAction::MoveNear, PixelRect(1010.f, 750.f, 110.f, 100.f), MoveButton);
+
+	// ---------- 刻蚀机页签（120 × 54，≈ 3 × 1.4cm）----------
+	for (int32 Tab = 0; Tab < EtchTabCount; ++Tab)
+	{
+		Add(EToyScreenAction::EtchTab, PixelRect(30.f + Tab * 130.f, 96.f, 120.f, 54.f), GreyButton, INDEX_NONE, Tab);
+	}
+	// 结构：放大腔和面板的显示开关（爆炸 / 复位就是右边那两个）
+	Add(EToyScreenAction::EtchBoards, PixelRect(50.f, 740.f, 520.f, 90.f), GreyButton, EtchTabStructure);
+	// 流程：左边 15 步的列表（不是按钮），右边开始 / 下一步、自动 / 暂停 / 复位、倍速，下面平台小地图和状态
+	Add(EToyScreenAction::EtchNext, PixelRect(430.f, 160.f, 420.f, 120.f), EtchGo, EtchTabFlow);
+	Add(EToyScreenAction::EtchAuto, PixelRect(430.f, 296.f, 130.f, 80.f), GreyButton, EtchTabFlow);
+	Add(EToyScreenAction::EtchPause, PixelRect(575.f, 296.f, 130.f, 80.f), GreyButton, EtchTabFlow);
+	Add(EToyScreenAction::EtchReset, PixelRect(720.f, 296.f, 130.f, 80.f), GreyButton, EtchTabFlow);
+	for (int32 Speed = 0; Speed < AToyEtcherRig::SpeedCount; ++Speed)
+	{
+		Add(EToyScreenAction::EtchSpeed, PixelRect(430.f + Speed * 105.f, 392.f, 95.f, 70.f), MoveButton, EtchTabFlow, Speed);
+	}
+	// 配方：一排预置，下面 8 个参数各一行 [-] 数值 [+]，右边是"按这个配方预计"
+	for (int32 Preset = 0; Preset < EtchPresetSlots; ++Preset)
+	{
+		Add(EToyScreenAction::EtchPreset, PixelRect(30.f + Preset * 166.f, 160.f, 152.f, 70.f), EtchPresetColor, EtchTabRecipe, Preset);
+	}
+	for (int32 Field = 0; Field < EtchFieldRows; ++Field)
+	{
+		const float Y = 246.f + Field * 64.f;
+		Add(EToyScreenAction::EtchFieldDown, PixelRect(236.f, Y, 70.f, 56.f), MoveButton, EtchTabRecipe, Field);
+		Add(EToyScreenAction::EtchFieldUp, PixelRect(444.f, Y, 70.f, 56.f), MoveButton, EtchTabRecipe, Field);
+	}
+	// 结果：再跑一片、改配方（网页版结果弹窗底下那两个）
+	Add(EToyScreenAction::EtchAgain, PixelRect(30.f, 776.f, 400.f, 76.f), EtchGo, EtchTabResult);
+	Add(EToyScreenAction::EtchTweak, PixelRect(450.f, 776.f, 400.f, 76.f), GreyButton, EtchTabResult);
 }
 
 TSharedRef<SWidget> AToyTouchScreen::BuildGui()
@@ -251,28 +305,43 @@ TSharedRef<SWidget> AToyTouchScreen::BuildGui()
 	const FToyScreenBrushes& B = *Brushes;
 	TSharedRef<SCanvas> Canvas = SNew(SCanvas);
 
-	auto AddBox = [&Canvas](const FBox2D& Rect, const FSlateBrush* Brush, const FLinearColor& Color)
+	// 只在某个页签显示：INDEX_NONE = 一直显示，NoEtcherTab = 桌上不是刻蚀机时才显示
+	auto OnTab = [Weak](int32 Tab) -> TAttribute<EVisibility>
+	{
+		if (Tab == INDEX_NONE)
+		{
+			return EVisibility::HitTestInvisible;
+		}
+		return TAttribute<EVisibility>::CreateLambda([Weak, Tab]()
+		{
+			const AToyTouchScreen* Screen = Weak.Get();
+			const bool bShow = Screen && (Tab == NoEtcherTab ? Screen->GetRig() == nullptr : Screen->CurrentTab() == Tab);
+			return bShow ? EVisibility::HitTestInvisible : EVisibility::Collapsed;
+		});
+	};
+	auto AddBox = [&Canvas, &OnTab](const FBox2D& Rect, const FSlateBrush* Brush, const FLinearColor& Color, int32 Tab = INDEX_NONE)
 	{
 		Canvas->AddSlot().Position(Rect.Min).Size(Rect.GetSize())
 		[
-			SNew(SBorder).BorderImage(Brush).BorderBackgroundColor(Color)
+			SNew(SBorder).BorderImage(Brush).BorderBackgroundColor(Color).Visibility(OnTab(Tab))
 		];
 	};
 	// SCanvas 槽的 HAlign / VAlign 是"控件相对 Position 这个点怎么对齐"（Center = 以 Position 为中心），不是在 Size 里居中。
 	// 槽一律左上对齐，在 Rect 里的对齐交给里面的 SBox
-	auto AddWidget = [&Canvas](const FBox2D& Rect, EHorizontalAlignment HAlign, const TSharedRef<SWidget>& Widget)
+	auto AddWidget = [&Canvas, &OnTab](const FBox2D& Rect, EHorizontalAlignment HAlign, const TSharedRef<SWidget>& Widget, int32 Tab = INDEX_NONE,
+		EVerticalAlignment VAlign = VAlign_Center)
 	{
 		Canvas->AddSlot().Position(Rect.Min).Size(Rect.GetSize())
 		[
-			SNew(SBox).HAlign(HAlign).VAlign(VAlign_Center)
+			SNew(SBox).HAlign(HAlign).VAlign(VAlign).Visibility(OnTab(Tab))
 			[
 				Widget
 			]
 		];
 	};
-	auto AddText = [&AddWidget](const FBox2D& Rect, TAttribute<FText> Text, int32 Size, const FLinearColor& Color, EHorizontalAlignment HAlign)
+	auto AddText = [&AddWidget](const FBox2D& Rect, TAttribute<FText> Text, int32 Size, const FLinearColor& Color, EHorizontalAlignment HAlign, int32 Tab = INDEX_NONE)
 	{
-		AddWidget(Rect, HAlign, SNew(STextBlock).Text(Text).Font(Font(Size)).ColorAndOpacity(Color));
+		AddWidget(Rect, HAlign, SNew(STextBlock).Text(Text).Font(Font(Size)).ColorAndOpacity(Color), Tab);
 	};
 
 	// 背景和两块面板
@@ -291,9 +360,9 @@ TSharedRef<SWidget> AToyTouchScreen::BuildGui()
 			return FSlateColor(StudioActor && StudioActor->GetMissingKind() ? WarnColor : DimTextColor);
 		}));
 
-	// 左边的小标题
-	AddText(PixelRect(30.f, 96.f, 300.f, 46.f), FText::FromString(TEXT("模型")), 20, DimTextColor, HAlign_Left);
-	AddText(PixelRect(30.f, 646.f, 820.f, 46.f), TAttribute<FText>::CreateLambda(Live(Weak, &AToyTouchScreen::CubeText, FText())), 20, DimTextColor, HAlign_Left);
+	// 左边的小标题（桌上摆着刻蚀机时这一行是页签栏）
+	AddText(PixelRect(30.f, 96.f, 300.f, 46.f), FText::FromString(TEXT("模型")), 20, DimTextColor, HAlign_Left, NoEtcherTab);
+	AddText(PixelRect(30.f, 646.f, 820.f, 46.f), TAttribute<FText>::CreateLambda(Live(Weak, &AToyTouchScreen::CubeText, FText())), 20, DimTextColor, HAlign_Left, EtchTabModels);
 
 	// 右边：当前模型的名字和状态、挪动标题、方向键中间的距离
 	AddText(PixelRect(890.f, 104.f, 350.f, 34.f), FText::FromString(TEXT("当前模型")), 16, DimTextColor, HAlign_Left);
@@ -304,6 +373,126 @@ TSharedRef<SWidget> AToyTouchScreen::BuildGui()
 	AddWidget(PixelRect(1010.f, 640.f, 110.f, 100.f), HAlign_Center,
 		SNew(STextBlock).Text_Lambda(Live(Weak, &AToyTouchScreen::DistanceText, FText())).Font(Font(18)).ColorAndOpacity(DimTextColor)
 		.Justification(ETextJustify::Center));
+
+	// ---------- 刻蚀机页签的内容（不是按钮的部分）：字和图直接读刻蚀机演示，换了刻蚀机就整个界面重建（SetEtcherRig）----------
+	const TWeakObjectPtr<AToyEtcherRig> Rig = EtchRig;
+	if (Rig.IsValid())
+	{
+		const FLinearColor Title(1.f, 0.8f, 0.3f);
+		const FLinearColor Good(0.6f, 0.95f, 0.65f);
+
+		// 结构：三级放大怎么看
+		AddBox(PixelRect(30.f, 160.f, 820.f, 700.f), &B.Panel, PanelColor, EtchTabStructure);
+		AddText(PixelRect(50.f, 176.f, 780.f, 50.f), FText::FromString(TEXT("三级放大：从整机看到一根栅极")), 26, Title, HAlign_Left, EtchTabStructure);
+		AddWidget(PixelRect(50.f, 236.f, 780.f, 490.f), HAlign_Left,
+			SNew(STextBlock)
+			.Text(FText::FromString(
+				TEXT("1. 桌上的整机（真实的三分之一左右）：跑工艺时闸阀门落下、升降针顶起，真空机械手的手指托着晶圆从闸阀伸进伸出；起辉以后腔里的紫光透过腔壁也看得见。\n\n")
+				TEXT("2. 左边放大的反应腔（真实的 60%）：气体分子从喷嘴进来，被电子撞碎成离子和自由基；自由基吸附在晶圆上，离子被鞘层电场加速打下来，生成 SiCl4 冒出、随气流被抽走。\n\n")
+				TEXT("3. 上面的剖面板：晶圆上一根 60 nm 宽的栅极，刻深、侧壁钻蚀、栅氧、光刻胶都实时画出来（放大一百万倍）。\n\n")
+				TEXT("想看零件：右边「爆炸拆开」，零件可以拿起来看名字和作用。一片正在跑的时候不能拆，拆开的时候也不能开始。")))
+			.Font(Font(19, false))
+			.ColorAndOpacity(TextColor)
+			.WrapTextAt(780.f)
+			.LineHeightPercentage(1.15f),
+			EtchTabStructure, VAlign_Top);
+
+		// 流程：15 步的列表，做完的打勾、正在做的高亮
+		for (int32 Step = 0; Step < ToyEtch::StepCount; ++Step)
+		{
+			Canvas->AddSlot().Position(FVector2D(30.f, 166.f + Step * 44.f)).Size(FVector2D(380.f, 40.f))
+			[
+				SNew(SBorder)
+				.BorderImage(&B.Swatch)
+				.Visibility(OnTab(EtchTabFlow))
+				.Padding(FMargin(14.f, 0.f))
+				.VAlign(VAlign_Center)
+				.BorderBackgroundColor_Lambda([Rig, Step]()
+				{
+					const int32 State = Rig.IsValid() ? Rig->StepState(Step) : 0;
+					return FSlateColor(State == 1 ? FLinearColor(0.34f, 0.2f, 0.02f) : State == 2 ? FLinearColor(0.03f, 0.1f, 0.05f) : FLinearColor(0.045f, 0.055f, 0.085f));
+				})
+				[
+					SNew(STextBlock)
+					.Font(Font(18, false))
+					.Text_Lambda([Rig, Step]()
+					{
+						const int32 State = Rig.IsValid() ? Rig->StepState(Step) : 0;
+						const TCHAR* Mark = State == 2 ? TEXT("√") : State == 1 ? TEXT("●") : TEXT("○");
+						const FString Name = Rig.IsValid() ? Rig->StepName(Step).ToString() : FString();
+						return FText::FromString(FString::Printf(TEXT("%s  %d. %s"), Mark, Step + 1, *Name));
+					})
+					.ColorAndOpacity_Lambda([Rig, Step, Good]()
+					{
+						const int32 State = Rig.IsValid() ? Rig->StepState(Step) : 0;
+						return FSlateColor(State == 1 ? TextColor : State == 2 ? Good : DimTextColor);
+					})
+				]
+			];
+		}
+		AddBox(PixelRect(430.f, 478.f, 420.f, 270.f), &B.Swatch, PanelColor, EtchTabFlow);
+		Canvas->AddSlot().Position(FVector2D(436.f, 484.f)).Size(FVector2D(408.f, 258.f))
+		[
+			SNew(SBox).Visibility(OnTab(EtchTabFlow))
+			[
+				SNew(SToyEtchMap).Rig(Rig)
+			]
+		];
+		AddWidget(PixelRect(430.f, 756.f, 420.f, 90.f), HAlign_Left,
+			SNew(STextBlock)
+			.Text_Lambda([Rig]()
+			{
+				return Rig.IsValid() ? FText::FromString(FString::Printf(TEXT("%s\n%s  %s"), *Rig->StatusLine().ToString(),
+					*Rig->DepthText().ToString(), *Rig->EndpointText().ToString())) : FText();
+			})
+			.Font(Font(17, false))
+			.ColorAndOpacity(DimTextColor)
+			.WrapTextAt(420.f),
+			EtchTabFlow);
+
+		// 配方：参数名 / 数值（两边的 - + 是按钮）、预计、提示
+		for (int32 Field = 0; Field < EtchFieldRows; ++Field)
+		{
+			const float Y = 246.f + Field * 64.f;
+			AddText(PixelRect(30.f, Y, 200.f, 56.f), TAttribute<FText>::CreateLambda(Live(Rig, &AToyEtcherRig::FieldName, FText(), Field)), 19, TextColor, HAlign_Left, EtchTabRecipe);
+			AddText(PixelRect(310.f, Y, 130.f, 56.f), TAttribute<FText>::CreateLambda(Live(Rig, &AToyEtcherRig::FieldValue, FText(), Field)), 22, TextColor, HAlign_Center, EtchTabRecipe);
+		}
+		AddBox(PixelRect(530.f, 246.f, 320.f, 504.f), &B.Panel, PanelColor, EtchTabRecipe);
+		AddWidget(PixelRect(550.f, 262.f, 290.f, 480.f), HAlign_Left,
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot().AutoHeight()
+			[
+				SNew(STextBlock).Text(FText::FromString(TEXT("按这个配方，预计："))).Font(Font(19)).ColorAndOpacity(Title)
+			]
+			+ SVerticalBox::Slot().AutoHeight().Padding(0.f, 10.f, 0.f, 0.f)
+			[
+				SNew(STextBlock).Text_Lambda(Live(Rig, &AToyEtcherRig::PredictText, FText())).Font(Font(16, false)).ColorAndOpacity(TextColor)
+				.WrapTextAt(290.f).LineHeightPercentage(1.25f)
+			]
+			+ SVerticalBox::Slot().AutoHeight().Padding(0.f, 14.f, 0.f, 0.f)
+			[
+				SNew(STextBlock).Text(FText::FromString(TEXT("简化模型：趋势对、数量级对，具体数字是估计值。"))).Font(Font(14, false)).ColorAndOpacity(DimTextColor)
+				.WrapTextAt(290.f)
+			],
+			EtchTabRecipe, VAlign_Top);
+		AddWidget(PixelRect(30.f, 766.f, 820.f, 90.f), HAlign_Left,
+			SNew(STextBlock)
+			.Text_Lambda(Live(Rig, &AToyEtcherRig::FieldTip, FText()))
+			.Font(Font(17, false))
+			.ColorAndOpacity_Lambda([Rig]() { return FSlateColor(Rig.IsValid() && Rig->IsRunning() ? WarnColor : DimTextColor); })
+			.WrapTextAt(820.f),
+			EtchTabRecipe);
+
+		// 结果：和右边浮着的结果板是同一份列表
+		AddBox(PixelRect(30.f, 160.f, 820.f, 604.f), &B.Panel, PanelColor, EtchTabResult);
+		Canvas->AddSlot().Position(FVector2D(50.f, 176.f)).Size(FVector2D(780.f, 576.f))
+		[
+			SNew(SBox).Visibility(OnTab(EtchTabResult)).VAlign(VAlign_Top)
+			[
+				ToyEtchUI::MakeResultList(Rig, 0.85f, &B.Swatch)
+			]
+		];
+	}
 
 	// 按钮和卡片：外层是选中描边（不选中时透明），内层是按钮底色；按下的一瞬间缩小 5%
 	for (int32 Index = 0; Index < Items.Num(); ++Index)
@@ -421,12 +610,53 @@ TSharedRef<SWidget> AToyTouchScreen::BuildItemContent(int32 Index)
 			];
 	}
 
-	const int32 Size = Item.Rect.GetSize().Y >= 110.f ? 28 : 22;
+	// 按钮的字：按钮里放不下就折行（刻蚀机的"下一步：吸附晶圆、通背氦"这种）
 	return SNew(STextBlock)
 		.Text_Lambda(Live(Weak, &AToyTouchScreen::ItemLabel, FText(), Index))
-		.Font(Font(Size))
+		.Font(Font(ItemFontSize(Index)))
 		.Justification(ETextJustify::Center)
+		.WrapTextAt(static_cast<float>(Item.Rect.GetSize().X) - 28.f)
 		.ColorAndOpacity_Lambda(TextColorOf);
+}
+
+int32 AToyTouchScreen::ItemFontSize(int32 Index) const
+{
+	const FToyScreenItem& Item = Items[Index];
+	switch (Item.Action)
+	{
+	case EToyScreenAction::EtchNext:      return 26;
+	case EToyScreenAction::EtchSpeed:     return 24;
+	case EToyScreenAction::EtchPreset:    return 18;
+	case EToyScreenAction::EtchFieldDown:
+	case EToyScreenAction::EtchFieldUp:   return 32;
+	default:                              return Item.Rect.GetSize().Y >= 110.f ? 28 : 22;
+	}
+}
+
+AToyEtcherRig* AToyTouchScreen::GetRig() const
+{
+	return EtchRig.Get();
+}
+
+int32 AToyTouchScreen::CurrentTab() const
+{
+	return EtchRig.IsValid() ? EtchTab : EtchTabModels;
+}
+
+void AToyTouchScreen::SetEtcherRig(AToyEtcherRig* Rig)
+{
+	EtchRig = Rig;
+	EtchTab = Rig ? EtchTabFlow : EtchTabModels;
+	// 刻蚀机页签里的字和图绑的是这一台刻蚀机演示，换了就重建界面（BeginPlay 之前还没有界面，不用管）
+	if (Brushes.IsValid() && Gui)
+	{
+		Gui->SetSlateWidget(BuildGui());
+	}
+}
+
+void AToyTouchScreen::SetEtchTab(int32 Tab)
+{
+	EtchTab = FMath::Clamp(Tab, 0, EtchTabCount - 1);
 }
 
 int32 AToyTouchScreen::PageCount() const
@@ -437,16 +667,32 @@ int32 AToyTouchScreen::PageCount() const
 bool AToyTouchScreen::IsItemVisible(int32 Index) const
 {
 	const FToyScreenItem& Item = Items[Index];
-	if (Item.Action == EToyScreenAction::PrevPage || Item.Action == EToyScreenAction::NextPage)
+	if (Item.Tab != INDEX_NONE && Item.Tab != CurrentTab())
 	{
-		return PageCount() > 1;
+		return false;
 	}
-	return Item.Page == INDEX_NONE || Item.Page == Page;
+	const AToyEtcherRig* Rig = GetRig();
+	switch (Item.Action)
+	{
+	case EToyScreenAction::PrevPage:
+	case EToyScreenAction::NextPage:
+		return PageCount() > 1;
+	case EToyScreenAction::EtchTab:
+		return Rig != nullptr;
+	case EToyScreenAction::EtchPreset:
+		return Rig && Rig->GetContent().Presets.IsValidIndex(Item.Param);
+	case EToyScreenAction::EtchFieldDown:
+	case EToyScreenAction::EtchFieldUp:
+		return Rig && Rig->GetContent().Fields.IsValidIndex(Item.Param);
+	default:
+		return Item.Page == INDEX_NONE || Item.Page == Page;
+	}
 }
 
 bool AToyTouchScreen::IsItemEnabled(int32 Index) const
 {
 	const AToyStudio* StudioActor = Studio.Get();
+	const AToyEtcherRig* Rig = GetRig();
 	switch (Items[Index].Action)
 	{
 	case EToyScreenAction::HideModel:
@@ -456,6 +702,25 @@ bool AToyTouchScreen::IsItemEnabled(int32 Index) const
 		return Page > 0;
 	case EToyScreenAction::NextPage:
 		return Page < PageCount() - 1;
+	// 刻蚀机：一片正在跑的时候不能拆开、不能改配方
+	case EToyScreenAction::ToggleExplode:
+		return !(Rig && Rig->IsRunning());
+	case EToyScreenAction::EtchNext:
+		return Rig && Rig->CanStart();
+	case EToyScreenAction::EtchReset:
+		return Rig && !Rig->GetProcess().bBusy && Rig->GetProcess().StepIdx >= 0;
+	case EToyScreenAction::EtchPreset:
+	case EToyScreenAction::EtchFieldDown:
+	case EToyScreenAction::EtchFieldUp:
+	case EToyScreenAction::EtchAgain:
+		return Rig && !Rig->IsRunning();
+	case EToyScreenAction::EtchTab:
+	case EToyScreenAction::EtchAuto:
+	case EToyScreenAction::EtchPause:
+	case EToyScreenAction::EtchSpeed:
+	case EToyScreenAction::EtchTweak:
+	case EToyScreenAction::EtchBoards:
+		return Rig != nullptr;
 	default:
 		return true;
 	}
@@ -475,9 +740,19 @@ bool AToyTouchScreen::IsItemHovered(int32 Index) const
 
 bool AToyTouchScreen::IsItemSelected(int32 Index) const
 {
+	const FToyScreenItem& Item = Items[Index];
+	const AToyEtcherRig* Rig = GetRig();
+	switch (Item.Action)
+	{
+	case EToyScreenAction::EtchTab:    return Rig && CurrentTab() == Item.Param;
+	case EToyScreenAction::EtchSpeed:  return Rig && Rig->GetSpeedIndex() == Item.Param;
+	case EToyScreenAction::EtchPreset: return Rig && Rig->IsPresetSelected(Item.Param);
+	case EToyScreenAction::EtchAuto:   return Rig && Rig->IsAuto();
+	case EToyScreenAction::EtchPause:  return Rig && Rig->IsPaused();
+	default: break;
+	}
 	const AToyStudio* StudioActor = Studio.Get();
-	const int32 Model = Items[Index].Model;
-	return StudioActor && Model != INDEX_NONE && StudioActor->IsModelShown(ModelTable[Model].Kind);
+	return StudioActor && Item.Model != INDEX_NONE && StudioActor->IsModelShown(ModelTable[Item.Model].Kind);
 }
 
 bool AToyTouchScreen::IsItemFlashing(int32 Index) const
@@ -620,13 +895,27 @@ bool AToyTouchScreen::Press(int32 Index)
 	FlashUntil = Now + 0.15;
 
 	const EToyScreenAction Action = Items[Index].Action;
+	const int32 Param = Items[Index].Param;
 	if (Action == EToyScreenAction::PrevPage || Action == EToyScreenAction::NextPage)
 	{
 		Page = FMath::Clamp(Page + (Action == EToyScreenAction::NextPage ? 1 : -1), 0, PageCount() - 1);
 	}
+	else if (Action == EToyScreenAction::EtchTab)
+	{
+		SetEtchTab(Param);
+	}
+	else if (Action == EToyScreenAction::EtchTweak)
+	{
+		SetEtchTab(EtchTabRecipe);
+	}
 	else if (AToyStudio* StudioActor = Studio.Get())
 	{
-		StudioActor->HandleScreenAction(Action);
+		StudioActor->HandleScreenAction(Action, Param);
+		// 再跑一片：回到待机以后切到"流程"，接着点开始
+		if (Action == EToyScreenAction::EtchAgain)
+		{
+			SetEtchTab(EtchTabFlow);
+		}
 	}
 	return true;
 }
@@ -671,6 +960,11 @@ FText AToyTouchScreen::ModelState() const
 	{
 		return FText::FromString(TEXT("点左边的卡片摆一个出来"));
 	}
+	const AToyEtcherRig* Rig = GetRig();
+	if (Rig && Rig->IsRunning())
+	{
+		return FText::FromString(TEXT("工艺进行中 · 跑完才能拆开"));
+	}
 	return FText::FromString(StudioActor->IsModelExploded() ? TEXT("爆炸图 · 零件可以拿起来看") : TEXT("装配状态"));
 }
 
@@ -711,6 +1005,29 @@ FText AToyTouchScreen::ItemLabel(int32 Index) const
 	case EToyScreenAction::MoveNear:      return FText::FromString(TEXT("拉近"));
 	case EToyScreenAction::MoveLeft:      return FText::FromString(TEXT("左移"));
 	case EToyScreenAction::MoveRight:     return FText::FromString(TEXT("右移"));
+	default: break;
+	}
+
+	// 刻蚀机页签里的按钮
+	const AToyEtcherRig* Rig = GetRig();
+	if (!Rig)
+	{
+		return FText();
+	}
+	switch (Item.Action)
+	{
+	case EToyScreenAction::EtchTab:       return FText::FromString(EtchTabNames[FMath::Clamp(Item.Param, 0, EtchTabCount - 1)]);
+	case EToyScreenAction::EtchNext:      return Rig->StartLabel();
+	case EToyScreenAction::EtchAuto:      return FText::FromString(Rig->IsAuto() ? TEXT("自动：开") : TEXT("自动：关"));
+	case EToyScreenAction::EtchPause:     return FText::FromString(Rig->IsPaused() ? TEXT("继续") : TEXT("暂停"));
+	case EToyScreenAction::EtchReset:     return FText::FromString(TEXT("复位"));
+	case EToyScreenAction::EtchSpeed:     return FText::FromString(FString::Printf(TEXT("%g×"), AToyEtcherRig::SpeedValue(Item.Param)));
+	case EToyScreenAction::EtchPreset:    return Rig->PresetName(Item.Param);
+	case EToyScreenAction::EtchFieldDown: return FText::FromString(TEXT("-"));
+	case EToyScreenAction::EtchFieldUp:   return FText::FromString(TEXT("+"));
+	case EToyScreenAction::EtchAgain:     return FText::FromString(TEXT("再跑一片"));
+	case EToyScreenAction::EtchTweak:     return FText::FromString(TEXT("改配方再试"));
+	case EToyScreenAction::EtchBoards:    return FText::FromString(Rig->AreBoardsShown() ? TEXT("隐藏放大腔和面板") : TEXT("显示放大腔和面板"));
 	default:                              return FText();
 	}
 }

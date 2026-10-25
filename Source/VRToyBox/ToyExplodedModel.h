@@ -58,6 +58,15 @@ public:
 
 	const TArray<TObjectPtr<AToyPartUnit>>& GetUnits() const { return Units; }
 
+	/** 爆炸进度 0（装配）~ 1（爆炸）。 */
+	float GetProgress() const { return Progress; }
+
+	/**
+	 * 工艺动画用（刻蚀机的闸阀门、升降针、晶圆）：单元在爆炸位置之外再挪一段（模型坐标，厘米，未缩放），或者整个藏起来。
+	 * 按 parts.json 里的单元 id 找，找不到就什么都不做。被抓着的单元等它飞回来以后再按这个位置摆。
+	 */
+	void SetUnitPose(const FString& UnitId, const FVector& Extra, bool bVisible);
+
 	// IToyGrabbable：装配状态下抓整台电机
 	virtual bool CanGrab() const override;
 	virtual FTransform ComputeHoldTransform(const FToyGripContext& Grip) const override;
@@ -106,6 +115,12 @@ private:
 
 	/** 每个单元的虚影网格（懒创建），和 Units 下标一一对应。 */
 	TArray<TArray<TObjectPtr<UStaticMeshComponent>>> Ghosts;
+
+	/** SetUnitPose 设的额外位移，和 Units 下标一一对应（平时都是 0）。 */
+	TArray<FVector> ExtraOffsets;
+
+	/** 单元现在应该在的相对位置：爆炸位移 + 额外位移。 */
+	FVector UnitOffset(int32 Index) const;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> GhostMaterial;

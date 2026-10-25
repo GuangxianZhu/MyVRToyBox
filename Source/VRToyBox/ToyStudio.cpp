@@ -1,6 +1,7 @@
 #include "ToyStudio.h"
 
 #include "ToyCube.h"
+#include "ToyEtcherRig.h"
 #include "ToyExplodedModel.h"
 #include "ToyMenuPanel.h"
 #include "ToyShapeComponent.h"
@@ -36,7 +37,8 @@ namespace
 	const FLinearColor ShelfColor(0.3f, 0.2f, 0.12f);
 
 	// 调试命令 toy.Screen <按钮名>：和戳触屏上那个按钮一样（Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Server / Robot / Engine / Hand / Etcher / Hide / Explode / Reset /
-	// MoveNear / MoveFar / MoveLeft / MoveRight），可以在 -ExecCmds 里连着写，不用鼠标点
+	// MoveNear / MoveFar / MoveLeft / MoveRight），可以在 -ExecCmds 里连着写，不用鼠标点。
+	// Tab0 ~ Tab4 切刻蚀机的页签（模型 / 结构 / 流程 / 配方 / 结果）；刻蚀机自己的按钮用 toy.Etch
 	void ScreenCommand(const TArray<FString>& Args, UWorld* World)
 	{
 		static const TMap<FString, EToyScreenAction> Names = {
@@ -61,6 +63,11 @@ namespace
 		}
 		for (const FString& Arg : Args)
 		{
+			if (Studio && Studio->GetScreen() && Arg.StartsWith(TEXT("tab"), ESearchCase::IgnoreCase) && Arg.Len() == 4 && FChar::IsDigit(Arg[3]))
+			{
+				Studio->GetScreen()->SetEtchTab(Arg[3] - TEXT('0'));
+				continue;
+			}
 			const EToyScreenAction* Action = Names.Find(Arg.ToLower());
 			if (!Studio || !Action)
 			{
@@ -305,7 +312,7 @@ FString AToyStudio::KindName(EToyModelKind Kind)
 	}
 }
 
-void AToyStudio::HandleScreenAction(EToyScreenAction Action)
+void AToyStudio::HandleScreenAction(EToyScreenAction Action, int32 Param)
 {
 	switch (Action)
 	{
@@ -329,9 +336,22 @@ void AToyStudio::HandleScreenAction(EToyScreenAction Action)
 	case EToyScreenAction::MoveRight:     MoveModel(FVector(0.f, MoveStepCm, 0.f)); break;
 	case EToyScreenAction::OpenMenu:      if (Menu) { Menu->Open(); } break;
 	case EToyScreenAction::HideModel:     if (Model) { ToggleModel(ModelKind); } break;
-	// 翻页只是触屏自己的事，不会传到这里
+	// 刻蚀机演示模式的按钮（触屏上桌上摆着刻蚀机才有这几个页签）
+	case EToyScreenAction::EtchNext:      if (EtcherRig) { EtcherRig->StartOrNext(); } break;
+	case EToyScreenAction::EtchAuto:      if (EtcherRig) { EtcherRig->ToggleAuto(); } break;
+	case EToyScreenAction::EtchPause:     if (EtcherRig) { EtcherRig->TogglePause(); } break;
+	case EToyScreenAction::EtchReset:
+	case EToyScreenAction::EtchAgain:     if (EtcherRig) { EtcherRig->ResetProcess(); } break;
+	case EToyScreenAction::EtchSpeed:     if (EtcherRig) { EtcherRig->SetSpeedIndex(Param); } break;
+	case EToyScreenAction::EtchPreset:    if (EtcherRig) { EtcherRig->ApplyPreset(Param); } break;
+	case EToyScreenAction::EtchFieldDown: if (EtcherRig) { EtcherRig->StepField(Param, -1); } break;
+	case EToyScreenAction::EtchFieldUp:   if (EtcherRig) { EtcherRig->StepField(Param, 1); } break;
+	case EToyScreenAction::EtchBoards:    if (EtcherRig) { EtcherRig->ToggleBoards(); } break;
+	// 翻页、切页签只是触屏自己的事，不会传到这里
 	case EToyScreenAction::PrevPage:
-	case EToyScreenAction::NextPage:      break;
+	case EToyScreenAction::NextPage:
+	case EToyScreenAction::EtchTab:
+	case EToyScreenAction::EtchTweak:     break;
 	}
 	// 触屏界面每帧从工作室读状态，不用在这里刷新
 }
@@ -344,6 +364,44 @@ void AToyStudio::MoveModel(const FVector& DeltaCm)
 	const FVector Next = ModelAnchor->GetRelativeLocation() + DeltaCm;
 	const FVector Clamped(FMath::Clamp(Next.X, TableX - 20.f, TableX + 20.f), FMath::Clamp(Next.Y, -40.f, 20.f), ModelHome.Z);
 	ModelAnchor->SetRelativeLocation(Clamped);
+	if (EtcherRig)
+	{
+		EtcherRig->AimAt(PlayerEye());
+	}
+}
+
+FVector AToyStudio::PlayerEye() const
+{
+	return GetActorTransform().TransformPosition(FVector(0.f, 0.f, 160.f));
+}
+
+void AToyStudio::SpawnEtcherRig()
+{
+	FActorSpawnParameters Params;
+	Params.Owner = this;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	EtcherRig = GetWorld()->SpawnActor<AToyEtcherRig>(AToyEtcherRig::StaticClass(), ModelAnchor->GetComponentTransform(), Params);
+	if (EtcherRig)
+	{
+		EtcherRig->Setup(Model, ModelAnchor, PlayerEye());
+	}
+	if (Screen)
+	{
+		Screen->SetEtcherRig(EtcherRig);
+	}
+}
+
+void AToyStudio::DestroyEtcherRig()
+{
+	if (EtcherRig)
+	{
+		EtcherRig->Destroy();
+		EtcherRig = nullptr;
+		if (Screen)
+		{
+			Screen->SetEtcherRig(nullptr);
+		}
+	}
 }
 
 float AToyStudio::GetModelDistanceCm() const
@@ -353,8 +411,9 @@ float AToyStudio::GetModelDistanceCm() const
 
 bool AToyStudio::ToggleModel(EToyModelKind Kind)
 {
-	// 再按一次同一个按钮 = 收起；按另一个模型的按钮 = 换模型
+	// 再按一次同一个按钮 = 收起；按另一个模型的按钮 = 换模型。刻蚀机的演示模式先删（它要把小模型上挪过的零件摆回去）
 	const bool bSame = Model && ModelKind == Kind;
+	DestroyEtcherRig();
 	if (Model)
 	{
 		Model->Destroy();
@@ -400,6 +459,10 @@ bool AToyStudio::ToggleModel(EToyModelKind Kind)
 	Model = Spawned;
 	ModelKind = Kind;
 	MissingKind.Reset();
+	if (Kind == EToyModelKind::Etcher)
+	{
+		SpawnEtcherRig();
+	}
 	return true;
 }
 
@@ -407,6 +470,11 @@ void AToyStudio::ToggleModelExploded()
 {
 	// 桌上还没有模型时，按"爆炸"就先摆出电机再炸开，省得多按一次
 	if (!Model && !ToggleModel(EToyModelKind::Motor))
+	{
+		return;
+	}
+	// 刻蚀机和网页版一样：一片正在跑的时候不能拆开（跑完可以，曲线和结果都留着）
+	if (EtcherRig && EtcherRig->IsRunning())
 	{
 		return;
 	}
