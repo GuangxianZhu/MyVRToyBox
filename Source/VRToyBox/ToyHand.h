@@ -20,8 +20,11 @@ class USkeletalMesh;
 class UWidgetComponent;
 
 /**
- * 一只手，挂在动作控制器（握把姿态）上。默认模型是 UE VR 模板自带的 MannyXR 手（Content/XRMannequins，左右手各用自己的网格）；
- * 设置页 HAND MODEL 选 ROBOT（或控制台 toy.HandModel 1）换成五指灵巧手（Content/Models/DexHand，见 UToyDexHandRig，左手是右手的镜像）。
+ * 一只手，挂在动作控制器（握把姿态）上。默认是机械夹爪（Red Matter 那种）：两片平行夹爪，扳机按多少就合多少，
+ * 捏住零件后每片夹爪各自停在碰到零件表面的地方（见 SetupClaw / ClawContact）。全部用引擎基础形状拼，不需要资产。
+ * 控制台 toy.HandModel 0 / 1 还能临时换回 UE VR 模板的 MannyXR 手（Content/XRMannequins）或五指灵巧手（Content/Models/DexHand，
+ * 见 UToyDexHandRig），只用来对比，设置页里已经没有这个选项。
+ * 下面关于手指的说明是 MannyXR / 灵巧手的；夹爪把"食指弯曲"当上夹爪、"拇指弯曲"当下夹爪的合拢程度（0 = 张开，1 = 合上）。
  * 两种手的手指都按手指分组的弯曲程度摆：扳机 → 拇指和食指合拢成"捏"；握把 → 中指、无名指、小指（见 TickCurls / ApplyFingerPose）。
  * MannyXR 不用动画蓝图，而是每帧在"张开"（Idle）和"握拳"（Grasp）两个姿势之间插值；灵巧手按关节表插值关节角。
  * 捏住东西后，拇指和食指各自只弯到指尖碰到物体表面为止（见 ComputeContactCurls，控制台 toy.FingerContact 0 关掉）。
@@ -90,6 +93,21 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<UToyDexHandRig> DexHand;
 
+	/** 机械夹爪（默认的手）：腕部外壳 + 两片夹爪 + 下方戳触屏的探针，都挂在 ClawRoot 下。 */
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<USceneComponent> ClawRoot;
+
+	/** 上 / 下夹爪：沿 ClawRoot 的 ±Z 平移开合，夹爪片和连杆挂在下面。 */
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<USceneComponent> ClawUpper;
+
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<USceneComponent> ClawLower;
+
+	/** 探针尖（戳触屏的点）。 */
+	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
+	TObjectPtr<USceneComponent> ClawProbeTip;
+
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<UArrowComponent> GripPoint;
 
@@ -149,6 +167,8 @@ private:
 	void TickCurls(float DeltaSeconds);
 	void SetupHandMesh();
 	bool SetupDexHand();
+	void SetupClaw();
+	void SetClawVisible(bool bVisible);
 	void ApplyFingerPose();
 	FVector GetFingerTip(int32 TipBone, int32 PrevBone) const;
 	FVector FingerTipAtCurl(uint8 Group, float Curl, int32 TipBone, int32 PrevBone) const;
@@ -193,6 +213,7 @@ private:
 	bool bHasPinchAnchor = false;
 	/** 现在用的是灵巧手（否则 MannyXR），以及摆手时的 toy.HandModel / toy.DexHandScale（变了就重摆）。 */
 	bool bUseDex = false;
+	bool bUseClaw = false;
 	int32 AppliedHandModel = -1;
 	float AppliedDexScale = 1.f;
 	bool bCustomInfo = false;
