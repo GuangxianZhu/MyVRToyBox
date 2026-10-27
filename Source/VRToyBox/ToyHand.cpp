@@ -7,7 +7,7 @@
 #include "ToyHandCalib.h"
 #include "ToyMenuPanel.h"
 #include "ToySettings.h"
-#include "ToyShapeComponent.h"
+#include "ToyClawToolRig.h"
 #include "ToyTouchScreen.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Animation/AnimSequence.h"
@@ -70,32 +70,12 @@ namespace
 		return Override == 0 || Override == 1 ? Override : 2;
 	}
 
-	// 机械夹爪的尺寸（厘米，ClawRoot 坐标系：X 朝前 = 手指方向，Z = 夹爪开合方向，左右手一样，整体只在 Y 上镜像）
-	namespace Claw
-	{
-		/** 夹爪中线离握把姿态多远（往手背一侧）。真手捏合点大概在这里，VR 里对不上就用手部校准的偏移调。 */
-		constexpr float AxisY = 1.f;
-		/** 扳机松开时两片夹爪片之间的距离（10cm 的方块要能夹进去）。比这大的零件夹不进去，见 ClawPushDistance。 */
-		constexpr float OpenGap = 11.f;
-		/** 底座和导轨的高度：盖住夹爪滑块的整个行程。 */
-		constexpr float BaseHeight = OpenGap + 3.4f;
-		/** 夹爪片（橡胶垫）的中心离腕部多远，捏合点就在两片中间。 */
-		constexpr float PadX = 11.5f;
-		constexpr float PadLength = 2.6f;
-		constexpr float PadWidth = 2.2f;
-		constexpr float PadThickness = 0.8f;
-		/** 探针在夹爪外侧（右手 +Y = 手背一侧，左手镜像），尖端和垫子前沿齐平，是戳触屏的点。
-		 *  放在侧面而不是下面：夹大件时下夹爪下面的探针会扎进零件里。 */
-		constexpr float ProbeY = 3.f;
-		constexpr float ProbeTipX = PadX + PadLength * 0.5f + 0.2f;
-		/** 夹不进去的大件最多往前推开这么远（厘米），再远就不管了。 */
-		constexpr float MaxPush = 10.f;
-
-		const FLinearColor White(0.82f, 0.84f, 0.86f);
-		const FLinearColor Orange(1.f, 0.38f, 0.04f);
-		const FLinearColor Grey(0.18f, 0.19f, 0.21f);
-		const FLinearColor Rubber(0.03f, 0.03f, 0.035f);
-	}
+	// 三指抓取器模式下，MannyXR 手当成握着握柄的手套：姿势固定（握拳，拇指搭在头顶的按钮上），颜色换成手套的浅灰
+	constexpr float GloveIndexCurl = 0.85f;
+	constexpr float GloveFingerCurl = 1.f;
+	constexpr float GloveThumbCurl = 0.35f;
+	const FLinearColor GloveColor(0.62f, 0.64f, 0.68f);
+	const TCHAR* GloveMaterialPath = TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial");
 
 	// MannyXR 手扳机按满时食指 / 拇指的弯曲程度（两个指尖刚好碰上）。灵巧手的弯曲程度 1 就是捏合手势，见 SetupDexHand
 	constexpr float MannyPinchIndexCurl = 0.45f;
@@ -229,49 +209,11 @@ AToyHand::AToyHand()
 	DexHand = CreateDefaultSubobject<UToyDexHandRig>(TEXT("DexHand"));
 	DexHand->SetupAttachment(Root);
 
-	// 机械夹爪：基础形状拼的，开合靠两片夹爪的场景组件沿 Z 平移（见 ApplyFingerPose）
-	{
-		using namespace Claw;
-		const FRotator AlongX(90.f, 0.f, 0.f);   // 基础圆柱的轴是 Z，转到沿 X
-		auto Part = [this](const TCHAR* Name, USceneComponent* Parent, EToyShape Shape, const FVector& Size, const FVector& Location,
-			const FLinearColor& Color, const FRotator& Rotation = FRotator::ZeroRotator)
-		{
-			UToyShapeComponent* Comp = UToyShapeComponent::Create(this, Name, Parent, Shape, Size, Location, Color, Rotation);
-			Comp->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
-			return Comp;
-		};
-		ClawRoot = CreateDefaultSubobject<USceneComponent>(TEXT("ClawRoot"));
-		ClawRoot->SetupAttachment(Root);
-		Part(TEXT("ClawHousing"), ClawRoot, EToyShape::Cylinder, FVector(6.f, 6.f, 7.f), FVector(-1.f, 0.f, 0.f), White, AlongX);
-		Part(TEXT("ClawCap"), ClawRoot, EToyShape::Sphere, FVector(6.f), FVector(-4.5f, 0.f, 0.f), White);
-		Part(TEXT("ClawRing"), ClawRoot, EToyShape::Cylinder, FVector(6.6f, 6.6f, 1.f), FVector(2.8f, 0.f, 0.f), Orange, AlongX);
-		Part(TEXT("ClawBase"), ClawRoot, EToyShape::Box, FVector(2.6f, 4.4f, BaseHeight), FVector(4.6f, 0.f, 0.f), White);
-		Part(TEXT("ClawRail"), ClawRoot, EToyShape::Box, FVector(0.8f, 1.f, BaseHeight), FVector(6.1f, 0.f, 0.f), Grey);
-		for (const float Sign : { 1.f, -1.f })
-		{
-			const bool bUpper = Sign > 0.f;
-			USceneComponent* Jaw = CreateDefaultSubobject<USceneComponent>(bUpper ? TEXT("ClawUpper") : TEXT("ClawLower"));
-			Jaw->SetupAttachment(ClawRoot);
-			Jaw->SetRelativeLocation(FVector(0.f, 0.f, Sign * OpenGap * 0.5f));
-			(bUpper ? ClawUpper : ClawLower) = Jaw;
-			// 滑块套在导轨上，连杆往前伸，末端朝里贴一片橡胶垫（垫的内表面在夹爪组件的 Z = 0）
-			Part(bUpper ? TEXT("ClawUpperSlider") : TEXT("ClawLowerSlider"), Jaw, EToyShape::Box, FVector(1.6f, 2.6f, 1.4f),
-				FVector(6.6f, 0.f, Sign * 1.1f), Orange);
-			Part(bUpper ? TEXT("ClawUpperArm") : TEXT("ClawLowerArm"), Jaw, EToyShape::Box, FVector(6.4f, 1.4f, 0.9f),
-				FVector(9.6f, 0.f, Sign * (PadThickness + 0.45f)), White);
-			Part(bUpper ? TEXT("ClawUpperPad") : TEXT("ClawLowerPad"), Jaw, EToyShape::Box, FVector(PadLength, PadWidth, PadThickness),
-				FVector(PadX, 0.f, Sign * PadThickness * 0.5f), Rubber);
-		}
-		const float ProbeStart = 5.4f;
-		const float ProbeEnd = ProbeTipX - 0.6f;
-		Part(TEXT("ClawProbeMount"), ClawRoot, EToyShape::Box, FVector(1.2f, 1.4f, 1.2f), FVector(5.f, ProbeY - 0.5f, 0.f), Grey);
-		Part(TEXT("ClawProbe"), ClawRoot, EToyShape::Cylinder, FVector(0.7f, 0.7f, ProbeEnd - ProbeStart),
-			FVector((ProbeStart + ProbeEnd) * 0.5f, ProbeY, 0.f), Grey, AlongX);
-		Part(TEXT("ClawProbeBall"), ClawRoot, EToyShape::Sphere, FVector(1.2f), FVector(ProbeEnd, ProbeY, 0.f), Orange);
-		ClawProbeTip = CreateDefaultSubobject<USceneComponent>(TEXT("ClawProbeTip"));
-		ClawProbeTip->SetupAttachment(ClawRoot);
-		ClawProbeTip->SetRelativeLocation(FVector(ProbeTipX, ProbeY, 0.f));
-	}
+	// 三指抓取器（默认）：网格在 InitHand 里按 rig.json 生成，左手由 SetupClaw 沿 Y 镜像
+	ClawTool = CreateDefaultSubobject<UToyClawToolRig>(TEXT("ClawTool"));
+	ClawTool->SetupAttachment(Root);
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> GloveFinder(GloveMaterialPath);
+	GloveBaseMaterial = GloveFinder.Object;
 
 	// 食指指尖：每帧对到骨骼上（见 ApplyFingerPose）
 	PokeTip = CreateDefaultSubobject<USceneComponent>(TEXT("PokeTip"));
@@ -366,17 +308,23 @@ void AToyHand::SetupHandMesh()
 {
 	AppliedHandModel = WantedHandModel();
 	AppliedDexScale = CVarDexHandScale.GetValueOnGameThread();
-	if (AppliedHandModel == 2)
-	{
-		SetupClaw();
-		return;
-	}
 	bUseClaw = false;
 	SetClawVisible(false);
+	HandMesh->EmptyOverrideMaterials();
 	if (AppliedHandModel == 1 && SetupDexHand())
 	{
 		return;
 	}
+	// 抓取器模式也先把 MannyXR 手摆好（它当握着握柄的手套），再换上抓取器
+	SetupMannyHand();
+	if (AppliedHandModel == 2)
+	{
+		SetupClaw();
+	}
+}
+
+void AToyHand::SetupMannyHand()
+{
 	bUseDex = false;
 	DexHand->SetHandVisible(false);
 	HandMesh->SetVisibility(true);
@@ -577,94 +525,84 @@ bool AToyHand::SetupDexHand()
 
 void AToyHand::SetupClaw()
 {
+	if (!ClawTool->Build())
+	{
+		UE_LOG(LogTemp, Error, TEXT("ToyBox: 抓取器模型没导入（Content/Models/ClawTool，跑 导入抓取器模型.bat），玩家的手退回 MannyXR"));
+		return;
+	}
 	bUseClaw = true;
-	bUseDex = false;
-	// 和灵巧手一样把 MannyXR 网格清掉，依赖骨骼的代码看到没有骨骼资产就跳过
-	HandMesh->SetSkinnedAssetAndUpdate(nullptr);
-	HandMesh->SetVisibility(false);
-	DexHand->SetHandVisible(false);
+	const float Mirror = (Side == EControllerHand::Left) ? -1.f : 1.f;
+	// 模型按右手建的（护手环在手背 +Y 一侧），左手整体沿 Y 镜像
+	ClawTool->SetRelativeTransform(FTransform(FQuat::Identity, FVector::ZeroVector, FVector(1.f, Mirror, 1.f)));
 	SetClawVisible(true);
-	// 夹爪的合拢程度 1 = 两片垫子贴在一起；上夹爪借用"食指弯曲"，下夹爪借用"拇指弯曲"
+
+	// MannyXR 手当手套：换成不反光的浅灰（所有材质槽），姿势在 ApplyFingerPose 里固定成握住握柄
+	if (HandMesh->GetSkinnedAsset() && GloveBaseMaterial)
+	{
+		UMaterialInstanceDynamic* Glove = UMaterialInstanceDynamic::Create(GloveBaseMaterial, this);
+		Glove->SetVectorParameterValue(TEXT("Color"), GloveColor);
+		for (int32 Slot = 0; Slot < HandMesh->GetNumMaterials(); ++Slot)
+		{
+			HandMesh->SetMaterial(Slot, Glove);
+		}
+	}
+
+	// 三根手指的合拢程度：1 = 三个指尖在中心碰上
 	PinchIndexCurl = 1.f;
 	PinchThumbCurl = 1.f;
-
-	const float Mirror = (Side == EControllerHand::Left) ? -1.f : 1.f;
-	// 只有探针不对称：左手整体沿 Y 镜像（缩放 -1），探针就到了左手的手背一侧
-	ClawRoot->SetRelativeTransform(FTransform(FQuat::Identity, FVector(0.f, Mirror * Claw::AxisY, 0.f), FVector(1.f, Mirror, 1.f)));
-	// 捏合点 = 两片垫子中间，不随开合移动
-	PinchAnchor = ClawRoot->GetRelativeTransform().TransformPosition(FVector(Claw::PadX, 0.f, 0.f));
+	PinchAnchor = ClawTool->GetRelativeTransform().TransformPosition(ClawTool->GetPinchLocal());
 	bHasPinchAnchor = true;
-	IndexCurl = 0.f;
-	ThumbCurl = 0.f;
+	for (int32 K = 0; K < UToyClawToolRig::NumFingers; ++K)
+	{
+		ClawClose[K] = 0.f;
+		ClawContact[K] = 1.f;
+	}
 	ApplyFingerPose();
-	UE_LOG(LogTemp, Log, TEXT("ToyBox: %s手用机械夹爪，捏合点锚定在手坐标 %s"),
+	UE_LOG(LogTemp, Log, TEXT("ToyBox: %s手用三指抓取器，捏合点锚定在手坐标 %s"),
 		Side == EControllerHand::Left ? TEXT("左") : TEXT("右"), *PinchAnchor.ToCompactString());
-}
-
-float AToyHand::ClawPushDistance() const
-{
-	AActor* Target = HeldActor.Get();
-	if (!Target)
-	{
-		return 0.f;
-	}
-	TInlineComponentArray<UStaticMeshComponent*> Meshes(Target);
-	Meshes.RemoveAll([](const UStaticMeshComponent* Mesh) { return !Mesh || !Mesh->IsVisible() || !Mesh->IsCollisionEnabled(); });
-	if (Meshes.Num() == 0)
-	{
-		return 0.f;
-	}
-	// 夹爪的实心部分（张开的两片垫子、两根连杆、底座；两片夹爪中间的空当不算）往后退 Back 厘米时，有没有一块和零件重叠。
-	// 重叠用"原地扫一下是不是一开始就穿进去"判断；完全埋在封闭网格里面、一个三角形都不碰的情况查不出来，但那时底座多半会碰到表面
-	using namespace Claw;
-	const FTransform& Frame = ClawRoot->GetComponentTransform();
-	const FQuat Rotation = Frame.GetRotation();
-	const FVector Forward = Frame.GetUnitAxis(EAxis::X);
-	struct FBlock { FVector Center; FVector Half; };
-	const FBlock Blocks[] = {
-		{ FVector(PadX, 0.f, OpenGap * 0.5f + PadThickness * 0.5f), FVector(PadLength, PadWidth, PadThickness) * 0.5f },
-		{ FVector(PadX, 0.f, -OpenGap * 0.5f - PadThickness * 0.5f), FVector(PadLength, PadWidth, PadThickness) * 0.5f },
-		{ FVector(9.6f, 0.f, OpenGap * 0.5f + PadThickness + 0.45f), FVector(3.2f, 0.7f, 0.45f) },
-		{ FVector(9.6f, 0.f, -OpenGap * 0.5f - PadThickness - 0.45f), FVector(3.2f, 0.7f, 0.45f) },
-		{ FVector(4.6f, 0.f, 0.f), FVector(1.3f, 2.2f, BaseHeight * 0.5f) },
-	};
-	auto Overlaps = [&](float Back)
-	{
-		for (const FBlock& Block : Blocks)
-		{
-			const FVector Center = Frame.TransformPosition(Block.Center) - Forward * Back;
-			const FCollisionShape Box = FCollisionShape::MakeBox(Block.Half);
-			for (UStaticMeshComponent* Mesh : Meshes)
-			{
-				for (const bool bComplex : { true, false })
-				{
-					FHitResult Hit;
-					if (Mesh->SweepComponent(Hit, Center, Center + Forward * 0.01f, Rotation, Box, bComplex) && Hit.bStartPenetrating)
-					{
-						return true;
-					}
-				}
-			}
-		}
-		return false;
-	};
-	if (!Overlaps(0.f))
-	{
-		return 0.f;
-	}
-	for (float Back = 0.5f; Back <= MaxPush; Back += 0.5f)
-	{
-		if (!Overlaps(Back))
-		{
-			return Back;
-		}
-	}
-	return 0.f;
 }
 
 void AToyHand::SetClawVisible(bool bVisible)
 {
-	ClawRoot->SetVisibility(bVisible, true);
+	ClawTool->SetToolVisible(bVisible);
+}
+
+float AToyHand::FindClawContact(int32 Finger) const
+{
+	AActor* Target = HeldActor.Get();
+	if (!Target)
+	{
+		return 1.f;
+	}
+	TInlineComponentArray<UStaticMeshComponent*> Meshes(Target);
+	Meshes.RemoveAll([](const UStaticMeshComponent* Mesh) { return !Mesh || !Mesh->IsVisible() || !Mesh->IsCollisionEnabled(); });
+	// 和 FindContactCurl 一样：指尖从张开合到底的路径切成 16 段，指尖内侧当成小球沿路径扫，第一次碰到零件就停在那里
+	constexpr int32 Steps = 16;
+	const FCollisionShape Ball = FCollisionShape::MakeSphere(ClawTool->GetTipRadius());
+	FVector From = ClawTool->TipAt(Finger, 0.f);
+	for (int32 Step = 1; Step <= Steps; ++Step)
+	{
+		const float Close = static_cast<float>(Step) / Steps;
+		const FVector To = ClawTool->TipAt(Finger, Close);
+		float BestTime = 2.f;
+		for (UStaticMeshComponent* Mesh : Meshes)
+		{
+			for (const bool bComplex : { true, false })
+			{
+				FHitResult Hit;
+				if (Mesh->SweepComponent(Hit, From, To, FQuat::Identity, Ball, bComplex) && !Hit.bStartPenetrating)
+				{
+					BestTime = FMath::Min(BestTime, Hit.Time);
+				}
+			}
+		}
+		if (BestTime <= 1.f)
+		{
+			return (Step - 1 + BestTime) / Steps;
+		}
+		From = To;
+	}
+	return 1.f;
 }
 
 FVector AToyHand::GetFingerDirectionLocal() const
@@ -726,10 +664,10 @@ void AToyHand::ApplyFingerPose()
 {
 	if (bUseClaw)
 	{
-		// 夹爪片的内表面离中线 OpenGap/2 × (1 - 合拢程度)
-		ClawUpper->SetRelativeLocation(FVector(0.f, 0.f, Claw::OpenGap * 0.5f * (1.f - IndexCurl)));
-		ClawLower->SetRelativeLocation(FVector(0.f, 0.f, -Claw::OpenGap * 0.5f * (1.f - ThumbCurl)));
-		PokeTip->SetWorldLocation(ClawProbeTip->GetComponentLocation());
+		// 手套手固定握住握柄；三根手指各按自己的合拢程度摆。戳触屏用捏合点（三根手指中间，张开时指尖也差不多在这个深度）
+		PoseManny(GloveIndexCurl, GloveFingerCurl, GloveThumbCurl);
+		ClawTool->SetClose(ClawClose);
+		PokeTip->SetWorldLocation(GetPinchLocation());
 		return;
 	}
 	if (bUseDex)
@@ -740,12 +678,21 @@ void AToyHand::ApplyFingerPose()
 		PokeTip->SetWorldLocation(DexHand->GetTip(UToyDexHandRig::Index, UToyDexHandRig::End));
 		return;
 	}
-	if (!HandMesh->GetSkinnedAsset() || OpenPose.Num() != HandMesh->BoneSpaceTransforms.Num())
+	if (!PoseManny(IndexCurl, FingerCurl, ThumbCurl))
 	{
 		return;
 	}
+	PokeTip->SetWorldLocation(GetFingerTip(IndexTipBone, IndexMidBone));
+}
+
+bool AToyHand::PoseManny(float InIndexCurl, float InFingerCurl, float InThumbCurl)
+{
+	if (!HandMesh->GetSkinnedAsset() || OpenPose.Num() != HandMesh->BoneSpaceTransforms.Num())
+	{
+		return false;
+	}
 	// 每根骨骼在张开和握拳之间按所属手指组的弯曲程度插值（旋转球面插值，位置线性插值）
-	const float Weights[4] = { 0.f, IndexCurl, FingerCurl, ThumbCurl };
+	const float Weights[4] = { 0.f, InIndexCurl, InFingerCurl, InThumbCurl };
 	for (int32 Index = 0; Index < OpenPose.Num(); ++Index)
 	{
 		FTransform Pose;
@@ -754,7 +701,7 @@ void AToyHand::ApplyFingerPose()
 	}
 	HandMesh->MarkRefreshTransformDirty();
 	HandMesh->RefreshBoneTransforms();
-	PokeTip->SetWorldLocation(GetFingerTip(IndexTipBone, IndexMidBone));
+	return true;
 }
 
 void AToyHand::SetInputs(float InGrip, float InTrigger)
@@ -937,8 +884,10 @@ void AToyHand::Grab(AActor* Target)
 	}
 
 	HeldActor = Target;
-	bClawPushChecked = false;
-	bClawPushed = false;
+	for (float& Contact : ClawContact)
+	{
+		Contact = 1.f;
+	}
 	ContactIndexCurl = PinchIndexCurl;
 	ContactThumbCurl = PinchThumbCurl;
 	bContactPending = true;
@@ -1049,21 +998,20 @@ void AToyHand::TickCurls(float DeltaSeconds)
 	// 捏着东西时拇指食指保持不动，扳机松一点也不张开（真正松手由 Tick 里的迟滞决定）；
 	// 而且不是固定弯到"捏合"，是各自弯到指尖碰到物体表面为止（ComputeContactCurls，等吸附滑完再算）
 	const bool bHolding = HeldActor.IsValid();
-	if (bHolding && bContactPending && SnapAlpha >= 1.f && bUseClaw && !bClawPushChecked)
+	if (bUseClaw)
 	{
-		// 夹爪：零件比张开的口子还大、夹爪陷在零件里时，先把零件沿夹爪方向往前推开，再滑一次，滑完再算夹爪停在哪
-		bClawPushChecked = true;
-		const float Push = ClawPushDistance();
-		if (Push > 0.f)
+		// 抓取器：没拿东西时三根手指跟着扳机一起合拢；拿着东西时各自停在碰到零件的地方（吸附滑完后算一次）
+		if (bHolding && bContactPending && SnapAlpha >= 1.f)
 		{
-			bClawPushed = true;
-			const FVector Offset = GripPoint->GetComponentTransform().InverseTransformVectorNoScale(ClawRoot->GetForwardVector() * Push);
-			SnapFrom = HeldActor->GetRootComponent()->GetRelativeTransform();
-			SnapTo = SnapFrom;
-			SnapTo.AddToTranslation(Offset);
-			SnapAlpha = 0.f;
-			UE_LOG(LogTemp, Log, TEXT("ToyBox: %s 比夹爪口子大，往前推开 %.1f cm"), *GetNameSafe(HeldActor.Get()), Push);
+			bContactPending = false;
+			ComputeContactCurls();
 		}
+		for (int32 K = 0; K < UToyClawToolRig::NumFingers; ++K)
+		{
+			ClawClose[K] = FMath::FInterpTo(ClawClose[K], bHolding ? ClawContact[K] : Trigger, DeltaSeconds, 20.f);
+		}
+		ApplyFingerPose();
+		return;
 	}
 	if (bHolding && bContactPending && SnapAlpha >= 1.f)
 	{
@@ -1106,7 +1054,7 @@ FVector AToyHand::FingerTipAtCurl(uint8 Group, float Curl, int32 TipBone, int32 
 float AToyHand::FindContactCurl(uint8 Group, float MaxCurl, int32 TipBone, int32 PrevBone) const
 {
 	AActor* Target = HeldActor.Get();
-	if (!Target || (!bUseDex && !bUseClaw && (TipBone == INDEX_NONE || PrevBone == INDEX_NONE)))
+	if (!Target || (!bUseDex && (TipBone == INDEX_NONE || PrevBone == INDEX_NONE)))
 	{
 		return MaxCurl;
 	}
@@ -1115,37 +1063,6 @@ float AToyHand::FindContactCurl(uint8 Group, float MaxCurl, int32 TipBone, int32
 	if (Meshes.Num() == 0)
 	{
 		return MaxCurl;
-	}
-
-	if (bUseClaw)
-	{
-		// 夹爪：垫子沿直线从张开合到底，整段一次扫过去（Group 1 = 上夹爪，3 = 下夹爪）。
-		// 一开始就和零件重叠（零件比张开的口子还大）就保持张开，只是"夹住边缘"
-		const float Sign = Group == 1 ? 1.f : -1.f;
-		const FTransform& Frame = ClawRoot->GetComponentTransform();
-		auto PadAt = [&Frame, Sign](float Close)
-		{
-			return Frame.TransformPosition(FVector(Claw::PadX, 0.f, Sign * (Claw::OpenGap * 0.5f * (1.f - Close) + Claw::PadThickness * 0.5f)));
-		};
-		const FCollisionShape Pad = FCollisionShape::MakeBox(FVector(Claw::PadLength, Claw::PadWidth, Claw::PadThickness) * 0.5f);
-		float BestTime = 2.f;
-		for (UStaticMeshComponent* Mesh : Meshes)
-		{
-			for (const bool bComplex : { true, false })
-			{
-				FHitResult Hit;
-				if (Mesh->SweepComponent(Hit, PadAt(0.f), PadAt(1.f), Frame.GetRotation(), Pad, bComplex))
-				{
-					if (Hit.bStartPenetrating)
-					{
-						return 0.f;
-					}
-					BestTime = FMath::Min(BestTime, Hit.Time);
-				}
-			}
-		}
-		// 被往前推开过的大件在两片垫子前面，合到底也碰不到：保持张开，像用爪子前端顶着
-		return BestTime <= 1.f ? MaxCurl * BestTime : (bClawPushed ? 0.f : MaxCurl);
 	}
 
 	// 指尖从张开弯到 MaxCurl 的路径切成几小段，把指尖当成小球沿每段扫过去，第一次碰到物体的那一段里按命中比例插出弯曲度
@@ -1182,7 +1099,19 @@ float AToyHand::FindContactCurl(uint8 Group, float MaxCurl, int32 TipBone, int32
 void AToyHand::ComputeContactCurls()
 {
 	const bool bMannyReady = HandMesh->GetSkinnedAsset() && OpenPose.Num() == HandMesh->BoneSpaceTransforms.Num();
-	if (!CVarFingerContact.GetValueOnGameThread() || !(bUseClaw || (bUseDex ? DexHand->IsBuilt() : bMannyReady)))
+	if (bUseClaw)
+	{
+		// toy.FingerContact 0：三根手指直接合到底
+		const bool bContact = CVarFingerContact.GetValueOnGameThread() != 0;
+		for (int32 K = 0; K < UToyClawToolRig::NumFingers; ++K)
+		{
+			ClawContact[K] = bContact ? FindClawContact(K) : 1.f;
+		}
+		UE_LOG(LogTemp, Log, TEXT("ToyBox: %s手抓取器夹住 %s，三根手指合拢到 %.2f / %.2f / %.2f"),
+			Side == EControllerHand::Left ? TEXT("左") : TEXT("右"), *GetNameSafe(HeldActor.Get()), ClawContact[0], ClawContact[1], ClawContact[2]);
+		return;
+	}
+	if (!CVarFingerContact.GetValueOnGameThread() || !(bUseDex ? DexHand->IsBuilt() : bMannyReady))
 	{
 		return;
 	}

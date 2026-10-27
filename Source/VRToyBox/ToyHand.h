@@ -14,17 +14,20 @@ class UArrowComponent;
 class UMaterialInstanceDynamic;
 class UPoseableMeshComponent;
 class UStaticMeshComponent;
+class UToyClawToolRig;
 class UToyDexHandRig;
+class UMaterialInterface;
 class UPrimitiveComponent;
 class USkeletalMesh;
 class UWidgetComponent;
 
 /**
- * 一只手，挂在动作控制器（握把姿态）上。默认是机械夹爪（Red Matter 那种）：两片平行夹爪，扳机按多少就合多少，
- * 捏住零件后每片夹爪各自停在碰到零件表面的地方（见 SetupClaw / ClawContact）。全部用引擎基础形状拼，不需要资产。
+ * 一只手，挂在动作控制器（握把姿态）上。默认是三指抓取器（参考 Red Matter 2，见 UToyClawToolRig）：
+ * 戴手套的手（MannyXR 手固定握拳、换成手套色）握着握柄，扳机按多少三根手指就合多少，
+ * 捏住零件后每根手指各自停在碰到零件表面的地方（见 SetupClaw / FindClawContact）。
  * 控制台 toy.HandModel 0 / 1 还能临时换回 UE VR 模板的 MannyXR 手（Content/XRMannequins）或五指灵巧手（Content/Models/DexHand，
  * 见 UToyDexHandRig），只用来对比，设置页里已经没有这个选项。
- * 下面关于手指的说明是 MannyXR / 灵巧手的；夹爪把"食指弯曲"当上夹爪、"拇指弯曲"当下夹爪的合拢程度（0 = 张开，1 = 合上）。
+ * 下面关于手指的说明是 MannyXR / 灵巧手的；抓取器用 ClawClose（每根手指 0 = 张开，1 = 合拢）。
  * 两种手的手指都按手指分组的弯曲程度摆：扳机 → 拇指和食指合拢成"捏"；握把 → 中指、无名指、小指（见 TickCurls / ApplyFingerPose）。
  * MannyXR 不用动画蓝图，而是每帧在"张开"（Idle）和"握拳"（Grasp）两个姿势之间插值；灵巧手按关节表插值关节角。
  * 捏住东西后，拇指和食指各自只弯到指尖碰到物体表面为止（见 ComputeContactCurls，控制台 toy.FingerContact 0 关掉）。
@@ -93,20 +96,9 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<UToyDexHandRig> DexHand;
 
-	/** 机械夹爪（默认的手）：腕部外壳 + 两片夹爪 + 下方戳触屏的探针，都挂在 ClawRoot 下。 */
+	/** 三指抓取器（默认的手）：网格和手指运动见 UToyClawToolRig。 */
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
-	TObjectPtr<USceneComponent> ClawRoot;
-
-	/** 上 / 下夹爪：沿 ClawRoot 的 ±Z 平移开合，夹爪片和连杆挂在下面。 */
-	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
-	TObjectPtr<USceneComponent> ClawUpper;
-
-	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
-	TObjectPtr<USceneComponent> ClawLower;
-
-	/** 探针尖（戳触屏的点）。 */
-	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
-	TObjectPtr<USceneComponent> ClawProbeTip;
+	TObjectPtr<UToyClawToolRig> ClawTool;
 
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<UArrowComponent> GripPoint;
@@ -167,10 +159,13 @@ private:
 	void TickCurls(float DeltaSeconds);
 	void SetupHandMesh();
 	bool SetupDexHand();
+	void SetupMannyHand();
 	void SetupClaw();
 	void SetClawVisible(bool bVisible);
-	/** 夹爪陷在拿着的零件里时，零件要沿夹爪方向往前推多远（厘米）才不重叠；本来就不重叠或推不开 = 0。 */
-	float ClawPushDistance() const;
+	/** 抓取器第 Finger 根手指从张开合到底的路上第一次碰到拿着的东西时的合拢程度；一路没碰到 = 1。 */
+	float FindClawContact(int32 Finger) const;
+	/** MannyXR 手按三组弯曲程度摆骨骼；没有骨骼资产返回 false。 */
+	bool PoseManny(float InIndexCurl, float InFingerCurl, float InThumbCurl);
 	void ApplyFingerPose();
 	FVector GetFingerTip(int32 TipBone, int32 PrevBone) const;
 	FVector FingerTipAtCurl(uint8 Group, float Curl, int32 TipBone, int32 PrevBone) const;
@@ -216,9 +211,13 @@ private:
 	/** 现在用的是灵巧手（否则 MannyXR），以及摆手时的 toy.HandModel / toy.DexHandScale（变了就重摆）。 */
 	bool bUseDex = false;
 	bool bUseClaw = false;
-	/** 这次抓取已经检查过 / 真的推开过夹不进去的大件（见 ClawPushDistance）。 */
-	bool bClawPushChecked = false;
-	bool bClawPushed = false;
+	/** 抓取器三根手指现在的合拢程度，以及拿着东西时各自停在哪里。 */
+	float ClawClose[3] = {};
+	float ClawContact[3] = { 1.f, 1.f, 1.f };
+
+	/** 手套的底材质（引擎基础形状的材质，带 Color 参数）。 */
+	UPROPERTY()
+	TObjectPtr<UMaterialInterface> GloveBaseMaterial;
 	int32 AppliedHandModel = -1;
 	float AppliedDexScale = 1.f;
 	bool bCustomInfo = false;
