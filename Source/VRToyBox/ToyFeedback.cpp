@@ -16,6 +16,17 @@ static TAutoConsoleVariable<int32> CVarFeedbackLog(
 	0,
 	TEXT("1 = 每个声音 / 震动事件打一行日志（桌面模式感觉不到震动时用来核对）"));
 
+// 用户戴头显试过（2026-10-27）：声音种类太多，敲击声统一用硬塑料，电机声不要。震动不受这两个开关影响，仍按材料分
+static TAutoConsoleVariable<int32> CVarMaterialSfx(
+	TEXT("toy.MaterialSfx"),
+	0,
+	TEXT("0 = 所有零件的敲击声都用硬塑料（默认）；1 = 按材料用不同的敲击声（重金属 / 轻金属 / 橡胶 / 脆性）"));
+
+static TAutoConsoleVariable<int32> CVarServoSfx(
+	TEXT("toy.ServoSfx"),
+	0,
+	TEXT("1 = 扣扳机时抓取器手指动有伺服电机声；0 = 没有（默认）"));
+
 namespace
 {
 	const TCHAR* AudioDir = TEXT("/Game/Audio/");
@@ -265,6 +276,9 @@ void UToyFeedback::Play(EToyFeedback Event, const FToyFeedbackParams& Params)
 	const EControllerHand Hand = Params.Hand;
 	const EToyMaterial Material = Params.Material;
 	const float Hard = Hardness(Material);
+	// 敲击声的材料（toy.MaterialSfx 0 时统一硬塑料）；震动还是按真实材料
+	const EToyMaterial SoundMaterial = CVarMaterialSfx.GetValueOnGameThread() ? Material : EToyMaterial::HardPlastic;
+	const float SoundHard = Hardness(SoundMaterial);
 	// 大小：以 10cm 方块（1000 cm³）为准，体积每大 8 倍低 3 个半音；震动尾巴随体积变长
 	const float Octaves = FMath::Log2(FMath::Max(Params.SizeCm3, 1.f) / 1000.f);
 	const float SizePitch = FMath::Pow(2.f, FMath::Clamp(-Octaves, -8.f, 6.f) / 12.f);
@@ -280,12 +294,12 @@ void UToyFeedback::Play(EToyFeedback Event, const FToyFeedbackParams& Params)
 		Haptic(Hand, 0.f, 0.12f, 0.f, 0.006f, 0.f);
 		break;
 	case EToyFeedback::FingerTouch:
-		PlaySound(TapCue(Material), At, 0.45f * Hard, SizePitch);
+		PlaySound(TapCue(SoundMaterial), At, 0.45f * SoundHard, SizePitch);
 		Haptic(Hand, 0.f, 0.2f + 0.3f * Hard, 0.f, 0.008f, HapticDecay(Material));
 		break;
 	case EToyFeedback::GrabSecured:
 		PlaySound(TEXT("Claw_Lock"), At, 0.7f, 1.f);
-		PlaySound(TapCue(Material), At, 0.8f * Hard, SizePitch * 0.85f);
+		PlaySound(TapCue(SoundMaterial), At, 0.8f * SoundHard, SizePitch * 0.85f);
 		// 一下干脆的锁定 + 跟着材料和大小的余震
 		Haptic(Hand, 0.f, 0.8f, 0.f, 0.012f, 0.02f);
 		Haptic(Hand, 0.02f, 0.35f * Hard, 0.005f, 0.f, 0.06f * Tail);
@@ -309,14 +323,14 @@ void UToyFeedback::Play(EToyFeedback Event, const FToyFeedbackParams& Params)
 		break;
 	case EToyFeedback::MagnetSnap:
 		PlaySound(TEXT("Part_Seat"), At, 0.7f, SizePitch);
-		PlaySound(TapCue(Material), At, 0.6f * Hard, SizePitch);
+		PlaySound(TapCue(SoundMaterial), At, 0.6f * SoundHard, SizePitch);
 		// 双击：两下相隔 40ms
 		Haptic(Hand, 0.f, 0.6f, 0.f, 0.010f, 0.015f);
 		Haptic(Hand, 0.04f, 0.45f, 0.f, 0.010f, 0.015f);
 		break;
 	case EToyFeedback::Seat:
 		PlaySound(TEXT("Part_Seat"), At, 0.45f, SizePitch);
-		PlaySound(TapCue(Material), At, 0.35f * Hard, SizePitch);
+		PlaySound(TapCue(SoundMaterial), At, 0.35f * SoundHard, SizePitch);
 		break;
 	case EToyFeedback::UiHover:
 		PlaySound(TEXT("UI_Hover"), At, 0.3f, 1.f);
@@ -371,7 +385,7 @@ void UToyFeedback::SetLoop(UAudioComponent* Loop, float Volume, float Pitch) con
 	{
 		return;
 	}
-	const float Final = Volume * ToySettings::SoundGain();
+	const float Final = CVarServoSfx.GetValueOnGameThread() ? Volume * ToySettings::SoundGain() : 0.f;
 	if (Final < 0.01f)
 	{
 		if (Loop->IsPlaying())
