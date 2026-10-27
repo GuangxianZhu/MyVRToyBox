@@ -33,7 +33,7 @@ namespace
 	constexpr float SetWidth = 17.f;
 	constexpr float SetHeight = 3.4f;
 
-	// 调试命令 toy.Menu <动作>：open / close / start / settings / back / turn / speed / teleport / ball / grab / res / hand / calib
+	// 调试命令 toy.Menu <动作>：open / close / start / settings / back / turn / speed / teleport / ball / grab / res / calib
 	void MenuCommand(const TArray<FString>& Args, UWorld* World)
 	{
 		static const TMap<FString, EToyMenuAction> Names = {
@@ -42,7 +42,6 @@ namespace
 			{ TEXT("speed"), EToyMenuAction::MoveSpeed }, { TEXT("teleport"), EToyMenuAction::Teleport },
 			{ TEXT("ball"), EToyMenuAction::PinchBall }, { TEXT("grab"), EToyMenuAction::GrabSize },
 			{ TEXT("res"), EToyMenuAction::Resolution }, { TEXT("calib"), EToyMenuAction::CalibrateHands },
-			{ TEXT("hand"), EToyMenuAction::HandModel },
 		};
 		AToyMenuPanel* Menu = nullptr;
 		for (TActorIterator<AToyMenuPanel> It(World); It && !Menu; ++It)
@@ -130,9 +129,7 @@ AToyMenuPanel::AToyMenuPanel()
 		TEXT("PINCH BALL"), TEXT(""), HandColor, 1.25f);
 	MakeButton(TEXT("Grab"), EToyMenuPage::Settings, EToyMenuAction::GrabSize, SetCol[1], SetRow[2], SetWidth, SetHeight,
 		TEXT("GRAB RANGE"), TEXT(""), HandColor, 1.25f);
-	MakeButton(TEXT("HandModel"), EToyMenuPage::Settings, EToyMenuAction::HandModel, SetCol[0], SetRow[3], SetWidth, SetHeight,
-		TEXT("HAND MODEL"), TEXT(""), HandColor, 1.25f);
-	MakeButton(TEXT("Calib"), EToyMenuPage::Settings, EToyMenuAction::CalibrateHands, SetCol[1], SetRow[3], SetWidth, SetHeight,
+	MakeButton(TEXT("Calib"), EToyMenuPage::Settings, EToyMenuAction::CalibrateHands, SetCol[0], SetRow[3], SetWidth, SetHeight,
 		TEXT("CALIBRATE"), TEXT("HANDS"), FLinearColor(0.85f, 0.5f, 0.05f), 1.25f);
 	MakeButton(TEXT("Back"), EToyMenuPage::Settings, EToyMenuAction::Back, SetCol[1], SetRow[4], SetWidth, SetHeight,
 		TEXT("BACK"), TEXT(""), FLinearColor(0.45f, 0.45f, 0.5f), 1.5f);
@@ -269,7 +266,6 @@ void AToyMenuPanel::RefreshLabels()
 		case EToyMenuAction::PinchBall:  Value = ToySettings::PinchBallLabel(); break;
 		case EToyMenuAction::GrabSize:   Value = ToySettings::GrabSizeLabel(); break;
 		case EToyMenuAction::Resolution: Value = ToySettings::ResolutionLabel(); break;
-		case EToyMenuAction::HandModel:  Value = ToySettings::HandModelLabel(); break;
 		default: continue;
 		}
 		Button.Line2->SetText(FText::FromString(Value));
@@ -339,7 +335,6 @@ void AToyMenuPanel::RunAction(EToyMenuAction Action)
 	case EToyMenuAction::PinchBall:  ToySettings::TogglePinchBall(); break;
 	case EToyMenuAction::GrabSize:   ToySettings::CycleGrabSize(); break;
 	case EToyMenuAction::Resolution: ToySettings::CycleResolution(); break;
-	case EToyMenuAction::HandModel:  ToySettings::ToggleHandModel(); break;
 	}
 	RefreshLabels();
 }

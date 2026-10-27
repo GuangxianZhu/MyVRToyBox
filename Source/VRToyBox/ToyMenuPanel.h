@@ -23,7 +23,6 @@ enum class EToyMenuAction : uint8
 	GrabSize,
 	Resolution,
 	CalibrateHands,
-	HandModel,
 	Back
 };
 

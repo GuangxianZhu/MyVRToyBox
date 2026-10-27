@@ -24,8 +24,6 @@ namespace ToySettings
 		int32 GrabSize = 1;
 		/** 0 = 80%，1 = 100%，2 = 120%。 */
 		int32 Resolution = 1;
-		/** 玩家的手：0 = UE VR 模板的 MannyXR 手（默认），1 = 五指灵巧手。 */
-		int32 HandModel = 0;
 	};
 
 	const FSettings& Get();
@@ -38,7 +36,6 @@ namespace ToySettings
 	void TogglePinchBall();
 	void CycleGrabSize();
 	void CycleResolution();
-	void ToggleHandModel();
 
 	/** 换算成具体数值。 */
 	float SnapTurnDegrees();
@@ -53,7 +50,6 @@ namespace ToySettings
 	FString PinchBallLabel();
 	FString GrabSizeLabel();
 	FString ResolutionLabel();
-	FString HandModelLabel();
 
 	/** 把要设控制台变量的选项（渲染分辨率）设下去。 */
 	void Apply();
