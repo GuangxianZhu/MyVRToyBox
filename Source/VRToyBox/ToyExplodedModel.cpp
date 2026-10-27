@@ -260,6 +260,7 @@ bool AToyExplodedModel::LoadManifest(const FString& ManifestPath)
 		Unit->FinishSetup();
 	}
 	Ghosts.SetNum(Units.Num());
+	ExtraOffsets.Init(FVector::ZeroVector, Units.Num());
 
 	// 4) 虚影 / 高亮材质。材质还没建（没跑 create_toy_materials.py）时就没有虚影和高亮，其他功能照常
 	if (UMaterialInterface* Ghost = LoadObject<UMaterialInterface>(nullptr, GhostMaterialPath))
@@ -310,12 +311,41 @@ void AToyExplodedModel::Tick(float DeltaSeconds)
 	UpdateGrabModes();
 }
 
+FVector AToyExplodedModel::UnitOffset(int32 Index) const
+{
+	const FVector Extra = ExtraOffsets.IsValidIndex(Index) ? ExtraOffsets[Index] : FVector::ZeroVector;
+	return Units[Index]->GetExplodeOffset(Progress) + Extra;
+}
+
+void AToyExplodedModel::SetUnitPose(const FString& UnitId, const FVector& Extra, bool bVisible)
+{
+	const int32 Index = Units.IndexOfByPredicate([&UnitId](const AToyPartUnit* Unit) { return Unit->GetUnitId() == UnitId; });
+	if (Index == INDEX_NONE || !ExtraOffsets.IsValidIndex(Index))
+	{
+		return;
+	}
+	AToyPartUnit* Unit = Units[Index];
+	if (Unit->IsHidden() == bVisible)
+	{
+		Unit->SetActorHiddenInGame(!bVisible);
+	}
+	if (ExtraOffsets[Index].Equals(Extra, 1e-3))
+	{
+		return;
+	}
+	ExtraOffsets[Index] = Extra;
+	if (Unit->IsHome())
+	{
+		Unit->SetActorRelativeLocation(UnitOffset(Index));
+	}
+}
+
 void AToyExplodedModel::ApplyProgress()
 {
 	for (int32 Index = 0; Index < Units.Num(); ++Index)
 	{
 		AToyPartUnit* Unit = Units[Index];
-		const FVector Offset = Unit->GetExplodeOffset(Progress);
+		const FVector Offset = UnitOffset(Index);
 		// 被抓着、或者正在飞回来的单元位置不归这里管
 		if (Unit->IsHome())
 		{
@@ -346,14 +376,18 @@ void AToyExplodedModel::UpdateGrabModes()
 
 FTransform AToyExplodedModel::GetUnitHomeWorld(const AToyPartUnit* Unit) const
 {
-	return FTransform(Unit->GetExplodeOffset(Progress)) * ModelRoot->GetComponentTransform();
+	const int32 Index = Units.IndexOfByKey(Unit);
+	const FVector Offset = Index != INDEX_NONE ? UnitOffset(Index) : Unit->GetExplodeOffset(Progress);
+	return FTransform(Offset) * ModelRoot->GetComponentTransform();
 }
 
 void AToyExplodedModel::OnUnitHome(AToyPartUnit* Unit)
 {
 	Unit->AttachToComponent(ModelRoot, FAttachmentTransformRules::KeepWorldTransform);
 	// 飞回来的过程有插值误差，挂回去后直接写准确的相对变换，免得一点点漂
-	Unit->SetActorRelativeTransform(FTransform(FQuat::Identity, Unit->GetExplodeOffset(Progress), FVector::OneVector));
+	const int32 Index = Units.IndexOfByKey(Unit);
+	const FVector Offset = Index != INDEX_NONE ? UnitOffset(Index) : Unit->GetExplodeOffset(Progress);
+	Unit->SetActorRelativeTransform(FTransform(FQuat::Identity, Offset, FVector::OneVector));
 }
 
 void AToyExplodedModel::ShowGhost(AToyPartUnit* Unit, bool bShow)
@@ -379,7 +413,7 @@ void AToyExplodedModel::ShowGhost(AToyPartUnit* Unit, bool bShow)
 			Ghost->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			Ghost->SetCastShadow(false);
 			Ghost->SetupAttachment(ModelRoot);
-			Ghost->SetRelativeLocation(Unit->GetExplodeOffset(Progress));
+			Ghost->SetRelativeLocation(UnitOffset(Index));
 			Ghost->RegisterComponent();
 			UnitGhosts.Add(Ghost);
 		}

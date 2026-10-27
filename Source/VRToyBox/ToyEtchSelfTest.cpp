@@ -1,4 +1,6 @@
+#include "ToyEtchContent.h"
 #include "ToyEtchCore.h"
+#include "ToyEtchProcess.h"
 
 #include "Dom/JsonObject.h"
 #include "HAL/IConsoleManager.h"
@@ -10,6 +12,7 @@
 
 // 调试命令 toy.EtchSelfTest [quit]：拿网页版算出来的标准答案（Content/Etcher/etcher_golden.json）逐组对 C++ 版工艺模型，
 // 顺便检查讲解文字（etcher_content.json）读得进来。两个文件都是 ITBasics 干法刻蚀机/tools/export_core.mjs 生成的。
+// 第二部分：5 个预置配方各按 15 步整套工艺（ToyEtch::FProcess，演示模式跑的就是它）从晶圆盒跑回晶圆盒，判定要和标准答案一模一样。
 namespace
 {
 	TSharedPtr<FJsonObject> LoadEtcherJson(const TCHAR* FileName)
@@ -115,10 +118,74 @@ namespace
 		return Errors;
 	}
 
+	/**
+	 * 整套工艺跑一片，和只算刻蚀那一段的标准答案比。判定（5 项合格 / 不合格）必须一样；数值允许差一点：
+	 * 网页里主刻 → 过刻 → 关射频是三步，步和步之间隔一帧（0.05 秒）还在刻，标准答案没有这两帧，
+	 * 所以刻穿以后挖进硅的深度这类量会多出零点几 nm（偏压太高那组 7.5 对 6.8），主刻时间晚一两帧。
+	 */
+	TArray<FString> CompareWholeRun(const FToyEtchPreset& Preset, const FJsonObject& Case)
+	{
+		TArray<FString> Errors;
+		ToyEtch::FProcess Process;
+		if (!ToyEtch::RunWholeProcess(Process, Preset.R))
+		{
+			Errors.Add(FString::Printf(TEXT("没跑完（停在第 %d 步，工艺时间 %.0f 秒）"), Process.StepIdx + 1, Process.SimT));
+			return Errors;
+		}
+		const ToyEtch::FEtch& E = Process.Result.E;
+		const TSharedPtr<FJsonObject>* WantEtch = nullptr;
+		if (Case.TryGetObjectField(TEXT("etch"), WantEtch))
+		{
+			const FEtchCheck EtchValues[] = {
+				{ TEXT("Dc"), E.Dc }, { TEXT("De"), E.De }, { TEXT("maskH"), E.MaskH }, { TEXT("ox"), E.Ox }, { TEXT("si"), E.Si },
+				{ TEXT("gateLoss"), E.GateLoss }, { TEXT("tMain"), E.tMain }, { TEXT("uncleared"), E.Uncleared },
+				{ TEXT("rmax"), Process.Result.V.SideCutMax },
+			};
+			for (const FEtchCheck& Value : EtchValues)
+			{
+				const double Want = (*WantEtch)->GetNumberField(Value.Key);
+				double Tolerance = FMath::Max(1.0, 0.03 * FMath::Abs(Want));
+				if (FCString::Strcmp(Value.Key, TEXT("tMain")) == 0)
+				{
+					Tolerance = 0.151;
+				}
+				else if (FCString::Strcmp(Value.Key, TEXT("uncleared")) == 0)
+				{
+					Tolerance = 0.2;
+				}
+				if (!EtchNearlyEqual(Value.Value, Want, Tolerance))
+				{
+					Errors.Add(FString::Printf(TEXT("%s %.4g（应为 %.4g）"), Value.Key, Value.Value, Want));
+				}
+			}
+			if (E.bTimeout != (*WantEtch)->GetBoolField(TEXT("timeout")))
+			{
+				Errors.Add(TEXT("timeout"));
+			}
+		}
+		const TArray<TSharedPtr<FJsonValue>>& WantOk = Case.GetArrayField(TEXT("ok"));
+		for (int32 i = 0; i < 5 && i < WantOk.Num(); i++)
+		{
+			if (Process.Result.V.Ok[i] != WantOk[i]->AsBool())
+			{
+				Errors.Add(FString::Printf(TEXT("第 %d 项判定"), i + 1));
+			}
+		}
+		FString Marks;
+		for (const bool bOk : Process.Result.V.Ok)
+		{
+			Marks += bOk ? TEXT("√") : TEXT("×");
+		}
+		UE_LOG(LogTemp, Log, TEXT("ToyBox: EtchSelfTest 整套工艺 %s：%.1f 秒跑完，主刻 %.2f s，判定 %s"), *Preset.Id, Process.SimT, E.tMain, *Marks);
+		return Errors;
+	}
+
 	void RunEtchSelfTest(const TArray<FString>& Args, UWorld* World)
 	{
 		int32 Passed = 0, Total = 0;
-		if (const TSharedPtr<FJsonObject> Golden = LoadEtcherJson(TEXT("etcher_golden.json")))
+		int32 RunPassed = 0, RunTotal = 0;
+		const TSharedPtr<FJsonObject> Golden = LoadEtcherJson(TEXT("etcher_golden.json"));
+		if (Golden)
 		{
 			for (const TSharedPtr<FJsonValue>& Value : Golden->GetArrayField(TEXT("cases")))
 			{
@@ -141,13 +208,42 @@ namespace
 				Content->GetArrayField(TEXT("steps")).Num(), Content->GetArrayField(TEXT("parts")).Num(),
 				Content->GetArrayField(TEXT("presets")).Num(), Content->GetArrayField(TEXT("fields")).Num());
 		}
-		if (Total > 0 && Passed == Total)
+
+		// 第二部分：预置配方跑整套工艺（标准答案里同名的那一组）
+		FToyEtchContent Texts;
+		if (Golden && Texts.Load(FPaths::ProjectContentDir() / TEXT("Etcher/etcher_content.json")))
 		{
-			UE_LOG(LogTemp, Log, TEXT("ToyBox: EtchSelfTest %d/%d 组和网页版一致"), Passed, Total);
+			for (const FToyEtchPreset& Preset : Texts.Presets)
+			{
+				const TSharedPtr<FJsonValue>* Found = Golden->GetArrayField(TEXT("cases")).FindByPredicate([&Preset](const TSharedPtr<FJsonValue>& Value)
+				{
+					return Value->AsObject()->GetStringField(TEXT("id")) == Preset.Id;
+				});
+				if (!Found)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("ToyBox: EtchSelfTest 标准答案里没有预置配方 %s"), *Preset.Id);
+					continue;
+				}
+				const TArray<FString> Errors = CompareWholeRun(Preset, *(*Found)->AsObject());
+				RunTotal++;
+				if (Errors.Num() == 0)
+				{
+					RunPassed++;
+				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("ToyBox: EtchSelfTest 整套工艺 %s 不一致：%s"), *Preset.Id, *FString::Join(Errors, TEXT("，")));
+				}
+			}
+		}
+
+		if (Total > 0 && Passed == Total && RunTotal > 0 && RunPassed == RunTotal)
+		{
+			UE_LOG(LogTemp, Log, TEXT("ToyBox: EtchSelfTest %d/%d 组和网页版一致；整套工艺 %d/%d 个预置配方判定一致"), Passed, Total, RunPassed, RunTotal);
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("ToyBox: EtchSelfTest 只有 %d/%d 组和网页版一致"), Passed, Total);
+			UE_LOG(LogTemp, Error, TEXT("ToyBox: EtchSelfTest 只有 %d/%d 组和网页版一致；整套工艺 %d/%d 个预置配方判定一致"), Passed, Total, RunPassed, RunTotal);
 		}
 		if (World && Args.ContainsByPredicate([](const FString& Arg) { return Arg.Equals(TEXT("quit"), ESearchCase::IgnoreCase); }))
 		{

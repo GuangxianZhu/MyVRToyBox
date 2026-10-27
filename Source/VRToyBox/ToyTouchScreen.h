@@ -4,10 +4,12 @@
 #include "GameFramework/Actor.h"
 #include "ToyTouchScreen.generated.h"
 
+class AToyEtcherRig;
 class AToyStudio;
 class SWidget;
 class UBoxComponent;
 class UWidgetComponent;
+struct FMargin;
 struct FSlateColor;
 struct FToyScreenBrushes;
 
@@ -35,7 +37,21 @@ enum class EToyScreenAction : uint8
 	OpenMenu,
 	HideModel,
 	PrevPage,
-	NextPage
+	NextPage,
+	// 刻蚀机演示模式（桌上摆着刻蚀机时触屏多出页签）：切页签、开始 / 下一步、自动、暂停、复位、倍速、预置配方、配方参数减 / 加、
+	// 结果页的"再跑一片"和"改配方"、放大腔和面板的显示开关
+	EtchTab,
+	EtchNext,
+	EtchAuto,
+	EtchPause,
+	EtchReset,
+	EtchSpeed,
+	EtchPreset,
+	EtchFieldDown,
+	EtchFieldUp,
+	EtchAgain,
+	EtchTweak,
+	EtchBoards
 };
 
 /** 界面上一块能点的区域（按钮或模型卡片），坐标是界面像素（左上角为原点）。 */
@@ -48,6 +64,10 @@ struct FToyScreenItem
 	int32 Page = INDEX_NONE;
 	/** 模型卡片对应的模型序号（ModelTable 里的下标），不是卡片就是 INDEX_NONE。 */
 	int32 Model = INDEX_NONE;
+	/** 刻蚀机页签：只在第几个页签里显示；INDEX_NONE = 和页签无关。桌上不是刻蚀机时一直是第 0 个（"模型"）页签 */
+	int32 Tab = INDEX_NONE;
+	/** 按钮带的参数：页签序号、倍速档、预置配方序号、配方参数序号 */
+	int32 Param = 0;
 };
 
 /** 一根正在屏幕前的手指（或桌面模式的鼠标）。 */
@@ -67,6 +87,7 @@ struct FToyScreenFinger
 /**
  * 桌上的支架触屏：底座 + 立杆 + 倾斜 30° 的屏幕。屏幕上是一块真正的 GUI（WidgetComponent 里放 C++ 写的 Slate 界面，能显示中文）：
  * 顶栏（标题、提示、菜单），左边 4×2 的模型卡片（七个模型 + 收起），下面生成 / 清空方块，右边当前模型的爆炸、复位和挪动方向键。
+ * 桌上摆着刻蚀机时，左边多出一排页签：模型 / 结构 / 流程 / 配方 / 结果（刻蚀机演示模式的按钮，见 AToyEtcherRig），右边不变。
  *
  * 界面按钮只是贴图上的像素，没有碰撞体，所以手指不是"碰到按钮"，而是被当成一只鼠标：
  * 指尖投影到屏幕平面上换算成界面像素，再看指尖离屏幕多远——3cm 以内悬停（按钮变亮、出现光标点），
@@ -84,6 +105,12 @@ public:
 	AToyTouchScreen();
 
 	void SetStudio(AToyStudio* InStudio);
+
+	/** 工作室摆出 / 收起刻蚀机时调用：刻蚀机页签里的字和图都直接读它，所以换了就把界面重建一遍。摆出来时切到"流程"页签 */
+	void SetEtcherRig(AToyEtcherRig* Rig);
+
+	/** 切到刻蚀机的第几个页签（0 模型、1 结构、2 流程、3 配方、4 结果）。调试命令 toy.Screen Tab2 也走这里 */
+	void SetEtchTab(int32 Tab);
 
 	/** 手指在屏幕前的感应区（TouchZone）里时每帧调用。这一帧按下了某个按钮就返回 true（手会震一下）。 */
 	bool TouchFinger(const UObject* Finger, const FVector& TipWorld);
@@ -152,6 +179,9 @@ private:
 	bool IsItemFlashing(int32 Index) const;
 	FSlateColor ItemColor(int32 Index) const;
 	int32 PageCount() const;
+	AToyEtcherRig* GetRig() const;
+	/** 现在显示的页签：桌上不是刻蚀机时总是 0 */
+	int32 CurrentTab() const;
 
 	/** 执行一个按钮。冷却中或按钮不可用时返回 false。 */
 	bool Press(int32 Index);
@@ -165,8 +195,12 @@ private:
 	FText CubeText() const;
 	FText DistanceText() const;
 	FText ItemLabel(int32 Index) const;
+	int32 ItemFontSize(int32 Index) const;
+	FMargin ItemPadding(int32 Index) const;
 
 	TWeakObjectPtr<AToyStudio> Studio;
+	TWeakObjectPtr<AToyEtcherRig> EtchRig;
+	int32 EtchTab = 0;
 	TArray<FToyScreenItem> Items;
 	/** 最多三根"手指"：左手、右手、鼠标。 */
 	FToyScreenFinger Fingers[3];

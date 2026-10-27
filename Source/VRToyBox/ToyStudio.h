@@ -9,6 +9,7 @@ class AToyCube;
 class AToyMenuPanel;
 class UChildActorComponent;
 class AToyExplodedModel;
+class AToyEtcherRig;
 
 /** 桌上能摆出来的爆炸图模型。一次只摆一个，换模型时先收起原来的，所以不会互相重叠。 */
 enum class EToyModelKind : uint8
@@ -45,8 +46,8 @@ public:
 	void ClearCubes();
 	int32 GetCubeCount() const;
 
-	/** 触屏按钮的入口。 */
-	void HandleScreenAction(EToyScreenAction Action);
+	/** 触屏按钮的入口。Param = 按钮带的参数（刻蚀机的速度档、预置配方、配方参数序号）。 */
+	void HandleScreenAction(EToyScreenAction Action, int32 Param = 0);
 
 	/** 摆出 / 收起某个模型。桌上已经有别的模型时先收起它。资产还没导入时返回 false。 */
 	bool ToggleModel(EToyModelKind Kind);
@@ -77,6 +78,11 @@ public:
 
 	/** 桌上现在摆着的模型，没有就是空（调试命令 toy.GrabAudit 用）。 */
 	AToyExplodedModel* GetModel() const { return Model; }
+
+	/** 桌上摆着刻蚀机时的演示模式（放大腔、面板、工艺流程），没有就是空。 */
+	AToyEtcherRig* GetEtcherRig() const { return EtcherRig; }
+
+	AToyTouchScreen* GetScreen() const { return Screen; }
 
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	int32 MaxCubes = 20;
@@ -203,6 +209,15 @@ private:
 	TObjectPtr<AToyExplodedModel> Model;
 
 	EToyModelKind ModelKind = EToyModelKind::Motor;
+
+	/** 刻蚀机的演示模式：摆出刻蚀机时生成，收起 / 换模型时先删掉它（它会把小模型上挪过的零件摆回去） */
+	UPROPERTY(Transient)
+	TObjectPtr<AToyEtcherRig> EtcherRig;
+
+	void SpawnEtcherRig();
+	void DestroyEtcherRig();
+	/** 玩家眼睛的大概位置（站立点上方 160cm），面板朝着它 */
+	FVector PlayerEye() const;
 
 	TArray<TWeakObjectPtr<AToyCube>> Cubes;
 

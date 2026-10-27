@@ -5,6 +5,8 @@ public class VRToyBox : ModuleRules
 	public VRToyBox(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+		// 每个 .cpp 单独编译：好几个文件的匿名命名空间里有同名的小工具（Font、BackColor 这些），合并编译（unity）会撞名
+		bUseUnity = false;
 
 		// HeadMountedDisplay：MotionControllerComponent 在这里
 		// Json：读爆炸图零件清单
