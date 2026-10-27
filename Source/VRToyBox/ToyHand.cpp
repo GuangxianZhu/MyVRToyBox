@@ -72,11 +72,30 @@ namespace
 		return Override == 0 || Override == 1 ? Override : 2;
 	}
 
-	// 三指抓取器模式下，MannyXR 手当成握着握柄的手套：姿势固定（握拳，拇指搭在头顶的按钮上），
+	// 三指抓取器模式下，MannyXR 手当成握着握柄的手套。姿势由抓取器的 rig.json 给（中指 / 无名指 / 小指包住握柄，
+	// 食指搭在扳机上，拇指用 IK 压到面板上，见 SolveGloveThumb）；rig.json 没有 glove 段（旧模型）时退回握拳。
 	// 材质用抓取器机身的白色（引擎基础形状材质带噪点纹理，手腕截面看着像一团灰斑，所以不用它）
 	constexpr float GloveIndexCurl = 1.f;
 	constexpr float GloveFingerCurl = 1.f;
 	constexpr float GloveThumbCurl = 0.35f;
+	/** 拇指 IK：指腹 = 末节往外延伸 0.55 倍末节长的点；迭代次数、每步最多转多少度。 */
+	constexpr float ThumbPadExtend = 0.55f;
+	constexpr int32 ThumbIkIterations = 12;
+	constexpr float ThumbIkStepDegrees = 20.f;
+
+	/** 把四元数的转角截到 MaxDegrees 以内（转轴不变）。 */
+	FQuat ClampAngle(FQuat Q, float MaxDegrees)
+	{
+		if (Q.W < 0.f)
+		{
+			Q = -Q;
+		}
+		FVector Axis;
+		float Angle;
+		Q.ToAxisAndAngle(Axis, Angle);
+		const float Limit = FMath::DegreesToRadians(MaxDegrees);
+		return Angle > Limit ? FQuat(Axis, Limit) : Q;
+	}
 	const TCHAR* GloveMaterialPath = TEXT("/Game/Models/ClawTool/claw_tool/Materials/M_ClawWhite.M_ClawWhite");
 
 	// MannyXR 手扳机按满时食指 / 拇指的弯曲程度（两个指尖刚好碰上）。灵巧手的弯曲程度 1 就是捏合手势，见 SetupDexHand
@@ -311,6 +330,9 @@ void AToyHand::InitHand(AToyBoxPawn* InPawn, EControllerHand InSide)
 
 void AToyHand::SetupHandMesh()
 {
+	ThumbOverrideBones.Reset();
+	ThumbOverride.Reset();
+	BoneWeightOverride.Reset();
 	AppliedHandModel = WantedHandModel();
 	AppliedDexScale = CVarDexHandScale.GetValueOnGameThread();
 	bUseClaw = false;
@@ -561,9 +583,89 @@ void AToyHand::SetupClaw()
 		ClawClose[K] = 0.f;
 		ClawContact[K] = 1.f;
 	}
+	// 中指 / 无名指 / 小指按 rig.json 的 glove.finger_joints 一节一节地弯（先指根、再中节、再指尖，各自碰到握柄就停，
+	// build_claw_tool.py 按手套蒙皮顶点算好的），这样手指才是绕着握柄合拢，而不是整根一起弯成拳头
+	BoneWeightOverride.Reset();
+	const UToyClawToolRig::FGlovePose& GlovePose = ClawTool->GetGlovePose();
+	if (GlovePose.bValid && GlovePose.bFingerJoints && HandMesh->GetSkinnedAsset())
+	{
+		BoneWeightOverride.Init(-1.f, OpenPose.Num());
+		static const TCHAR* Fingers[3] = { TEXT("middle"), TEXT("ring"), TEXT("pinky") };
+		const TCHAR* Suffix = Side == EControllerHand::Left ? TEXT("_l") : TEXT("_r");
+		for (int32 F = 0; F < 3; ++F)
+		{
+			for (int32 J = 0; J < 3; ++J)
+			{
+				const int32 Bone = HandMesh->GetBoneIndex(FName(*FString::Printf(TEXT("%s_0%d%s"), Fingers[F], J + 1, Suffix)));
+				if (BoneWeightOverride.IsValidIndex(Bone))
+				{
+					BoneWeightOverride[Bone] = GlovePose.FingerJoints[F][J];
+				}
+			}
+		}
+	}
 	ApplyFingerPose();
+	SolveGloveThumb();
 	UE_LOG(LogTemp, Log, TEXT("ToyBox: %s手用三指抓取器，捏合点锚定在手坐标 %s"),
 		Side == EControllerHand::Left ? TEXT("左") : TEXT("右"), *PinchAnchor.ToCompactString());
+}
+
+void AToyHand::SolveGloveThumb()
+{
+	// 拇指指腹压到面板上方的 ThumbTarget：拇指三节（末节 → 根）循环 CCD，每一节转到让指腹对准目标，
+	// 根关节相对握拳姿势最多转 ThumbRootLimit 度（不然拇指会翻成竖大拇指那样）。只解一次，结果存成三节的局部变换
+	ThumbOverrideBones.Reset();
+	ThumbOverride.Reset();
+	const UToyClawToolRig::FGlovePose& Glove = ClawTool->GetGlovePose();
+	if (!Glove.bValid || !HandMesh->GetSkinnedAsset())
+	{
+		return;
+	}
+	ApplyFingerPose();   // 从没有拇指覆盖的握拳姿势开始解
+	const TCHAR* Suffix = Side == EControllerHand::Left ? TEXT("_l") : TEXT("_r");
+	FName Bones[3];
+	int32 Indices[3];
+	for (int32 K = 0; K < 3; ++K)
+	{
+		Bones[K] = FName(*FString::Printf(TEXT("thumb_0%d%s"), K + 1, Suffix));
+		Indices[K] = HandMesh->GetBoneIndex(Bones[K]);
+		if (Indices[K] == INDEX_NONE)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ToyBox: 手套没有骨骼 %s，拇指不做 IK"), *Bones[K].ToString());
+			return;
+		}
+	}
+	// ThumbTarget 在抓取器坐标里；左手的抓取器 Y 缩放 -1，变到世界时自动镜像
+	const FVector Target = ClawTool->GetComponentTransform().TransformPosition(Glove.ThumbTarget);
+	auto Pad = [this, &Bones]()
+	{
+		const FVector Mid = HandMesh->GetBoneLocationByName(Bones[1], EBoneSpaces::WorldSpace);
+		const FVector End = HandMesh->GetBoneLocationByName(Bones[2], EBoneSpaces::WorldSpace);
+		return End + (End - Mid) * ThumbPadExtend;
+	};
+	const FQuat RootRest = HandMesh->GetBoneRotationByName(Bones[0], EBoneSpaces::WorldSpace).Quaternion();
+	for (int32 Iteration = 0; Iteration < ThumbIkIterations; ++Iteration)
+	{
+		for (int32 K = 2; K >= 0; --K)
+		{
+			const FVector Joint = HandMesh->GetBoneLocationByName(Bones[K], EBoneSpaces::WorldSpace);
+			const FQuat Delta = ClampAngle(FQuat::FindBetweenVectors(Pad() - Joint, Target - Joint), ThumbIkStepDegrees);
+			FQuat World = Delta * HandMesh->GetBoneRotationByName(Bones[K], EBoneSpaces::WorldSpace).Quaternion();
+			if (K == 0)
+			{
+				World = ClampAngle(World * RootRest.Inverse(), Glove.ThumbRootLimit) * RootRest;
+			}
+			HandMesh->SetBoneRotationByName(Bones[K], World.Rotator(), EBoneSpaces::WorldSpace);
+			HandMesh->RefreshBoneTransforms();
+		}
+	}
+	for (int32 K = 0; K < 3; ++K)
+	{
+		ThumbOverrideBones.Add(Indices[K]);
+		ThumbOverride.Add(HandMesh->BoneSpaceTransforms[Indices[K]]);
+	}
+	UE_LOG(LogTemp, Log, TEXT("ToyBox: %s手手套拇指压到面板，指腹离目标 %.2f cm"), Side == EControllerHand::Left ? TEXT("左") : TEXT("右"),
+		FVector::Dist(Pad(), Target));
 }
 
 void AToyHand::SetClawVisible(bool bVisible)
@@ -668,8 +770,17 @@ void AToyHand::ApplyFingerPose()
 {
 	if (bUseClaw)
 	{
-		// 手套手固定握住握柄；三根手指各按自己的合拢程度摆。戳触屏用捏合点（三根手指中间，张开时指尖也差不多在这个深度）
-		PoseManny(GloveIndexCurl, GloveFingerCurl, GloveThumbCurl);
+		// 手套手固定握住握柄（食指扣扳机时多弯一点）；三根抓取器手指各按自己的合拢程度摆。
+		// 戳触屏用捏合点（三根手指中间，张开时指尖也差不多在这个深度）
+		const UToyClawToolRig::FGlovePose& Glove = ClawTool->GetGlovePose();
+		if (Glove.bValid)
+		{
+			PoseManny(Glove.IndexCurl + Glove.IndexPull * Trigger, Glove.FingerCurl, Glove.ThumbCurl);
+		}
+		else
+		{
+			PoseManny(GloveIndexCurl, GloveFingerCurl, GloveThumbCurl);
+		}
 		ClawTool->SetClose(ClawClose);
 		PokeTip->SetWorldLocation(GetPinchLocation());
 		return;
@@ -699,9 +810,17 @@ bool AToyHand::PoseManny(float InIndexCurl, float InFingerCurl, float InThumbCur
 	const float Weights[4] = { 0.f, InIndexCurl, InFingerCurl, InThumbCurl };
 	for (int32 Index = 0; Index < OpenPose.Num(); ++Index)
 	{
+		// 抓取器模式：中指 / 无名指 / 小指每个关节有自己的弯曲程度（绕着握柄合拢，见 SetupClaw）
+		const float Weight = BoneWeightOverride.IsValidIndex(Index) && BoneWeightOverride[Index] >= 0.f
+			? BoneWeightOverride[Index] : Weights[BoneGroup[Index]];
 		FTransform Pose;
-		Pose.Blend(OpenPose[Index], FistPose[Index], Weights[BoneGroup[Index]]);
+		Pose.Blend(OpenPose[Index], FistPose[Index], Weight);
 		HandMesh->BoneSpaceTransforms[Index] = Pose;
+	}
+	// 抓取器模式：拇指三节用 SolveGloveThumb 解好的姿势
+	for (int32 K = 0; K < ThumbOverrideBones.Num(); ++K)
+	{
+		HandMesh->BoneSpaceTransforms[ThumbOverrideBones[K]] = ThumbOverride[K];
 	}
 	HandMesh->MarkRefreshTransformDirty();
 	HandMesh->RefreshBoneTransforms();

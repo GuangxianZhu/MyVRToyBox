@@ -42,6 +42,26 @@ public:
 	/** 三根手指全部合拢时三个指尖的中点（本组件坐标）：捏合点。 */
 	FVector GetPinchLocal() const { return Pinch; }
 
+	/**
+	 * 手套怎么握它（rig.json 的 glove，build_claw_tool.py 按手套的蒙皮顶点算好的）：
+	 * 中指 / 无名指 / 小指包住握柄的弯曲程度，食指搭在扳机上的弯曲程度（扣扳机时再多弯 IndexPull），拇指的基础弯曲程度，
+	 * 拇指指腹要压到的点（本组件坐标，面板上方）和拇指根关节最多转多少度。
+	 */
+	struct FGlovePose
+	{
+		float FingerCurl = 1.f;
+		float IndexCurl = 1.f;
+		float IndexPull = 0.f;
+		float ThumbCurl = 0.35f;
+		float ThumbRootLimit = 30.f;
+		FVector ThumbTarget = FVector::ZeroVector;
+		/** 中指 / 无名指 / 小指（[0..2]）三个关节（指根、中节、指尖）各自的弯曲程度；bFingerJoints = false 时三指都用 FingerCurl。 */
+		float FingerJoints[3][3] = {};
+		bool bFingerJoints = false;
+		bool bValid = false;
+	};
+	const FGlovePose& GetGlovePose() const { return Glove; }
+
 private:
 	struct FFinger
 	{
@@ -65,6 +85,7 @@ private:
 	float ClosedAngles[NumSegments] = {};
 	float TipRadius = 0.45f;
 	FVector Pinch = FVector::ZeroVector;
+	FGlovePose Glove;
 	/** 每节网格在张开姿势下的坐标系（求 张开 → 现在 的变换用）。 */
 	FMatrix OpenFrames[NumFingers][NumSegments];
 

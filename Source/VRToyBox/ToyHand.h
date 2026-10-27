@@ -164,6 +164,8 @@ private:
 	bool SetupDexHand();
 	void SetupMannyHand();
 	void SetupClaw();
+	/** 抓取器模式：拇指 IK 压到面板上（结果存在 ThumbOverride，PoseManny 每次摆手时套上）。 */
+	void SolveGloveThumb();
 	void SetClawVisible(bool bVisible);
 	/** 抓取器第 Finger 根手指从张开合到底的路上第一次碰到拿着的东西时的合拢程度；一路没碰到 = 1。 */
 	float FindClawContact(int32 Finger) const;
@@ -207,6 +209,11 @@ private:
 	/** 每根骨骼（网格骨骼序号）的张开 / 握拳局部变换和所属手指组：0 = 不动，1 = 食指，2 = 中指无名指小指，3 = 拇指。 */
 	TArray<FTransform> OpenPose;
 	TArray<FTransform> FistPose;
+	/** 抓取器模式下拇指三节的骨骼序号和解好的局部变换（空 = 不覆盖）。 */
+	TArray<int32> ThumbOverrideBones;
+	TArray<FTransform> ThumbOverride;
+	/** 抓取器模式下中指 / 无名指 / 小指各关节自己的弯曲程度（按骨骼序号，-1 = 用所属手指组的弯曲程度）。 */
+	TArray<float> BoneWeightOverride;
 	TArray<uint8> BoneGroup;
 	int32 IndexTipBone = INDEX_NONE;
 	int32 IndexMidBone = INDEX_NONE;

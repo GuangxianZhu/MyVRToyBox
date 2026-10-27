@@ -83,6 +83,28 @@ bool UToyClawToolRig::Build()
 	}
 	TipRadius = static_cast<float>(Rig->GetNumberField(TEXT("tip_radius")));
 	Pinch = ReadVector(Rig, TEXT("pinch"));
+	const TSharedPtr<FJsonObject>* GloveObject = nullptr;
+	if (Rig->TryGetObjectField(TEXT("glove"), GloveObject))
+	{
+		const TSharedPtr<FJsonObject>& G = *GloveObject;
+		Glove.FingerCurl = static_cast<float>(G->GetNumberField(TEXT("finger_curl")));
+		Glove.IndexCurl = static_cast<float>(G->GetNumberField(TEXT("index_curl")));
+		Glove.IndexPull = static_cast<float>(G->GetNumberField(TEXT("index_pull")));
+		Glove.ThumbCurl = static_cast<float>(G->GetNumberField(TEXT("thumb_curl")));
+		Glove.ThumbRootLimit = static_cast<float>(G->GetNumberField(TEXT("thumb_root_limit")));
+		Glove.ThumbTarget = ReadVector(G, TEXT("thumb_target"));
+		const TSharedPtr<FJsonObject>* JointsObject = nullptr;
+		if (G->TryGetObjectField(TEXT("finger_joints"), JointsObject))
+		{
+			static const TCHAR* FingerNames[3] = { TEXT("middle"), TEXT("ring"), TEXT("pinky") };
+			Glove.bFingerJoints = true;
+			for (int32 F = 0; F < 3; ++F)
+			{
+				Glove.bFingerJoints &= ReadFloats(*JointsObject, FingerNames[F], Glove.FingerJoints[F], 3);
+			}
+		}
+		Glove.bValid = true;
+	}
 
 	// 网格：parts.json 里每个零件一个，名字 F{k}S{j} 的是手指节，其余（ClawBody）不动
 	TMap<FString, UStaticMeshComponent*> ByName;
