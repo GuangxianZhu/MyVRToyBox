@@ -169,6 +169,8 @@ private:
 	bool SetupDexHand();
 	void SetupClaw();
 	void SetClawVisible(bool bVisible);
+	/** 夹爪陷在拿着的零件里时，零件要沿夹爪方向往前推多远（厘米）才不重叠；本来就不重叠或推不开 = 0。 */
+	float ClawPushDistance() const;
 	void ApplyFingerPose();
 	FVector GetFingerTip(int32 TipBone, int32 PrevBone) const;
 	FVector FingerTipAtCurl(uint8 Group, float Curl, int32 TipBone, int32 PrevBone) const;
@@ -214,6 +216,9 @@ private:
 	/** 现在用的是灵巧手（否则 MannyXR），以及摆手时的 toy.HandModel / toy.DexHandScale（变了就重摆）。 */
 	bool bUseDex = false;
 	bool bUseClaw = false;
+	/** 这次抓取已经检查过 / 真的推开过夹不进去的大件（见 ClawPushDistance）。 */
+	bool bClawPushChecked = false;
+	bool bClawPushed = false;
 	int32 AppliedHandModel = -1;
 	float AppliedDexScale = 1.f;
 	bool bCustomInfo = false;
