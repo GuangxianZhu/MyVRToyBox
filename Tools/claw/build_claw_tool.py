@@ -31,18 +31,42 @@ OUT = next((a for a in ARGS if not a.startswith('--')), os.path.dirname(os.path.
 RENDER = '--render' in ARGS
 
 # ------------------------------------------------------------------ 尺寸（虚幻坐标，厘米）
-# 握柄轴：VR 校准把手指方向 +X 转了 -64°（见 ToyHandCalib），所以控制器握把的轴在手坐标里是 +X 往上翘 64°
-HANDLE_AXIS = Vector((math.cos(math.radians(64)), 0.0, math.sin(math.radians(64))))
-HANDLE_BOTTOM = -5.0
-HANDLE_TOP = 4.0
-HANDLE_R = 1.55
+# 整个抓取器按"手套握住它"来摆（Red Matter 那种：工具迁就手，不是手迁就工具）。下面的数都是在游戏里量 MannyXR 手套
+# （扳机 0.55、三指 0.95 弯曲时的蒙皮顶点）以后算出来的，见 docs 里的 clawfit 截图：
+# 握柄：圆柱贴着掌心、被中指 / 无名指 / 小指包住；食指不握柄，搭在握柄前面的扳机上；拇指压在头顶的面板上。
+GRIP_POINT = Vector((0.42, -2.05, -2.10))
+GRIP_AXIS = Vector((0.168, -0.052, 0.984)).normalized()
+GRIP_CORE_R = 1.33        # 白色芯
+GRIP_R = 1.5              # 深蓝握把套（手指包住的表面）
+GRIP_S0, GRIP_S1 = -4.3, 3.6
+NECK_R, NECK_S1 = 0.8, 5.6
 
-# 头的中心落在握柄轴的延长线上，握柄上端埋在头里
-HEAD_CENTER = Vector((2.4, 0.0, 5.0))
-HEAD_R = 3.6
-HEAD_THICK = 3.0          # 沿 X
-COLLAR_R = 2.6
-COLLAR_X1 = HEAD_CENTER.x + HEAD_THICK / 2 + 0.7
+# 三根手指的底座圈（rig 和以前一样，只是整体抬高 1cm，让头底下离食指指节留出空隙）
+RIG_CENTER = Vector((4.6, 0.0, 6.0))
+COLLAR_X1 = RIG_CENTER.x
+HEAD_CENTER = RIG_CENTER   # finger_frame 用它的 z
+COLLAR_C = Vector((4.2, 0.0, 6.0))
+COLLAR_R = 1.5
+
+# 头：从顶面板（朝玩家眼睛，拇指压着）弯到前面的手指底座圈，像个弯头
+PANEL_C = Vector((3.2, -2.2, 6.8))
+PANEL_TILT = 25.0         # 面板法线 = 握柄轴往 -X 倒 25°
+PANEL_N = (GRIP_AXIS * math.cos(math.radians(PANEL_TILT)) - Vector((1, 0, 0)) * math.sin(math.radians(PANEL_TILT))).normalized()
+PANEL_R = 1.8
+HEAD_DEPTH = 1.0
+THUMB_TARGET = PANEL_C + PANEL_N * 1.4   # 拇指指腹落点（面板上方，手套拇指的厚度）
+
+# 扳机：食指放松（弯 0.5）时离握柄最近的那块手套表面，拨片前面留 1.5mm
+TRIGGER_FINGER = Vector((4.04, -2.76, -0.37))
+TRIGGER_S = 2.35
+TRIGGER_SIZE = (0.8, 1.5, 1.6)   # 厚（朝握柄）、宽、高（顺着握柄）
+TRIGGER_LIFT = 0.4               # 往上挪一点，别碰到下面包着握柄的中指
+
+# 手套姿势（AToyHand 用）：中指 / 无名指 / 小指包住握柄的弯曲程度，食指放在扳机上的弯曲程度、扣扳机时多弯一点
+GLOVE = dict(finger_curl=0.95, index_curl=0.5, index_pull=0.08, thumb_curl=0.35, thumb_root_limit=30.0)
+
+# 护手环：从头部手背一侧绕过手背（离手套 ≥1cm），落到握柄底部
+HOOP_CTRL = [Vector((3.2, 1.3, 6.6)), Vector((1.0, 9.0, 6.0)), Vector((0.8, 9.0, -10.5)), None]
 
 FINGER_BASE_R = 2.0       # 手指根关节离中轴多远
 FINGER_ANGLES = [0.0, 120.0, 240.0]   # 绕 X 轴，0 = 正上方（+Z）
@@ -218,6 +242,25 @@ class Builder:
         bmesh.ops.recalc_face_normals(temp, faces=temp.faces)
         self._add(temp, ue_matrix(), key, True)
 
+    def loft(self, rings_ue, key, segments=48, cap_start=True, cap_end=True):
+        """rings_ue: [(centre, axis_a, axis_b, radius)]，相邻圈之间连成管子，两头可以封口。"""
+        temp = bmesh.new()
+        loops = []
+        for c, a, b, r in rings_ue:
+            loops.append([temp.verts.new(Vector(c) + (Vector(a) * math.cos(2 * math.pi * k / segments) + Vector(b) * math.sin(2 * math.pi * k / segments)) * r)
+                          for k in range(segments)])
+        for l0, l1 in zip(loops, loops[1:]):
+            for k in range(segments):
+                temp.faces.new((l0[k], l0[(k + 1) % segments], l1[(k + 1) % segments], l1[k]))
+        if cap_start:
+            temp.faces.new(list(reversed(loops[0])))
+        if cap_end:
+            temp.faces.new(loops[-1])
+        bmesh.ops.recalc_face_normals(temp, faces=temp.faces)
+        for f in temp.faces:
+            f.smooth = len(f.verts) == 4
+        self._add(temp, ue_matrix(), key, None)
+
     def build(self):
         mesh = bpy.data.meshes.new(self.name)
         self.bm.to_mesh(mesh)
@@ -281,52 +324,87 @@ def tip_core(k, rel):
 
 
 # ------------------------------------------------------------------ 建模
+def qrot_between(a, b):
+    return Vector(a).normalized().rotation_difference(Vector(b).normalized())
+
+
+def head_rings(n=12):
+    """面板圈（法线 PANEL_N）→ 底座圈（法线 +X），中间按最小旋转把两根基向量带过去，半径中间鼓一点。"""
+    a0 = (Vector((1, 0, 0)) - PANEL_N * PANEL_N.x).normalized()
+    b0 = PANEL_N.cross(a0)
+    back = PANEL_C - PANEL_N * HEAD_DEPTH
+    out = []
+    for i in range(n):
+        t = i / (n - 1)
+        nrm = (PANEL_N * (1 - t) + Vector((1, 0, 0)) * t).normalized()
+        q = qrot_between(PANEL_N, nrm)
+        c = back * (1 - t) + COLLAR_C * t
+        r = PANEL_R * (1 - t) + COLLAR_R * t + 0.1 * math.sin(math.pi * t)
+        out.append((c, q @ a0, q @ b0, r))
+    return out
+
+
+def trigger_frame():
+    foot = GRIP_POINT + GRIP_AXIS * TRIGGER_S
+    u = (foot - TRIGGER_FINGER).normalized()          # 从指腹指向握柄
+    w = GRIP_AXIS                                      # 扳机长边顺着握柄
+    v = u.cross(w).normalized()
+    centre = TRIGGER_FINGER + u * (0.15 + TRIGGER_SIZE[0] / 2) + w * TRIGGER_LIFT
+    return centre, u, v, w, foot
+
+
 def build_body():
     b = Builder('ClawBody')
-    h = HANDLE_AXIS
-    bottom = h * HANDLE_BOTTOM
-    top = h * HANDLE_TOP
-    b.cylinder(bottom, top, HANDLE_R, HANDLE_R * 1.08, 'white')
-    # 握把套（深蓝橡胶）+ 三道防滑环
-    b.cylinder(h * (HANDLE_BOTTOM + 1.0), h * (HANDLE_TOP - 1.4), HANDLE_R + 0.12, HANDLE_R + 0.18, 'blue')
-    for s in (-2.5, -0.8, 0.9):
-        b.cylinder(h * (s - 0.15), h * (s + 0.15), HANDLE_R + 0.24, HANDLE_R + 0.24, 'dark')
-    # 底盖：压扁的球 + 橙色尾灯
-    b.sphere(bottom, HANDLE_R + 0.35, 'white', scale=(1, 1, 0.55), axes=(h.orthogonal().normalized(), h.cross(h.orthogonal().normalized()), h))
-    b.ring(bottom - h * 0.85, h, 0.9, 0.5, 0.15, 'glow')
+    g, p0 = GRIP_AXIS, GRIP_POINT
+    at = lambda s: p0 + g * s
+    # 握柄：白芯 + 深蓝握把套 + 三道防滑环；底盖压扁的球 + 橙色尾灯；上面细一点的颈连到头
+    b.cylinder(at(GRIP_S0), at(GRIP_S1), GRIP_CORE_R, GRIP_CORE_R, 'white')
+    b.cylinder(at(GRIP_S0 + 0.8), at(GRIP_S1 - 0.6), GRIP_R, GRIP_R, 'blue')
+    for s in (-2.2, -0.4, 1.4):
+        b.cylinder(at(s - 0.12), at(s + 0.12), GRIP_R + 0.06, GRIP_R + 0.06, 'dark')
+    ox = g.orthogonal().normalized()
+    oy = g.cross(ox)
+    b.sphere(at(GRIP_S0), GRIP_CORE_R + 0.3, 'white', scale=(1, 1, 0.6), axes=(ox, oy, g))
+    b.ring(at(GRIP_S0 - 0.75), g, 0.9, 0.5, 0.15, 'glow')
+    b.cylinder(at(GRIP_S1 - 0.2), at(NECK_S1), NECK_R + 0.25, NECK_R, 'white')
 
-    # 圆形头：沿 X 的扁圆柱，前后都倒圆角
-    c = HEAD_CENTER
-    half = HEAD_THICK / 2
-    b.cylinder(c - X * half, c + X * half, HEAD_R, HEAD_R, 'white', segments=64)
-    # 背面（朝玩家）：深蓝面板 + 发光环 + 三个小灯
-    b.cylinder(c - X * (half + 0.05), c - X * (half - 0.2), HEAD_R - 0.7, HEAD_R - 0.7, 'blue', segments=64)
-    b.ring(c - X * (half + 0.12), X, HEAD_R - 0.95, HEAD_R - 1.35, 0.12, 'glow', segments=64)
-    b.ring(c - X * (half + 0.12), X, 0.9, 0.55, 0.12, 'glow')
-    for ang in (35, 145, 270):
-        a = math.radians(ang)
-        p = c - X * (half + 0.1) + Vector((0, math.cos(a), math.sin(a))) * (HEAD_R - 1.9)
-        b.cylinder(p - X * 0.05, p + X * 0.08, 0.22, 0.22, 'glow', segments=16)
-    # 拇指按钮：头顶靠后
-    btn = c + Vector((-0.6, 0.0, HEAD_R - 0.2))
-    b.cylinder(btn, btn + Vector((0, 0, 0.45)), 0.75, 0.65, 'dark', segments=24)
-    # 前端安装环（金属）+ 三个手指底座
-    b.cylinder(c + X * half - X * 0.1, Vector((COLLAR_X1, 0, c.z)), COLLAR_R, COLLAR_R - 0.15, 'grey', segments=48)
-    b.cylinder(Vector((COLLAR_X1 - 0.05, 0, c.z)), Vector((COLLAR_X1 + 0.15, 0, c.z)), 0.9, 0.9, 'glow', segments=24)
+    # 头：面板 → 底座圈的弯头，面板一端封口做成显示面
+    rings = head_rings()
+    b.loft(rings, 'white')
+    c, a, bb, r = rings[0]
+    n = PANEL_N
+    face = c + n * HEAD_DEPTH          # 面板表面 = PANEL_C
+    b.cylinder(face - n * 0.15, face + n * 0.05, PANEL_R - 0.25, PANEL_R - 0.25, 'blue', segments=64)
+    b.ring(face + n * 0.08, n, PANEL_R - 0.45, PANEL_R - 0.8, 0.1, 'glow', segments=64)
+    b.ring(face + n * 0.08, n, 0.85, 0.6, 0.1, 'glow', segments=32)
+    for ang in (40, 160, 280):
+        q = face + n * 0.06 + (a * math.cos(math.radians(ang)) + bb * math.sin(math.radians(ang))) * (PANEL_R - 1.3)
+        b.cylinder(q, q + n * 0.08, 0.2, 0.2, 'glow', segments=16)
+    # 拇指摇杆：面板正中的小黑帽
+    b.cylinder(face, face + n * 0.45, 0.5, 0.42, 'dark', segments=24)
+
+    # 前端安装圈（金属）+ 三个手指底座
+    b.cylinder(Vector((COLLAR_C.x - 0.4, 0, COLLAR_C.z)), Vector((COLLAR_X1, 0, COLLAR_C.z)), COLLAR_R + 0.1, COLLAR_R - 0.1, 'grey', segments=48)
+    b.cylinder(Vector((COLLAR_X1 - 0.05, 0, COLLAR_C.z)), Vector((COLLAR_X1 + 0.15, 0, COLLAR_C.z)), 0.9, 0.9, 'glow', segments=24)
     for k in range(3):
         base, u, t = finger_frame(k)
         b.box(base - X * 0.35 - u * 0.2, (X, u, t), (1.1, 1.5, 1.7), 'white', bevel=0.12)
 
-    # 护手环：从头部手背一侧绕过手背，落到握柄下端（右手在 +Y）
+    # 扳机：深色拨片 + 正面一条橙色灯，背后一根短杆连到握柄
+    tc, u, v, w, foot = trigger_frame()
+    b.box(tc, (u, v, w), TRIGGER_SIZE, 'dark', bevel=0.18)
+    b.box(tc - u * (TRIGGER_SIZE[0] / 2 + 0.01), (u, v, w), (0.05, 0.45, 1.2), 'glow', bevel=0.02)
+    b.cylinder(tc + u * (TRIGGER_SIZE[0] / 2 - 0.1), foot + w * TRIGGER_LIFT - u * (GRIP_R - 0.2), 0.3, 0.3, 'grey', segments=16)
+
+    # 护手环：头的手背一侧 → 绕过手背 → 握柄底部
+    end = at(GRIP_S0) + Vector((0.0, 0.6, -1.0))
+    ctrl = HOOP_CTRL[:3] + [end]
     pts = []
-    ctrl = [Vector((3.0, 2.6, 6.8)), Vector((1.4, 6.8, 4.2)), Vector((-0.4, 7.0, -1.2)), Vector((-1.9, 2.4, -4.8))]
-    for i in range(25):
-        s = i / 24
-        p = (ctrl[0] * (1 - s) ** 3 + ctrl[1] * 3 * s * (1 - s) ** 2 + ctrl[2] * 3 * s * s * (1 - s) + ctrl[3] * s ** 3)
-        pts.append(p)
-    b.sweep(pts, 1.5, 0.45, (0.0, 1.0, 0.0), 'white')
-    # 护手环内侧一条发光线
-    b.sweep([p - Vector((0, 0.25, 0)) for p in pts[3:22]], 0.35, 0.1, (0.0, 1.0, 0.0), 'glow')
+    for i in range(41):
+        s = i / 40
+        pts.append(ctrl[0] * (1 - s) ** 3 + ctrl[1] * 3 * s * (1 - s) ** 2 + ctrl[2] * 3 * s * s * (1 - s) + ctrl[3] * s ** 3)
+    b.sweep(pts, 1.5, 0.5, (0.0, 1.0, 0.0), 'white')
+    b.sweep([p - Vector((0, 0.27, 0)) for p in pts[4:37]], 0.35, 0.1, (0.0, 1.0, 0.0), 'glow')
     return b.build()
 
 
@@ -387,6 +465,10 @@ def main():
         open=OPEN_REL, closed=CLOSED_REL,
         tip_radius=TIP_RADIUS,
         pinch=[round(v, 3) for v in pinch],
+        glove=dict(GLOVE, thumb_target=[round(v, 3) for v in THUMB_TARGET]),
+        grip=dict(point=[round(v, 3) for v in GRIP_POINT], axis=[round(v, 5) for v in GRIP_AXIS], radius=GRIP_R),
+        trigger=[round(v, 3) for v in trigger_frame()[0]],
+        panel=dict(centre=[round(v, 3) for v in PANEL_C], normal=[round(v, 5) for v in PANEL_N]),
         fingers=fingers,
     )
     with open(os.path.join(OUT, 'rig.json'), 'w', encoding='utf-8') as f:
