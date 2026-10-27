@@ -9,7 +9,9 @@
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 
-namespace
+// 有名字的命名空间：unity build 会把这个文件和 ToyDexHandRig.cpp / ToyExplodedModel.cpp 拼成一个编译单元，
+// 匿名命名空间里同名的 PartsFile / LoadJson / ReadVector 会重定义
+namespace ClawToolJson
 {
 	// 抓取器的导入结果（导入抓取器模型.bat）：parts.json 是零件 → 网格清单，rig.json 是关节表
 	const TCHAR* PartsFile = TEXT("Models/ClawTool/parts.json");
@@ -65,8 +67,10 @@ bool UToyClawToolRig::Build()
 	{
 		return true;
 	}
-	const TSharedPtr<FJsonObject> Rig = LoadJson(RigFile);
-	const TSharedPtr<FJsonObject> Manifest = LoadJson(PartsFile);
+	using ClawToolJson::ReadFloats;
+	using ClawToolJson::ReadVector;
+	const TSharedPtr<FJsonObject> Rig = ClawToolJson::LoadJson(ClawToolJson::RigFile);
+	const TSharedPtr<FJsonObject> Manifest = ClawToolJson::LoadJson(ClawToolJson::PartsFile);
 	const TArray<TSharedPtr<FJsonValue>>* FingerValues = nullptr;
 	const TArray<TSharedPtr<FJsonValue>>* PartValues = nullptr;
 	if (!Rig || !Manifest || !Rig->TryGetArrayField(TEXT("fingers"), FingerValues) || FingerValues->Num() != NumFingers

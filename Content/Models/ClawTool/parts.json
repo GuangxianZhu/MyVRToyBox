@@ -1,0 +1,100 @@
+{
+ "source": "claw_tool.glb",
+ "model": {
+  "title": "ClawTool",
+  "body": "",
+  "explode_scale": 1.0
+ },
+ "units": [
+  {
+   "id": "base",
+   "grabbable": false,
+   "name_cn": "",
+   "material": "",
+   "desc": "",
+   "grab": null
+  }
+ ],
+ "parts": [
+  {
+   "name": "ClawBody",
+   "name_cn": "",
+   "mesh": "/Game/Models/ClawTool/claw_tool/StaticMeshes/ClawBody.ClawBody",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "F0S0",
+   "name_cn": "",
+   "mesh": "/Game/Models/ClawTool/claw_tool/StaticMeshes/F0S0.F0S0",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "F0S1",
+   "name_cn": "",
+   "mesh": "/Game/Models/ClawTool/claw_tool/StaticMeshes/F0S1.F0S1",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "F0S2",
+   "name_cn": "",
+   "mesh": "/Game/Models/ClawTool/claw_tool/StaticMeshes/F0S2.F0S2",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "F1S0",
+   "name_cn": "",
+   "mesh": "/Game/Models/ClawTool/claw_tool/StaticMeshes/F1S0.F1S0",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "F1S1",
+   "name_cn": "",
+   "mesh": "/Game/Models/ClawTool/claw_tool/StaticMeshes/F1S1.F1S1",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "F1S2",
+   "name_cn": "",
+   "mesh": "/Game/Models/ClawTool/claw_tool/StaticMeshes/F1S2.F1S2",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "F2S0",
+   "name_cn": "",
+   "mesh": "/Game/Models/ClawTool/claw_tool/StaticMeshes/F2S0.F2S0",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "F2S1",
+   "name_cn": "",
+   "mesh": "/Game/Models/ClawTool/claw_tool/StaticMeshes/F2S1.F2S1",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  },
+  {
+   "name": "F2S2",
+   "name_cn": "",
+   "mesh": "/Game/Models/ClawTool/claw_tool/StaticMeshes/F2S2.F2S2",
+   "spin": 0,
+   "unit": "base",
+   "ex": []
+  }
+ ]
+}
