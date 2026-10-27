@@ -89,7 +89,7 @@ namespace
 		constexpr float ProbeY = 3.f;
 		constexpr float ProbeTipX = PadX + PadLength * 0.5f + 0.2f;
 		/** 夹不进去的大件最多往前推开这么远（厘米），再远就不管了。 */
-		constexpr float MaxPush = 35.f;
+		constexpr float MaxPush = 10.f;
 
 		const FLinearColor White(0.82f, 0.84f, 0.86f);
 		const FLinearColor Orange(1.f, 0.38f, 0.04f);
@@ -628,37 +628,8 @@ float AToyHand::ClawPushDistance() const
 		{ FVector(9.6f, 0.f, -OpenGap * 0.5f - PadThickness - 0.45f), FVector(3.2f, 0.7f, 0.45f) },
 		{ FVector(4.6f, 0.f, 0.f), FVector(1.3f, 2.2f, BaseHeight * 0.5f) },
 	};
-	// 光靠"一开始就穿进去"查不出整块埋在零件里面的情况（转子：夹爪和外壳都在实心网格里面，一个三角形都不碰）。
-	// 所以再沿夹爪方向从后面打几条线：从外壳后面 15cm 打到底座前面（中线和左右两边）、打到垫子前沿（上下两片垫子的高度），
-	// 碰到零件就说明零件有一部分在夹爪的实心部分里（从外面打进来的线，单面三角形也打得到）
-	struct FLine { FVector From; FVector To; };
-	const float Rear = -8.f - 15.f;
-	const float BaseFront = 6.6f;
-	const float TipFront = PadX + PadLength * 0.5f;
-	const float PadZ = OpenGap * 0.5f + PadThickness * 0.5f;
-	const FLine Lines[] = {
-		{ FVector(Rear, 0.f, 0.f), FVector(BaseFront, 0.f, 0.f) },
-		{ FVector(Rear, 2.f, 0.f), FVector(BaseFront, 2.f, 0.f) },
-		{ FVector(Rear, -2.f, 0.f), FVector(BaseFront, -2.f, 0.f) },
-		{ FVector(Rear, 0.f, PadZ), FVector(TipFront, 0.f, PadZ) },
-		{ FVector(Rear, 0.f, -PadZ), FVector(TipFront, 0.f, -PadZ) },
-	};
-	const FCollisionQueryParams LineParams(SCENE_QUERY_STAT(ToyClawPush), true);
 	auto Overlaps = [&](float Back)
 	{
-		for (const FLine& Line : Lines)
-		{
-			const FVector From = Frame.TransformPosition(Line.From) - Forward * Back;
-			const FVector To = Frame.TransformPosition(Line.To) - Forward * Back;
-			for (UStaticMeshComponent* Mesh : Meshes)
-			{
-				FHitResult Hit;
-				if (Mesh->LineTraceComponent(Hit, From, To, LineParams))
-				{
-					return true;
-				}
-			}
-		}
 		for (const FBlock& Block : Blocks)
 		{
 			const FVector Center = Frame.TransformPosition(Block.Center) - Forward * Back;
