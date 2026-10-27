@@ -89,7 +89,8 @@ MATS = {
     'blue': material('M_ClawBlue', BLUE, rough=0.6),
     'grey': material('M_ClawMetal', GREY, metallic=0.9, rough=0.3),
     'dark': material('M_ClawRubber', DARK, rough=0.85),
-    'glow': material('M_ClawGlow', ORANGE, emission=1.0),
+    # 发光强度按虚幻房间亮度定（自动曝光下房间几十尼特，1 倍看着就是平的橙色）
+    'glow': material('M_ClawGlow', ORANGE, emission=8.0),
 }
 
 

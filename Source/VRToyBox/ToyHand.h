@@ -214,10 +214,6 @@ private:
 	/** 抓取器三根手指现在的合拢程度，以及拿着东西时各自停在哪里。 */
 	float ClawClose[3] = {};
 	float ClawContact[3] = { 1.f, 1.f, 1.f };
-
-	/** 手套的底材质（引擎基础形状的材质，带 Color 参数）。 */
-	UPROPERTY()
-	TObjectPtr<UMaterialInterface> GloveBaseMaterial;
 	int32 AppliedHandModel = -1;
 	float AppliedDexScale = 1.f;
 	bool bCustomInfo = false;

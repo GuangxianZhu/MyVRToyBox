@@ -70,12 +70,12 @@ namespace
 		return Override == 0 || Override == 1 ? Override : 2;
 	}
 
-	// 三指抓取器模式下，MannyXR 手当成握着握柄的手套：姿势固定（握拳，拇指搭在头顶的按钮上），颜色换成手套的浅灰
-	constexpr float GloveIndexCurl = 0.85f;
+	// 三指抓取器模式下，MannyXR 手当成握着握柄的手套：姿势固定（握拳，拇指搭在头顶的按钮上），
+	// 材质用抓取器机身的白色（引擎基础形状材质带噪点纹理，手腕截面看着像一团灰斑，所以不用它）
+	constexpr float GloveIndexCurl = 1.f;
 	constexpr float GloveFingerCurl = 1.f;
 	constexpr float GloveThumbCurl = 0.35f;
-	const FLinearColor GloveColor(0.62f, 0.64f, 0.68f);
-	const TCHAR* GloveMaterialPath = TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial");
+	const TCHAR* GloveMaterialPath = TEXT("/Game/Models/ClawTool/claw_tool/Materials/M_ClawWhite.M_ClawWhite");
 
 	// MannyXR 手扳机按满时食指 / 拇指的弯曲程度（两个指尖刚好碰上）。灵巧手的弯曲程度 1 就是捏合手势，见 SetupDexHand
 	constexpr float MannyPinchIndexCurl = 0.45f;
@@ -212,8 +212,6 @@ AToyHand::AToyHand()
 	// 三指抓取器（默认）：网格在 InitHand 里按 rig.json 生成，左手由 SetupClaw 沿 Y 镜像
 	ClawTool = CreateDefaultSubobject<UToyClawToolRig>(TEXT("ClawTool"));
 	ClawTool->SetupAttachment(Root);
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> GloveFinder(GloveMaterialPath);
-	GloveBaseMaterial = GloveFinder.Object;
 
 	// 食指指尖：每帧对到骨骼上（见 ApplyFingerPose）
 	PokeTip = CreateDefaultSubobject<USceneComponent>(TEXT("PokeTip"));
@@ -536,11 +534,10 @@ void AToyHand::SetupClaw()
 	ClawTool->SetRelativeTransform(FTransform(FQuat::Identity, FVector::ZeroVector, FVector(1.f, Mirror, 1.f)));
 	SetClawVisible(true);
 
-	// MannyXR 手当手套：换成不反光的浅灰（所有材质槽），姿势在 ApplyFingerPose 里固定成握住握柄
-	if (HandMesh->GetSkinnedAsset() && GloveBaseMaterial)
+	// MannyXR 手当手套：所有材质槽换成机身的白色，姿势在 ApplyFingerPose 里固定成握住握柄
+	UMaterialInterface* Glove = LoadObject<UMaterialInterface>(nullptr, GloveMaterialPath);
+	if (HandMesh->GetSkinnedAsset() && Glove)
 	{
-		UMaterialInstanceDynamic* Glove = UMaterialInstanceDynamic::Create(GloveBaseMaterial, this);
-		Glove->SetVectorParameterValue(TEXT("Color"), GloveColor);
 		for (int32 Slot = 0; Slot < HandMesh->GetNumMaterials(); ++Slot)
 		{
 			HandMesh->SetMaterial(Slot, Glove);
