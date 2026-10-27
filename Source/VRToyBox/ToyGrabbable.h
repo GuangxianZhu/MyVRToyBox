@@ -68,4 +68,7 @@ public:
 
 	/** 拿在手里时手边浮出的信息牌。没有就返回 false。 */
 	virtual bool GetGrabInfo(FText& OutTitle, FText& OutBody) const { return false; }
+
+	/** 材料说明（parts.json 的 material 字段那样的文字），声音和震动按它分材料（UToyFeedback::ClassifyMaterial）。空 = 硬塑料。 */
+	virtual FString GetMaterialText() const { return FString(); }
 };

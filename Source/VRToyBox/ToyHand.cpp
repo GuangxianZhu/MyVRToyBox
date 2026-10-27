@@ -8,6 +8,8 @@
 #include "ToyMenuPanel.h"
 #include "ToySettings.h"
 #include "ToyClawToolRig.h"
+#include "ToyFeedback.h"
+#include "Components/AudioComponent.h"
 #include "ToyTouchScreen.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Animation/AnimSequence.h"
@@ -266,6 +268,11 @@ void AToyHand::InitHand(AToyBoxPawn* InPawn, EControllerHand InSide)
 	GripPoint->SetRelativeLocationAndRotation(PalmSurface, GripRotation);
 
 	SetupHandMesh();
+
+	if (UToyFeedback* System = UToyFeedback::Get(this))
+	{
+		ServoLoop = System->CreateServoLoop(Root);
+	}
 
 	if (UMaterialInterface* Base = LoadObject<UMaterialInterface>(nullptr, RangeMaterialPath))
 	{
@@ -885,11 +892,20 @@ void AToyHand::Grab(AActor* Target)
 	{
 		Contact = 1.f;
 	}
+	for (bool& bTouched : bFingerTouched)
+	{
+		bTouched = false;
+	}
 	ContactIndexCurl = PinchIndexCurl;
 	ContactThumbCurl = PinchThumbCurl;
 	bContactPending = true;
 	ShowInfo(Target);
-	Pulse(0.7f, 0.08f);
+	// 抓取器：等三根手指碰到表面再响（TickContactFeedback）；别的手模型没有这个过程，抓起就锁定
+	bSecurePending = bUseClaw;
+	if (!bUseClaw)
+	{
+		Feedback(EToyFeedback::GrabSecured, GetPinchLocation(), Target);
+	}
 }
 
 void AToyHand::ReleaseHeld(bool bThrow)
@@ -902,9 +918,12 @@ void AToyHand::ReleaseHeld(bool bThrow)
 		return;
 	}
 	Target->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	bSecurePending = false;
+	const FVector Velocity = bThrow ? GetThrowVelocity() : FVector::ZeroVector;
+	Feedback(EToyFeedback::Release, GetPinchLocation(), Target, static_cast<float>(Velocity.Size()));
 	if (IToyGrabbable* Grabbable = AsGrabbable(Target))
 	{
-		Grabbable->OnReleased(this, bThrow ? GetThrowVelocity() : FVector::ZeroVector);
+		Grabbable->OnReleased(this, Velocity);
 	}
 }
 
@@ -923,6 +942,7 @@ void AToyHand::UpdateHover()
 	if (IToyGrabbable* Grabbable = AsGrabbable(Candidate))
 	{
 		Grabbable->AddHover();
+		Feedback(EToyFeedback::HoverEnter, GetPinchLocation(), Candidate);
 	}
 	// 范围小球跟着变色（见 TickRangeSphere）；VR 里看不清时可以查日志
 	UE_LOG(LogTemp, Log, TEXT("ToyBox: %s手捏合范围内：%s"), Side == EControllerHand::Left ? TEXT("左") : TEXT("右"),
@@ -1003,11 +1023,18 @@ void AToyHand::TickCurls(float DeltaSeconds)
 			bContactPending = false;
 			ComputeContactCurls();
 		}
+		float Previous[UToyClawToolRig::NumFingers];
 		for (int32 K = 0; K < UToyClawToolRig::NumFingers; ++K)
 		{
+			Previous[K] = ClawClose[K];
 			ClawClose[K] = FMath::FInterpTo(ClawClose[K], bHolding ? ClawContact[K] : Trigger, DeltaSeconds, 20.f);
 		}
 		ApplyFingerPose();
+		TickServo(Previous, DeltaSeconds);
+		if (bHolding && !bContactPending)
+		{
+			TickContactFeedback();
+		}
 		return;
 	}
 	if (bHolding && bContactPending && SnapAlpha >= 1.f)
@@ -1156,11 +1183,9 @@ void AToyHand::TickPoke()
 		AToyTouchScreen* Screen = Cast<AToyTouchScreen>(Overlap.GetActor());
 		if (Screen && Component == Screen->TouchZone.Get() && !ScreenNow)
 		{
+			// 悬停 / 按下 / 松开的声音和震动由触屏自己发（鼠标点也要响），见 AToyTouchScreen::TouchFinger
 			ScreenNow = Screen;
-			if (Screen->TouchFinger(this, PokeTip->GetComponentLocation()))
-			{
-				Pulse(0.5f, 0.05f);
-			}
+			Screen->TouchFinger(this, PokeTip->GetComponentLocation());
 			continue;
 		}
 		AToyMenuPanel* Menu = Cast<AToyMenuPanel>(Overlap.GetActor());
@@ -1172,7 +1197,15 @@ void AToyHand::TickPoke()
 		NowTouching.Add(WeakComponent);
 		if (!Touching.Contains(WeakComponent) && Menu->Poke(Component))
 		{
-			Pulse(0.5f, 0.05f);
+			Feedback(EToyFeedback::UiPress, PokeTip->GetComponentLocation(), nullptr);
+		}
+	}
+	// 手指离开菜单按钮：轻一点的"松开"
+	for (const TWeakObjectPtr<UPrimitiveComponent>& Previous : Touching)
+	{
+		if (Previous.IsValid() && !NowTouching.Contains(Previous))
+		{
+			Feedback(EToyFeedback::UiRelease, PokeTip->GetComponentLocation(), nullptr);
 		}
 	}
 	Touching = MoveTemp(NowTouching);
@@ -1214,6 +1247,81 @@ void AToyHand::Pulse(float Amplitude, float Duration) const
 	if (AToyBoxPawn* Pawn = OwnerPawn.Get())
 	{
 		Pawn->PlayHaptic(Side, Amplitude, Duration);
+	}
+}
+
+void AToyHand::Feedback(EToyFeedback Event, const FVector& Location, const AActor* Target, float Speed) const
+{
+	UToyFeedback* System = UToyFeedback::Get(this);
+	if (!System)
+	{
+		return;
+	}
+	FToyFeedbackParams Params;
+	Params.Location = Location;
+	Params.Hand = Side;
+	Params.Speed = Speed;
+	Params.Source = this;
+	if (Target)
+	{
+		Params.Material = UToyFeedback::MaterialOf(Target);
+		Params.SizeCm3 = UToyFeedback::SizeOf(Target);
+	}
+	System->Play(Event, Params);
+}
+
+void AToyHand::TickServo(const float* PreviousClose, float DeltaSeconds)
+{
+	// 三根手指这一帧一共动了多少（合拢量，0~1 一根手指走完全程是 1）
+	float Moved = 0.f;
+	for (int32 K = 0; K < UToyClawToolRig::NumFingers; ++K)
+	{
+		Moved += FMath::Abs(ClawClose[K] - PreviousClose[K]);
+	}
+	const float Speed = DeltaSeconds > 0.f ? Moved / DeltaSeconds : 0.f;
+
+	// 电机声：动得越快越响、越高；停下就静音。一根手指以 1/秒 走算"慢"
+	if (UToyFeedback* System = UToyFeedback::Get(this))
+	{
+		const float Volume = FMath::Clamp((Speed - 0.15f) / 4.f, 0.f, 1.f) * 0.5f;
+		System->SetLoop(ServoLoop, Volume, 0.8f + FMath::Clamp(Speed / 8.f, 0.f, 0.7f));
+	}
+
+	// 齿轮感：合拢量每累计 0.08 震一下小的，手指动得快就震得密；同时有一点很弱的持续震
+	ServoAccum += Moved / UToyClawToolRig::NumFingers;
+	if (ServoAccum >= 0.08f)
+	{
+		ServoAccum = FMath::Fmod(ServoAccum, 0.08f);
+		Feedback(EToyFeedback::ServoTick, GetPinchLocation(), nullptr);
+	}
+	if (AToyBoxPawn* Pawn = OwnerPawn.Get())
+	{
+		Pawn->SetHapticDrive(Side, FMath::Clamp(Speed * 0.015f, 0.f, 0.06f));
+	}
+}
+
+void AToyHand::TickContactFeedback()
+{
+	const AActor* Target = HeldActor.Get();
+	bool bAllInPlace = true;
+	for (int32 K = 0; K < UToyClawToolRig::NumFingers; ++K)
+	{
+		const bool bInPlace = FMath::Abs(ClawClose[K] - ClawContact[K]) < 0.03f;
+		bAllInPlace &= bInPlace;
+		if (bInPlace && !bFingerTouched[K])
+		{
+			bFingerTouched[K] = true;
+			// 合到底也没碰到零件的手指（ClawContact = 1）不响
+			if (ClawContact[K] < 0.995f)
+			{
+				Feedback(EToyFeedback::FingerTouch, ClawTool->TipAt(K, ClawClose[K]), Target);
+			}
+		}
+	}
+	if (bAllInPlace && bSecurePending)
+	{
+		bSecurePending = false;
+		Feedback(EToyFeedback::GrabSecured, GetPinchLocation(), Target);
 	}
 }
 

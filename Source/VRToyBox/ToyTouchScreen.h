@@ -4,6 +4,8 @@
 #include "GameFramework/Actor.h"
 #include "ToyTouchScreen.generated.h"
 
+enum class EToyFeedback : uint8;
+
 class AToyStudio;
 class SWidget;
 class UBoxComponent;
@@ -155,6 +157,8 @@ private:
 
 	/** 执行一个按钮。冷却中或按钮不可用时返回 false。 */
 	bool Press(int32 Index);
+	/** 触屏的声音 + 震动（Finger 是手就震那只手；鼠标只响）。 */
+	void PlayFeedback(EToyFeedback Event, const FVector& Location, const UObject* Finger) const;
 
 	FToyScreenFinger* FindFinger(const UObject* FingerOwner, bool bCreate);
 	void UpdateFinger(FToyScreenFinger& Finger, const FVector& WorldPoint);

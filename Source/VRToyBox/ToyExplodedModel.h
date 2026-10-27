@@ -68,6 +68,8 @@ public:
 	virtual void RemoveHover() override;
 	virtual EToyGripStyle GetGripStyle() const override { return EToyGripStyle::Palm; }
 	virtual bool GetGrabInfo(FText& OutTitle, FText& OutBody) const override;
+	/** 整台机器拿起来：按铸铁 / 钢的声音算。 */
+	virtual FString GetMaterialText() const override { return TEXT("钢"); }
 
 	/** 装配状态下最长边缩放到这么长（厘米）。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
