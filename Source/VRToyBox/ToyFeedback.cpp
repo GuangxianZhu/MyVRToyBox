@@ -31,6 +31,13 @@ namespace
 		return Names[static_cast<int32>(Event)];
 	}
 
+	/** 同一来源的冷却只管会连发的事件（碰撞类）。指尖碰到每根手指只响一次、伺服齿轮和倒车雷达自己控制节奏，
+	 * 不能被冷却吞掉：三根手指常常在 60ms 内先后碰到，同一只手发出的第二、三下会被当成重复 */
+	bool UsesCooldown(EToyFeedback Event)
+	{
+		return Event != EToyFeedback::FingerTouch && Event != EToyFeedback::ServoTick && Event != EToyFeedback::ParkPulse;
+	}
+
 	/** 材料敲击声的文件名前缀（Tap_Heavy_1.wav …），抓取器自己按轻金属算。 */
 	FString TapCue(EToyMaterial Material)
 	{
@@ -243,7 +250,7 @@ void UToyFeedback::Haptic(EControllerHand Hand, float Delay, float Amplitude, fl
 void UToyFeedback::Play(EToyFeedback Event, const FToyFeedbackParams& Params)
 {
 	const double Now = GetWorld()->GetTimeSeconds();
-	if (Params.Source)
+	if (Params.Source && UsesCooldown(Event))
 	{
 		double& Last = LastPlayTime.FindOrAdd(TPair<const UObject*, uint8>(Params.Source, static_cast<uint8>(Event)), -10.0);
 		if (Now - Last < SourceCooldown)
