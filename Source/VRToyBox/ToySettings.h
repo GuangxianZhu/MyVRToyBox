@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 
 /**
- * 玩家设置（主菜单的 SETTINGS 页改它）：转身方式、移动速度、传送开关、捏合小球、抓取范围、渲染分辨率、手模型。
+ * 玩家设置（主菜单的 SETTINGS 页改它）：转身方式、移动速度、传送开关、捏合小球、抓取范围、渲染分辨率、声音、震动。
  *
  * 每个选项都是"几档里选一档"，菜单按钮每按一次换到下一档。Pawn 和手每帧读 Get()，所以改了马上生效；
  * 渲染分辨率是控制台变量 r.ScreenPercentage，改的时候由 Apply() 设一次。
@@ -24,6 +24,9 @@ namespace ToySettings
 		int32 GrabSize = 1;
 		/** 0 = 80%，1 = 100%，2 = 120%。 */
 		int32 Resolution = 1;
+		/** 声音、震动：0 = 关，1 = 弱，2 = 强。 */
+		int32 Sound = 2;
+		int32 Haptics = 2;
 	};
 
 	const FSettings& Get();
@@ -36,12 +39,17 @@ namespace ToySettings
 	void TogglePinchBall();
 	void CycleGrabSize();
 	void CycleResolution();
+	void CycleSound();
+	void CycleHaptics();
 
 	/** 换算成具体数值。 */
 	float SnapTurnDegrees();
 	float MoveSpeedCm();
 	float GrabRadiusCm();
 	float ScreenPercentage();
+	/** 声音音量、震动强度的倍数（关 0，弱 0.5，强 1）。 */
+	float SoundGain();
+	float HapticGain();
 
 	/** 菜单按钮第二行的文字（英文：TextRender 自带字体没有中文字形）。 */
 	FString TurnLabel();
@@ -50,6 +58,8 @@ namespace ToySettings
 	FString PinchBallLabel();
 	FString GrabSizeLabel();
 	FString ResolutionLabel();
+	FString SoundLabel();
+	FString HapticsLabel();
 
 	/** 把要设控制台变量的选项（渲染分辨率）设下去。 */
 	void Apply();

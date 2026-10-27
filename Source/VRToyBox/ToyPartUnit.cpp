@@ -1,6 +1,7 @@
 #include "ToyPartUnit.h"
 
 #include "ToyExplodedModel.h"
+#include "ToyFeedback.h"
 #include "ToyHand.h"
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -150,11 +151,29 @@ void AToyPartUnit::Tick(float DeltaSeconds)
 	if (Holder.IsValid())
 	{
 		// 拿着靠近原位：原位出现虚影，提示"松手就装回去了"
-		const bool bNear = DistanceToHome() < MagnetDistance;
+		const float Distance = DistanceToHome();
+		const bool bNear = Distance < MagnetDistance;
+		bLeftHome |= Distance > MagnetDistance * 1.5f;
 		if (bNear != bGhostShown)
 		{
 			bGhostShown = bNear;
 			ModelActor->ShowGhost(this, bNear);
+			if (bNear && bLeftHome)
+			{
+				PlayFeedback(static_cast<uint8>(EToyFeedback::GhostReady), Holder.Get());
+				ParkPulseTimer = 0.f;
+			}
+		}
+		// 像倒车雷达：虚影出现后手上一下一下地震，越靠近原位越密（边缘 0.35 秒一下，贴上去 0.06 秒一下）
+		if (bNear && bLeftHome)
+		{
+			const float Closeness = 1.f - FMath::Clamp(Distance / MagnetDistance, 0.f, 1.f);
+			ParkPulseTimer -= DeltaSeconds;
+			if (ParkPulseTimer <= 0.f)
+			{
+				ParkPulseTimer = FMath::Lerp(0.35f, 0.06f, Closeness);
+				PlayFeedback(static_cast<uint8>(EToyFeedback::ParkPulse), Holder.Get(), Closeness);
+			}
 		}
 		return;
 	}
@@ -174,6 +193,15 @@ void AToyPartUnit::Tick(float DeltaSeconds)
 		{
 			bReturning = false;
 			ModelActor->OnUnitHome(this);
+			// 吸回去的（手还在旁边）震松手的那只手；飞了一段回来的只响
+			if (bMagnetReturn)
+			{
+				PlayFeedback(static_cast<uint8>(EToyFeedback::MagnetSnap), ReleasedBy.Get());
+			}
+			else
+			{
+				PlayFeedback(static_cast<uint8>(EToyFeedback::Seat), nullptr);
+			}
 		}
 	}
 }
@@ -450,6 +478,7 @@ void AToyPartUnit::OnGrabbed(AToyHand* Hand)
 	Holder = Hand;
 	bReturning = false;
 	bGhostShown = false;
+	bLeftHome = false;
 }
 
 void AToyPartUnit::OnReleased(AToyHand* Hand, const FVector& Velocity)
@@ -467,6 +496,12 @@ void AToyPartUnit::OnReleased(AToyHand* Hand, const FVector& Velocity)
 	ReturnFrom = GetActorTransform();
 	ReturnAlpha = 0.f;
 	bReturning = true;
+	bMagnetReturn = Distance < MagnetDistance;
+	ReleasedBy = Hand;
+	if (!bMagnetReturn)
+	{
+		PlayFeedback(static_cast<uint8>(EToyFeedback::ReturnWhoosh), nullptr, Distance);
+	}
 	if (bGhostShown)
 	{
 		bGhostShown = false;
@@ -526,4 +561,34 @@ bool AToyPartUnit::GetGrabInfo(FText& OutTitle, FText& OutBody) const
 	OutTitle = Title;
 	OutBody = Body;
 	return !Title.IsEmpty();
+}
+
+FString AToyPartUnit::GetMaterialText() const
+{
+	// 信息牌第一行是"材料：…"（AToyExplodedModel 读 parts.json 时拼的）；只取这一行，免得说明文字里的词干扰分类
+	const FString Text = Body.ToString();
+	FString First;
+	FString Rest;
+	if (Text.StartsWith(TEXT("材料：")) && Text.Split(TEXT("\n"), &First, &Rest))
+	{
+		return First;
+	}
+	return Text.StartsWith(TEXT("材料：")) ? Text : FString();
+}
+
+void AToyPartUnit::PlayFeedback(uint8 Event, const AToyHand* Hand, float Speed) const
+{
+	UToyFeedback* System = UToyFeedback::Get(this);
+	if (!System)
+	{
+		return;
+	}
+	FToyFeedbackParams Params;
+	Params.Location = GetActorTransform().TransformPosition(GetLocalCenter());
+	Params.Hand = Hand ? Hand->GetSide() : EControllerHand::AnyHand;
+	Params.Material = UToyFeedback::MaterialOf(this);
+	Params.SizeCm3 = UToyFeedback::SizeOf(this);
+	Params.Speed = Speed;
+	Params.Source = this;
+	System->Play(static_cast<EToyFeedback>(Event), Params);
 }

@@ -1,6 +1,7 @@
 #include "ToyMenuPanel.h"
 
 #include "ToyBoxPawn.h"
+#include "ToyFeedback.h"
 #include "ToySettings.h"
 #include "ToyShapeComponent.h"
 #include "Camera/PlayerCameraManager.h"
@@ -42,6 +43,7 @@ namespace
 			{ TEXT("speed"), EToyMenuAction::MoveSpeed }, { TEXT("teleport"), EToyMenuAction::Teleport },
 			{ TEXT("ball"), EToyMenuAction::PinchBall }, { TEXT("grab"), EToyMenuAction::GrabSize },
 			{ TEXT("res"), EToyMenuAction::Resolution }, { TEXT("calib"), EToyMenuAction::CalibrateHands },
+			{ TEXT("sound"), EToyMenuAction::Sound }, { TEXT("haptics"), EToyMenuAction::Haptics },
 		};
 		AToyMenuPanel* Menu = nullptr;
 		for (TActorIterator<AToyMenuPanel> It(World); It && !Menu; ++It)
@@ -131,6 +133,12 @@ AToyMenuPanel::AToyMenuPanel()
 		TEXT("GRAB RANGE"), TEXT(""), HandColor, 1.25f);
 	MakeButton(TEXT("Calib"), EToyMenuPage::Settings, EToyMenuAction::CalibrateHands, SetCol[0], SetRow[3], SetWidth, SetHeight,
 		TEXT("CALIBRATE"), TEXT("HANDS"), FLinearColor(0.85f, 0.5f, 0.05f), 1.25f);
+	// 声音、震动：设置名 + 关 / 弱 / 强（OFF / LOW / HIGH）
+	const FLinearColor FeelColor(0.75f, 0.35f, 0.45f);
+	MakeButton(TEXT("Sound"), EToyMenuPage::Settings, EToyMenuAction::Sound, SetCol[1], SetRow[3], SetWidth, SetHeight,
+		TEXT("SOUND"), TEXT(""), FeelColor, 1.25f);
+	MakeButton(TEXT("Haptics"), EToyMenuPage::Settings, EToyMenuAction::Haptics, SetCol[0], SetRow[4], SetWidth, SetHeight,
+		TEXT("HAPTICS"), TEXT(""), FeelColor, 1.25f);
 	MakeButton(TEXT("Back"), EToyMenuPage::Settings, EToyMenuAction::Back, SetCol[1], SetRow[4], SetWidth, SetHeight,
 		TEXT("BACK"), TEXT(""), FLinearColor(0.45f, 0.45f, 0.5f), 1.5f);
 }
@@ -196,10 +204,25 @@ void AToyMenuPanel::Open()
 	// 开局时头显的追踪（和桌面模式的相机高度）要过一两帧才到位，过一会儿再按头的位置摆一次
 	GetWorldTimerManager().SetTimer(PlaceTimer, FTimerDelegate::CreateWeakLambda(this, [this]() { PlaceInFrontOfPlayer(); }),
 		0.5f, false);
+	if (UToyFeedback* System = UToyFeedback::Get(this))
+	{
+		FToyFeedbackParams Params;
+		Params.Location = GetActorLocation();
+		System->Play(EToyFeedback::MenuOpen, Params);
+	}
 }
 
 void AToyMenuPanel::Close()
 {
+	if (bOpen)
+	{
+		if (UToyFeedback* System = UToyFeedback::Get(this))
+		{
+			FToyFeedbackParams Params;
+			Params.Location = GetActorLocation();
+			System->Play(EToyFeedback::MenuClose, Params);
+		}
+	}
 	bOpen = false;
 	GetWorldTimerManager().ClearTimer(PlaceTimer);
 	SetActorHiddenInGame(true);
@@ -266,6 +289,8 @@ void AToyMenuPanel::RefreshLabels()
 		case EToyMenuAction::PinchBall:  Value = ToySettings::PinchBallLabel(); break;
 		case EToyMenuAction::GrabSize:   Value = ToySettings::GrabSizeLabel(); break;
 		case EToyMenuAction::Resolution: Value = ToySettings::ResolutionLabel(); break;
+		case EToyMenuAction::Sound:      Value = ToySettings::SoundLabel(); break;
+		case EToyMenuAction::Haptics:    Value = ToySettings::HapticsLabel(); break;
 		default: continue;
 		}
 		Button.Line2->SetText(FText::FromString(Value));
@@ -335,6 +360,8 @@ void AToyMenuPanel::RunAction(EToyMenuAction Action)
 	case EToyMenuAction::PinchBall:  ToySettings::TogglePinchBall(); break;
 	case EToyMenuAction::GrabSize:   ToySettings::CycleGrabSize(); break;
 	case EToyMenuAction::Resolution: ToySettings::CycleResolution(); break;
+	case EToyMenuAction::Sound:      ToySettings::CycleSound(); break;
+	case EToyMenuAction::Haptics:    ToySettings::CycleHaptics(); break;
 	}
 	RefreshLabels();
 }

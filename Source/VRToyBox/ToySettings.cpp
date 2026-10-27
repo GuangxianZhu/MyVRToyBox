@@ -12,6 +12,8 @@ namespace
 	constexpr float MoveSpeeds[3] = { 100.f, 150.f, 220.f };
 	constexpr float GrabRadii[3] = { 1.5f, 2.f, 3.f };
 	constexpr float Percentages[3] = { 80.f, 100.f, 120.f };
+	constexpr float Gains[3] = { 0.f, 0.5f, 1.f };
+	const TCHAR* LevelNames[3] = { TEXT("OFF"), TEXT("LOW"), TEXT("HIGH") };
 
 	void Changed()
 	{
@@ -34,6 +36,8 @@ void ToySettings::Set(const FSettings& Settings)
 	GSettings.MoveSpeed = FMath::Clamp(GSettings.MoveSpeed, 0, 2);
 	GSettings.GrabSize = FMath::Clamp(GSettings.GrabSize, 0, 2);
 	GSettings.Resolution = FMath::Clamp(GSettings.Resolution, 0, 2);
+	GSettings.Sound = FMath::Clamp(GSettings.Sound, 0, 2);
+	GSettings.Haptics = FMath::Clamp(GSettings.Haptics, 0, 2);
 	if (GSettings.Turn >= ETurn::Count)
 	{
 		GSettings.Turn = ETurn::Snap45;
@@ -51,6 +55,8 @@ void ToySettings::ToggleTeleport() { GSettings.bTeleport = !GSettings.bTeleport;
 void ToySettings::TogglePinchBall() { GSettings.bPinchBall = !GSettings.bPinchBall; Changed(); }
 void ToySettings::CycleGrabSize() { GSettings.GrabSize = (GSettings.GrabSize + 1) % 3; Changed(); }
 void ToySettings::CycleResolution() { GSettings.Resolution = (GSettings.Resolution + 1) % 3; Changed(); }
+void ToySettings::CycleSound() { GSettings.Sound = (GSettings.Sound + 1) % 3; Changed(); }
+void ToySettings::CycleHaptics() { GSettings.Haptics = (GSettings.Haptics + 1) % 3; Changed(); }
 
 float ToySettings::SnapTurnDegrees()
 {
@@ -60,6 +66,10 @@ float ToySettings::SnapTurnDegrees()
 float ToySettings::MoveSpeedCm() { return MoveSpeeds[GSettings.MoveSpeed]; }
 float ToySettings::GrabRadiusCm() { return GrabRadii[GSettings.GrabSize]; }
 float ToySettings::ScreenPercentage() { return Percentages[GSettings.Resolution]; }
+float ToySettings::SoundGain() { return Gains[GSettings.Sound]; }
+float ToySettings::HapticGain() { return Gains[GSettings.Haptics]; }
+FString ToySettings::SoundLabel() { return LevelNames[GSettings.Sound]; }
+FString ToySettings::HapticsLabel() { return LevelNames[GSettings.Haptics]; }
 
 FString ToySettings::TurnLabel()
 {
@@ -113,6 +123,8 @@ void ToySettings::Load()
 		if (GConfig->GetBool(SettingsSection, TEXT("PinchBall"), bValue, GGameUserSettingsIni)) Settings.bPinchBall = bValue;
 		if (GConfig->GetInt(SettingsSection, TEXT("GrabSize"), Value, GGameUserSettingsIni)) Settings.GrabSize = Value;
 		if (GConfig->GetInt(SettingsSection, TEXT("Resolution"), Value, GGameUserSettingsIni)) Settings.Resolution = Value;
+		if (GConfig->GetInt(SettingsSection, TEXT("Sound"), Value, GGameUserSettingsIni)) Settings.Sound = Value;
+		if (GConfig->GetInt(SettingsSection, TEXT("Haptics"), Value, GGameUserSettingsIni)) Settings.Haptics = Value;
 		Set(Settings);
 	}
 	Apply();
@@ -131,13 +143,15 @@ void ToySettings::Save()
 	GConfig->SetBool(SettingsSection, TEXT("PinchBall"), GSettings.bPinchBall, GGameUserSettingsIni);
 	GConfig->SetInt(SettingsSection, TEXT("GrabSize"), GSettings.GrabSize, GGameUserSettingsIni);
 	GConfig->SetInt(SettingsSection, TEXT("Resolution"), GSettings.Resolution, GGameUserSettingsIni);
+	GConfig->SetInt(SettingsSection, TEXT("Sound"), GSettings.Sound, GGameUserSettingsIni);
+	GConfig->SetInt(SettingsSection, TEXT("Haptics"), GSettings.Haptics, GGameUserSettingsIni);
 	GConfig->Flush(false, GGameUserSettingsIni);
 	UE_LOG(LogTemp, Log, TEXT("ToyBox Settings: %s"), *Describe());
 }
 
 FString ToySettings::Describe()
 {
-	return FString::Printf(TEXT("Turn=%s Move=%s(%.0f) Teleport=%s PinchBall=%s Grab=%s(%.1fcm) Res=%s"),
+	return FString::Printf(TEXT("Turn=%s Move=%s(%.0f) Teleport=%s PinchBall=%s Grab=%s(%.1fcm) Res=%s Sound=%s Haptics=%s"),
 		*TurnLabel(), *MoveSpeedLabel(), MoveSpeedCm(), *TeleportLabel(), *PinchBallLabel(), *GrabSizeLabel(), GrabRadiusCm(),
-		*ResolutionLabel());
+		*ResolutionLabel(), *SoundLabel(), *HapticsLabel());
 }

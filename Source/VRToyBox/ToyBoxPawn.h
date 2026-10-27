@@ -16,6 +16,22 @@ class UMotionControllerComponent;
 class UStaticMeshComponent;
 
 /**
+ * 震动混合器里的一层：等 Delay 秒后开始，Attack 秒升到 Amplitude，保持 Hold 秒，Decay 秒线性降到 0。
+ * 每只手所有的层每帧加起来（再加上这一帧的持续驱动），截到 1，乘设置里的 HAPTICS 档位，只用振幅（Quest 上频率基本不起作用）。
+ * 很短的层（比如 6ms 的"嗒"）比一帧还短：第一次轮到它时至少按满振幅输出一帧。
+ */
+struct FToyHapticLayer
+{
+	float Delay = 0.f;
+	float Amplitude = 0.f;
+	float Attack = 0.f;
+	float Hold = 0.f;
+	float Decay = 0.f;
+	double Start = 0.0;
+	bool bEmitted = false;
+};
+
+/**
  * 玩家：VROrigin（地面）+ 头显相机 + 两个动作控制器，控制器上各挂一只 AToyHand。
  *
  * 两种模式，每帧根据有没有头显自动切换：
@@ -38,7 +54,17 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 
+	/** 一下固定强度的震动（加一层没有渐入渐出的震动层）。 */
 	void PlayHaptic(EControllerHand Hand, float Amplitude, float Duration);
+
+	/** 给某只手的震动混合器加一层（UToyFeedback 用）。 */
+	void AddHaptic(EControllerHand Hand, const FToyHapticLayer& Layer);
+
+	/** 这一帧的持续震动（比如手指在动），每帧要重新设，不设就是 0。同一帧设多次取最大。 */
+	void SetHapticDrive(EControllerHand Hand, float Amplitude);
+
+	/** toy.HapticTest：在右手上放一串测试震动，右手边的信息牌显示正在放哪一步。 */
+	void StartHapticTest(int32 Mode);
 
 	AToyHand* GetRightHand() const { return RightHand; }
 
@@ -139,6 +165,7 @@ private:
 	void AddIgnoredForMove(FCollisionQueryParams& Params) const;
 	float ReadAxis(const TArray<FKey>& Keys) const;
 	AToyHand* SpawnHand(EControllerHand HandSide, UMotionControllerComponent* MotionController);
+	void TickHaptics();
 
 	UPROPERTY(Transient)
 	TObjectPtr<AToyHand> LeftHand;
@@ -195,6 +222,13 @@ private:
 	FVector2D LastMousePosition = FVector2D::ZeroVector;
 	float DesktopHoldDistance = 60.f;
 
-	FTimerHandle LeftHapticTimer;
-	FTimerHandle RightHapticTimer;
+	/** 震动混合器：[0] = 左手，[1] = 右手。 */
+	TArray<FToyHapticLayer> HapticLayers[2];
+	float HapticDrive[2] = { 0.f, 0.f };
+	float HapticOutput[2] = { 0.f, 0.f };
+
+	/** toy.HapticTest 每一步的开始时间（相对 HapticTestStart）和信息牌上显示的字。 */
+	TArray<TPair<float, FString>> HapticTestSteps;
+	double HapticTestStart = 0.0;
+	int32 HapticTestShown = INDEX_NONE;
 };

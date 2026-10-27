@@ -45,6 +45,7 @@ public:
 	virtual void OnGrabbed(AToyHand* Hand) override;
 	virtual void OnReleased(AToyHand* Hand, const FVector& Velocity) override;
 	virtual AToyHand* GetHolder() const override;
+	virtual FString GetMaterialText() const override { return TEXT("塑料"); }
 
 	void SetBaseColor(const FLinearColor& InColor);
 

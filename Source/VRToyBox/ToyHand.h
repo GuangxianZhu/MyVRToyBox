@@ -20,6 +20,8 @@ class UMaterialInterface;
 class UPrimitiveComponent;
 class USkeletalMesh;
 class UWidgetComponent;
+class UAudioComponent;
+enum class EToyFeedback : uint8;
 
 /**
  * 一只手，挂在动作控制器（握把姿态）上。默认是三指抓取器（参考 Red Matter 2，见 UToyClawToolRig）：
@@ -80,6 +82,7 @@ public:
 	void SetPokeEnabled(bool bEnabled);
 	void ReleaseHeld(bool bThrow);
 	bool IsHolding() const;
+	EControllerHand GetSide() const { return Side; }
 	AActor* GetHeldActor() const;
 
 	/** 桌面模式：鼠标射线点中的 Actor。它在手的抓取范围里时优先抓它（零件挨得近时，以鼠标点中的为准）。 */
@@ -175,6 +178,12 @@ private:
 	void RecordMotion();
 	FVector GetThrowVelocity() const;
 	void Pulse(float Amplitude, float Duration) const;
+	/** 声音 + 震动事件（UToyFeedback），震这只手；给了 Target 就按它的材料和大小。 */
+	void Feedback(EToyFeedback Event, const FVector& Location, const AActor* Target, float Speed = 0.f) const;
+	/** 伺服电机声 + 齿轮感震动，跟着三根手指的合拢速度（只有抓取器有）。 */
+	void TickServo(const float* PreviousClose, float DeltaSeconds);
+	/** 拿着东西时：每根手指碰到零件表面响一声，三根都到位再来一下锁定。 */
+	void TickContactFeedback();
 	void TickRangeSphere(float DeltaSeconds);
 
 	UPROPERTY()
@@ -222,6 +231,14 @@ private:
 	float ContactIndexCurl = 0.f;
 	float ContactThumbCurl = 0.f;
 	bool bContactPending = false;
+	/** 抓取器：每根手指碰到零件的声音已经响过；三根都到位后的锁定声还没响。 */
+	bool bFingerTouched[3] = { false, false, false };
+	bool bSecurePending = false;
+	/** 伺服齿轮感：手指合拢量累计到 0.08 震一下。 */
+	float ServoAccum = 0.f;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UAudioComponent> ServoLoop;
 
 	TWeakObjectPtr<AToyBoxPawn> OwnerPawn;
 	EControllerHand Side = EControllerHand::Right;

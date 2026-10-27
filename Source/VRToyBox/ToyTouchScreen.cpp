@@ -1,5 +1,7 @@
 #include "ToyTouchScreen.h"
 
+#include "ToyFeedback.h"
+#include "ToyHand.h"
 #include "ToyShapeComponent.h"
 #include "ToyStudio.h"
 #include "Algo/Find.h"
@@ -558,7 +560,13 @@ bool AToyTouchScreen::TouchFinger(const UObject* Finger, const FVector& TipWorld
 		return false;
 	}
 	UpdateFinger(*State, TipWorld);
+	const int32 OldHover = State->Hover;
 	State->Hover = State->Distance < HoverCm ? HitTest(State->Pixel) : INDEX_NONE;
+	// 悬停到一个新按钮上"嗒"一下；手指在屏幕上滑过一排按钮，每跨过一个按钮边缘就一下，像屏幕有纹理
+	if (State->Hover != OldHover && State->Hover != INDEX_NONE && !State->bPressed)
+	{
+		PlayFeedback(EToyFeedback::UiHover, TipWorld, Finger);
+	}
 
 	if (State->bPressed)
 	{
@@ -566,6 +574,7 @@ bool AToyTouchScreen::TouchFinger(const UObject* Finger, const FVector& TipWorld
 		if (State->Distance > ReleaseCm)
 		{
 			State->bPressed = false;
+			PlayFeedback(EToyFeedback::UiRelease, TipWorld, Finger);
 		}
 		return false;
 	}
@@ -573,7 +582,12 @@ bool AToyTouchScreen::TouchFinger(const UObject* Finger, const FVector& TipWorld
 	if (State->Distance <= PressCm && State->LastDistance > PressCm)
 	{
 		State->bPressed = true;
-		return State->Hover != INDEX_NONE && Press(State->Hover);
+		const bool bPressed = State->Hover != INDEX_NONE && Press(State->Hover);
+		if (bPressed)
+		{
+			PlayFeedback(EToyFeedback::UiPress, TipWorld, Finger);
+		}
+		return bPressed;
 	}
 	return false;
 }
@@ -595,8 +609,33 @@ bool AToyTouchScreen::MouseAt(const FVector& WorldPoint, bool bClick)
 	}
 	UpdateFinger(*State, WorldPoint);
 	State->bMouse = true;
+	const int32 OldHover = State->Hover;
 	State->Hover = HitTest(State->Pixel);
-	return bClick && State->Hover != INDEX_NONE && Press(State->Hover);
+	if (State->Hover != OldHover && State->Hover != INDEX_NONE)
+	{
+		PlayFeedback(EToyFeedback::UiHover, WorldPoint, this);
+	}
+	const bool bPressed = bClick && State->Hover != INDEX_NONE && Press(State->Hover);
+	if (bPressed)
+	{
+		PlayFeedback(EToyFeedback::UiPress, WorldPoint, this);
+	}
+	return bPressed;
+}
+
+void AToyTouchScreen::PlayFeedback(EToyFeedback Event, const FVector& Location, const UObject* Finger) const
+{
+	if (UToyFeedback* System = UToyFeedback::Get(this))
+	{
+		FToyFeedbackParams Params;
+		Params.Location = Location;
+		if (const AToyHand* Hand = Cast<AToyHand>(Finger))
+		{
+			Params.Hand = Hand->GetSide();
+		}
+		Params.Source = Finger;
+		System->Play(Event, Params);
+	}
 }
 
 void AToyTouchScreen::MouseLeave()

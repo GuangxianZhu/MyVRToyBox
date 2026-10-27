@@ -116,6 +116,7 @@ public:
 	virtual void RemoveHover() override;
 	virtual EToyGripStyle GetGripStyle() const override;
 	virtual bool GetGrabInfo(FText& OutTitle, FText& OutBody) const override;
+	virtual FString GetMaterialText() const override;
 
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<USceneComponent> Root;
@@ -170,4 +171,12 @@ private:
 	float ReturnDuration = 0.4f;
 	FTransform ReturnFrom;
 	bool bGhostShown = false;
+
+	/** 声音 + 震动：虚影出现后到下一下倒车雷达脉冲还剩多久；松手时是不是吸回去、谁松的手（落位时震那只手）。 */
+	float ParkPulseTimer = 0.f;
+	/** 刚抓起时零件就在原位旁边：先拿开过 MagnetDistance 的 1.5 倍，再靠近才响"快到了"和倒车雷达。 */
+	bool bLeftHome = false;
+	bool bMagnetReturn = false;
+	TWeakObjectPtr<AToyHand> ReleasedBy;
+	void PlayFeedback(uint8 Event, const AToyHand* Hand, float Speed = 0.f) const;
 };

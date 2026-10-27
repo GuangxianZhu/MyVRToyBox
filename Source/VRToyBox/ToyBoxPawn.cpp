@@ -29,6 +29,16 @@ static TAutoConsoleVariable<int32> CVarHandPreview(
 
 namespace
 {
+	FAutoConsoleCommandWithWorldAndArgs HapticTestCommand(TEXT("toy.HapticTest"),
+		TEXT("在右手上放一串测试震动，右手边的信息牌显示步骤：1 = 振幅阶梯，2 = 时长阶梯，3 = 点击 vs 包络，4 = 齿轮"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+		{
+			if (AToyBoxPawn* Pawn = World ? Cast<AToyBoxPawn>(UGameplayStatics::GetPlayerPawn(World, 0)) : nullptr)
+			{
+				Pawn->StartHapticTest(Args.Num() > 0 ? FCString::Atoi(*Args[0]) : 0);
+			}
+		}));
+
 	const TCHAR* ArcMeshPath = TEXT("/Engine/BasicShapes/Sphere.Sphere");
 	const TCHAR* RingMeshPath = TEXT("/Engine/BasicShapes/Cylinder.Cylinder");
 	const TCHAR* GlowMaterialPath = TEXT("/Game/Materials/M_ToyGhost.M_ToyGhost");
@@ -220,6 +230,7 @@ void AToyBoxPawn::Tick(float DeltaSeconds)
 	{
 		TickDesktop();
 	}
+	TickHaptics();
 }
 
 void AToyBoxPawn::ApplyMode(bool bNewVR)
@@ -849,20 +860,180 @@ void AToyBoxPawn::TickDesktop()
 
 void AToyBoxPawn::PlayHaptic(EControllerHand Hand, float Amplitude, float Duration)
 {
+	FToyHapticLayer Layer;
+	Layer.Amplitude = Amplitude;
+	Layer.Hold = Duration;
+	AddHaptic(Hand, Layer);
+}
+
+void AToyBoxPawn::AddHaptic(EControllerHand Hand, const FToyHapticLayer& Layer)
+{
+	FToyHapticLayer& Added = HapticLayers[Hand == EControllerHand::Left ? 0 : 1].Add_GetRef(Layer);
+	Added.Start = GetWorld()->GetRealTimeSeconds() + Layer.Delay;
+	Added.bEmitted = false;
+}
+
+void AToyBoxPawn::SetHapticDrive(EControllerHand Hand, float Amplitude)
+{
+	float& Drive = HapticDrive[Hand == EControllerHand::Left ? 0 : 1];
+	Drive = FMath::Max(Drive, Amplitude);
+}
+
+void AToyBoxPawn::TickHaptics()
+{
+	const double Now = GetWorld()->GetRealTimeSeconds();
 	APlayerController* PC = Cast<APlayerController>(GetController());
-	if (!bVR || !PC)
+	for (int32 Side = 0; Side < 2; ++Side)
 	{
+		float Sum = HapticDrive[Side];
+		HapticDrive[Side] = 0.f;
+		TArray<FToyHapticLayer>& Stack = HapticLayers[Side];
+		for (int32 Index = Stack.Num() - 1; Index >= 0; --Index)
+		{
+			FToyHapticLayer& Layer = Stack[Index];
+			if (Now < Layer.Start)
+			{
+				continue;
+			}
+			const float T = static_cast<float>(Now - Layer.Start);
+			const float End = Layer.Attack + Layer.Hold + Layer.Decay;
+			float Envelope = 0.f;
+			if (T < Layer.Attack)
+			{
+				Envelope = T / Layer.Attack;
+			}
+			else if (T < Layer.Attack + Layer.Hold)
+			{
+				Envelope = 1.f;
+			}
+			else if (T < End)
+			{
+				Envelope = 1.f - (T - Layer.Attack - Layer.Hold) / Layer.Decay;
+			}
+			// 比一帧还短的层：第一次轮到它时至少按满振幅出一帧，不然 90Hz 下 6ms 的"嗒"会整个漏掉
+			if (!Layer.bEmitted)
+			{
+				Layer.bEmitted = true;
+				if (Layer.Attack < 0.02f)
+				{
+					Envelope = 1.f;
+				}
+			}
+			Sum += Layer.Amplitude * Envelope;
+			if (T >= End)
+			{
+				Stack.RemoveAt(Index);
+			}
+		}
+		const float Output = FMath::Clamp(Sum, 0.f, 1.f) * ToySettings::HapticGain();
+		if (bVR && PC && (Output > 0.005f || HapticOutput[Side] > 0.005f))
+		{
+			PC->SetHapticsByValue(1.f, Output, Side == 0 ? EControllerHand::Left : EControllerHand::Right);
+		}
+		HapticOutput[Side] = Output;
+	}
+
+	// toy.HapticTest：信息牌跟着步骤换字，全部放完收起
+	if (HapticTestSteps.Num() > 0 && RightHand)
+	{
+		const float Elapsed = static_cast<float>(Now - HapticTestStart);
+		int32 Step = INDEX_NONE;
+		for (int32 Index = 0; Index < HapticTestSteps.Num(); ++Index)
+		{
+			if (Elapsed >= HapticTestSteps[Index].Key)
+			{
+				Step = Index;
+			}
+		}
+		const bool bDone = Elapsed > HapticTestSteps.Last().Key + 1.5f;
+		if (bDone)
+		{
+			HapticTestSteps.Reset();
+			HapticTestShown = INDEX_NONE;
+			RightHand->HideCustomInfo();
+			UE_LOG(LogTemp, Log, TEXT("ToyBox: 震动测试放完"));
+		}
+		else if (Step != HapticTestShown && Step != INDEX_NONE)
+		{
+			HapticTestShown = Step;
+			RightHand->ShowCustomInfo(FText::FromString(TEXT("震动测试")), FText::FromString(HapticTestSteps[Step].Value));
+			UE_LOG(LogTemp, Log, TEXT("ToyBox: 震动测试 %s"), *HapticTestSteps[Step].Value);
+		}
+	}
+}
+
+void AToyBoxPawn::StartHapticTest(int32 Mode)
+{
+	HapticTestSteps.Reset();
+	HapticTestShown = INDEX_NONE;
+	HapticTestStart = GetWorld()->GetRealTimeSeconds();
+	auto Pulse = [this](float At, float Amplitude, float Attack, float Hold, float Decay)
+	{
+		FToyHapticLayer Layer;
+		Layer.Delay = At;
+		Layer.Amplitude = Amplitude;
+		Layer.Attack = Attack;
+		Layer.Hold = Hold;
+		Layer.Decay = Decay;
+		AddHaptic(EControllerHand::Right, Layer);
+	};
+	auto Step = [this](float At, const FString& Label) { HapticTestSteps.Emplace(At, Label); };
+
+	switch (Mode)
+	{
+	case 1:
+	{
+		// 振幅阶梯：同样 30ms，越来越强；找"刚刚感觉得到"的那一档
+		const float Amps[] = { 0.05f, 0.1f, 0.15f, 0.2f, 0.3f, 0.4f, 0.5f };
+		for (int32 K = 0; K < UE_ARRAY_COUNT(Amps); ++K)
+		{
+			const float At = 0.5f + K * 1.2f;
+			Step(At - 0.3f, FString::Printf(TEXT("1 振幅 %d/%d：%.2f，30ms"), K + 1, UE_ARRAY_COUNT(Amps), Amps[K]));
+			Pulse(At, Amps[K], 0.f, 0.03f, 0.f);
+		}
+		break;
+	}
+	case 2:
+	{
+		// 时长阶梯：同样 0.6，越来越长；找"像一下点击"和"像一下嗡"的分界
+		const float Durations[] = { 0.005f, 0.01f, 0.02f, 0.03f, 0.05f };
+		for (int32 K = 0; K < UE_ARRAY_COUNT(Durations); ++K)
+		{
+			const float At = 0.5f + K * 1.2f;
+			Step(At - 0.3f, FString::Printf(TEXT("2 时长 %d/%d：%.0fms，0.6"), K + 1, UE_ARRAY_COUNT(Durations), Durations[K] * 1000.f));
+			Pulse(At, 0.6f, 0.f, Durations[K], 0.f);
+		}
+		break;
+	}
+	case 3:
+		// 干脆的"咔"和渐强渐弱的"嗡"交替三遍
+		for (int32 K = 0; K < 3; ++K)
+		{
+			const float At = 0.5f + K * 2.4f;
+			Step(At - 0.3f, FString::Printf(TEXT("3 点击 %d/3：0.8，8ms"), K + 1));
+			Pulse(At, 0.8f, 0.f, 0.008f, 0.f);
+			Step(At + 0.9f, FString::Printf(TEXT("3 包络 %d/3：0.6，升 40ms + 停 40ms + 降 120ms"), K + 1));
+			Pulse(At + 1.2f, 0.6f, 0.04f, 0.04f, 0.12f);
+		}
+		break;
+	case 4:
+	{
+		// 伺服"齿轮感"：0.12 的 6ms 小脉冲，间隔 30 / 60 / 100ms 各放 1 秒
+		const float Gaps[] = { 0.03f, 0.06f, 0.1f };
+		for (int32 K = 0; K < UE_ARRAY_COUNT(Gaps); ++K)
+		{
+			const float At = 0.5f + K * 2.f;
+			Step(At - 0.3f, FString::Printf(TEXT("4 齿轮 %d/3：0.12，6ms，每 %.0fms 一下"), K + 1, Gaps[K] * 1000.f));
+			for (float T = 0.f; T < 1.f; T += Gaps[K])
+			{
+				Pulse(At + T, 0.12f, 0.f, 0.006f, 0.f);
+			}
+		}
+		break;
+	}
+	default:
+		UE_LOG(LogTemp, Warning, TEXT("ToyBox: toy.HapticTest 1 = 振幅阶梯，2 = 时长阶梯，3 = 点击 vs 包络，4 = 齿轮"));
 		return;
 	}
-	PC->SetHapticsByValue(1.f, Amplitude, Hand);
-
-	FTimerHandle& Timer = (Hand == EControllerHand::Left) ? LeftHapticTimer : RightHapticTimer;
-	TWeakObjectPtr<APlayerController> WeakPC(PC);
-	GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateWeakLambda(this, [WeakPC, Hand]()
-	{
-		if (APlayerController* Player = WeakPC.Get())
-		{
-			Player->SetHapticsByValue(0.f, 0.f, Hand);
-		}
-	}), Duration, false);
+	UE_LOG(LogTemp, Log, TEXT("ToyBox: 震动测试 %d 开始，共 %d 步%s"), Mode, HapticTestSteps.Num(), bVR ? TEXT("") : TEXT("（桌面模式没有震动，只显示步骤）"));
 }
