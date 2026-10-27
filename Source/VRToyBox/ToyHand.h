@@ -212,6 +212,8 @@ private:
 	/** 抓取器模式下拇指三节的骨骼序号和解好的局部变换（空 = 不覆盖）。 */
 	TArray<int32> ThumbOverrideBones;
 	TArray<FTransform> ThumbOverride;
+	/** 抓取器模式下中指 / 无名指 / 小指各关节自己的弯曲程度（按骨骼序号，-1 = 用所属手指组的弯曲程度）。 */
+	TArray<float> BoneWeightOverride;
 	TArray<uint8> BoneGroup;
 	int32 IndexTipBone = INDEX_NONE;
 	int32 IndexMidBone = INDEX_NONE;

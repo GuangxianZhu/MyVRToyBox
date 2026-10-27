@@ -332,6 +332,7 @@ void AToyHand::SetupHandMesh()
 {
 	ThumbOverrideBones.Reset();
 	ThumbOverride.Reset();
+	BoneWeightOverride.Reset();
 	AppliedHandModel = WantedHandModel();
 	AppliedDexScale = CVarDexHandScale.GetValueOnGameThread();
 	bUseClaw = false;
@@ -582,6 +583,27 @@ void AToyHand::SetupClaw()
 		ClawClose[K] = 0.f;
 		ClawContact[K] = 1.f;
 	}
+	// 中指 / 无名指 / 小指按 rig.json 的 glove.finger_joints 一节一节地弯（先指根、再中节、再指尖，各自碰到握柄就停，
+	// build_claw_tool.py 按手套蒙皮顶点算好的），这样手指才是绕着握柄合拢，而不是整根一起弯成拳头
+	BoneWeightOverride.Reset();
+	const UToyClawToolRig::FGlovePose& GlovePose = ClawTool->GetGlovePose();
+	if (GlovePose.bValid && GlovePose.bFingerJoints && HandMesh->GetSkinnedAsset())
+	{
+		BoneWeightOverride.Init(-1.f, OpenPose.Num());
+		static const TCHAR* Fingers[3] = { TEXT("middle"), TEXT("ring"), TEXT("pinky") };
+		const TCHAR* Suffix = Side == EControllerHand::Left ? TEXT("_l") : TEXT("_r");
+		for (int32 F = 0; F < 3; ++F)
+		{
+			for (int32 J = 0; J < 3; ++J)
+			{
+				const int32 Bone = HandMesh->GetBoneIndex(FName(*FString::Printf(TEXT("%s_0%d%s"), Fingers[F], J + 1, Suffix)));
+				if (BoneWeightOverride.IsValidIndex(Bone))
+				{
+					BoneWeightOverride[Bone] = GlovePose.FingerJoints[F][J];
+				}
+			}
+		}
+	}
 	ApplyFingerPose();
 	SolveGloveThumb();
 	UE_LOG(LogTemp, Log, TEXT("ToyBox: %s手用三指抓取器，捏合点锚定在手坐标 %s"),
@@ -788,8 +810,11 @@ bool AToyHand::PoseManny(float InIndexCurl, float InFingerCurl, float InThumbCur
 	const float Weights[4] = { 0.f, InIndexCurl, InFingerCurl, InThumbCurl };
 	for (int32 Index = 0; Index < OpenPose.Num(); ++Index)
 	{
+		// 抓取器模式：中指 / 无名指 / 小指每个关节有自己的弯曲程度（绕着握柄合拢，见 SetupClaw）
+		const float Weight = BoneWeightOverride.IsValidIndex(Index) && BoneWeightOverride[Index] >= 0.f
+			? BoneWeightOverride[Index] : Weights[BoneGroup[Index]];
 		FTransform Pose;
-		Pose.Blend(OpenPose[Index], FistPose[Index], Weights[BoneGroup[Index]]);
+		Pose.Blend(OpenPose[Index], FistPose[Index], Weight);
 		HandMesh->BoneSpaceTransforms[Index] = Pose;
 	}
 	// 抓取器模式：拇指三节用 SolveGloveThumb 解好的姿势

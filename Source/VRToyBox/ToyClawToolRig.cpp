@@ -93,6 +93,16 @@ bool UToyClawToolRig::Build()
 		Glove.ThumbCurl = static_cast<float>(G->GetNumberField(TEXT("thumb_curl")));
 		Glove.ThumbRootLimit = static_cast<float>(G->GetNumberField(TEXT("thumb_root_limit")));
 		Glove.ThumbTarget = ReadVector(G, TEXT("thumb_target"));
+		const TSharedPtr<FJsonObject>* JointsObject = nullptr;
+		if (G->TryGetObjectField(TEXT("finger_joints"), JointsObject))
+		{
+			static const TCHAR* FingerNames[3] = { TEXT("middle"), TEXT("ring"), TEXT("pinky") };
+			Glove.bFingerJoints = true;
+			for (int32 F = 0; F < 3; ++F)
+			{
+				Glove.bFingerJoints &= ReadFloats(*JointsObject, FingerNames[F], Glove.FingerJoints[F], 3);
+			}
+		}
 		Glove.bValid = true;
 	}
 

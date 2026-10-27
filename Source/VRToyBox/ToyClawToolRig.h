@@ -55,6 +55,9 @@ public:
 		float ThumbCurl = 0.35f;
 		float ThumbRootLimit = 30.f;
 		FVector ThumbTarget = FVector::ZeroVector;
+		/** 中指 / 无名指 / 小指（[0..2]）三个关节（指根、中节、指尖）各自的弯曲程度；bFingerJoints = false 时三指都用 FingerCurl。 */
+		float FingerJoints[3][3] = {};
+		bool bFingerJoints = false;
 		bool bValid = false;
 	};
 	const FGlovePose& GetGlovePose() const { return Glove; }

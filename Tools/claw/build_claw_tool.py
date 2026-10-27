@@ -32,14 +32,17 @@ RENDER = '--render' in ARGS
 
 # ------------------------------------------------------------------ 尺寸（虚幻坐标，厘米）
 # 整个抓取器按"手套握住它"来摆（Red Matter 那种：工具迁就手，不是手迁就工具）。下面的数都是在游戏里量 MannyXR 手套
-# （扳机 0.55、三指 0.95 弯曲时的蒙皮顶点）以后算出来的，见 docs 里的 clawfit 截图：
-# 握柄：圆柱贴着掌心、被中指 / 无名指 / 小指包住；食指不握柄，搭在握柄前面的扳机上；拇指压在头顶的面板上。
-GRIP_POINT = Vector((0.42, -2.05, -2.10))
-GRIP_AXIS = Vector((0.168, -0.052, 0.984)).normalized()
+# 的蒙皮顶点以后算出来的，见 docs 里的 clawfit 截图：
+# 握柄：放在手指半握（0.65）时拳头里空出来的那个洞（掌心、近节指骨、指尖围成的圈）的中心线上，贴着掌心；
+# 然后中指 / 无名指 / 小指各自从张开往里合（先指根、再中节、再指尖，碰到握柄就停），合拢程度写进 rig.json 的 glove.finger_joints；
+# 指根那一节在游戏里（线性蒙皮）指根掌侧的皮会鼓进握柄，所以指根比扫出来的少弯一点（中指 / 无名指 0.85，小指 0.7）。
+# 食指不握柄，搭在握柄前面的扳机上；拇指压在头顶的面板上。
+GRIP_POINT = Vector((1.492, -1.093, -2.862))
+GRIP_AXIS = Vector((0.0977, -0.2068, 0.9735)).normalized()
 GRIP_CORE_R = 1.33        # 白色芯
 GRIP_R = 1.5              # 深蓝握把套（手指包住的表面）
-GRIP_S0, GRIP_S1 = -4.3, 3.6
-NECK_R, NECK_S1 = 0.8, 5.6
+GRIP_S0, GRIP_S1 = -3.6, 4.3
+NECK_R, NECK_S1 = 0.8, 7.15
 
 # 三根手指的底座圈（rig 和以前一样，只是整体抬高 1cm，让头底下离食指指节留出空隙）
 RIG_CENTER = Vector((4.6, 0.0, 6.0))
@@ -58,12 +61,14 @@ THUMB_TARGET = PANEL_C + PANEL_N * 1.4   # 拇指指腹落点（面板上方，�
 
 # 扳机：食指放松（弯 0.5）时离握柄最近的那块手套表面，拨片前面留 1.5mm
 TRIGGER_FINGER = Vector((4.04, -2.76, -0.37))
-TRIGGER_S = 2.35
+TRIGGER_S = 3.02
 TRIGGER_SIZE = (0.8, 1.5, 1.6)   # 厚（朝握柄）、宽、高（顺着握柄）
 TRIGGER_LIFT = 0.4               # 往上挪一点，别碰到下面包着握柄的中指
 
 # 手套姿势（AToyHand 用）：中指 / 无名指 / 小指包住握柄的弯曲程度，食指放在扳机上的弯曲程度、扣扳机时多弯一点
-GLOVE = dict(finger_curl=0.95, index_curl=0.5, index_pull=0.08, thumb_curl=0.35, thumb_root_limit=30.0)
+GLOVE = dict(finger_curl=0.95, index_curl=0.5, index_pull=0.08, thumb_curl=0.35, thumb_root_limit=30.0,
+             # 中指 / 无名指 / 小指三个关节（指根、中节、指尖）各自的弯曲程度（0 = 张开姿势，1 = 模板的握拳姿势）
+             finger_joints=dict(middle=[0.85, 0.4, 0.825], ring=[0.85, 0.125, 1.0], pinky=[0.7, 0.0, 1.0]))
 
 # 护手环：从头部手背一侧绕过手背（离手套 ≥1cm），落到握柄底部
 HOOP_CTRL = [Vector((3.2, 1.3, 6.6)), Vector((1.0, 9.0, 6.0)), Vector((0.8, 9.0, -10.5)), None]
@@ -360,7 +365,7 @@ def build_body():
     # 握柄：白芯 + 深蓝握把套 + 三道防滑环；底盖压扁的球 + 橙色尾灯；上面细一点的颈连到头
     b.cylinder(at(GRIP_S0), at(GRIP_S1), GRIP_CORE_R, GRIP_CORE_R, 'white')
     b.cylinder(at(GRIP_S0 + 0.8), at(GRIP_S1 - 0.6), GRIP_R, GRIP_R, 'blue')
-    for s in (-2.2, -0.4, 1.4):
+    for s in (-1.6, 0.4, 2.3):
         b.cylinder(at(s - 0.12), at(s + 0.12), GRIP_R + 0.06, GRIP_R + 0.06, 'dark')
     ox = g.orthogonal().normalized()
     oy = g.cross(ox)
