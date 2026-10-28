@@ -13,3 +13,8 @@ Saved/
 *.sdf
 *.xcodeproj
 *.xcworkspace
+
+# ArchViz Interior（Epic 示例）资产：只在本机用，不进公开仓库
+/Content/ArchViz/
+/ArchVisRT.uproject
+/ArchVisRT.png

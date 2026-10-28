@@ -27,6 +27,10 @@
 			]
 		},
 		{
+			"Name": "GPULightmass",
+			"Enabled": true
+		},
+		{
 			"Name": "EditorScriptingUtilities",
 			"Enabled": true,
 			"TargetAllowList": [
