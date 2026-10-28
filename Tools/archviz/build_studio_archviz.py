@@ -11,7 +11,9 @@ ArchViz Interior 是 Epic 的免费示例，只装在本机的 Content/ArchViz �
      桌子中心对准餐桌中心，面朝餐边柜和挂画那面墙，窗户在左右两侧；检查站立点周围 60cm 内没有家具；
      按房间内墙算 WalkArea（工作室坐标，往里缩 30cm）
   6. 调低后期体积的曝光补偿（示例是 +1.76，窗外一片白；-1.5 时看窗户的画面过曝 < 3%）
-  7. 存关卡
+  7. 摆件（PROPS 表里挑的 10 件）换成能拿起来的 AToyProp：网格没有简单碰撞就加盒子 / 凸包，花盆里的植物挂上去跟着走；
+     家具、墙这些只有三角面碰撞的网格改成"复杂碰撞当简单碰撞"，摆件才放得住、扔不穿（改的是本机 Content/ArchViz 里的网格）
+  8. 存关卡
 
 环境变量 ARCHVIZ_STEP=bake 时不做上面这些，只打开 L_StudioArchViz 用 CPU Lightmass（Production）烘焙光照、存关卡和 BuiltData。
 烘焙要渲染（反射捕获、光照贴图编码），所以这一步不能带 -nullrhi，要带 -AllowCommandletRendering。
@@ -42,6 +44,29 @@ EXPOSURE_BIAS = float(os.environ.get('ARCHVIZ_EXPOSURE', '-1.5'))
 # 触屏、信息牌这些不受光照的界面跟着曝光走：样板间是固定曝光再减 1.5 档，比自己房间的自动曝光暗，整体再提亮这么多倍
 # 7 是量出来的：站位看触屏，屏幕区域平均亮度 34.8（L_Studio 里 33.7），4 只有 23.1。头显里还嫌暗 / 亮，游戏里 toy.UiBrightness <倍数> 现场试
 UI_BRIGHTNESS = float(os.environ.get('ARCHVIZ_UI_BRIGHTNESS', '7'))
+
+# 能拿起来的摆件（AToyProp）：(文件夹, 标签, 网格, 工作室坐标 (X, Y, 底面高) 约数, 名字, 材料, 质量 kg, 碰撞, 挂在上面一起走的 Actor)
+# 挑的是站在房间里伸手够得到、不超过 35cm、放在台面 / 架子上的：左手边餐边柜、正前方矮柜、边几、茶几、电视柜、梯架。
+# 没挑的：边几下层隔板上的碗（提起来会穿过桌面）、茶几上挨着两个花瓶的碗（凸包和花瓶互相重叠，一碰就被挤下桌）、
+# 梯架上的陀螺（侧躺着靠边沿立住，一碰就原地转半圈）、梯架中层的白瓷花瓶（放在隔板最外沿，提起来再放下就翻下去）
+# 材料写法要让 UToyFeedback::ClassifyMaterial 认得出（钢 / 铜 → 重金属，陶瓷 / 大理石 → 脆性，塑料 → 硬塑料；木、纸、蜡按硬塑料）。
+# 碰撞：网格没有简单碰撞时 'box' = 包围盒（书），'hull' = 整个网格顶点的凸包；已经有的不动
+PROPS = (
+    ('DiningRoom/DiningRoom-SideTable1', 'Hedra1', 'SM_Hedra_02', (-35, -227, 80), '镂空几何摆件', '钢', 0.35, 'hull', ()),
+    ('DiningRoom/DiningRoom-SideTable1', 'Book2', 'SM_Book_03', (-35, -230, 78), '白色小书', '纸', 0.4, 'box', ()),
+    ('DiningRoom/DiningRoom-SideTable1', 'Hedra2', 'SM_Hedra_03', (48, -229, 73), '木头多面体', '木', 0.6, 'hull', ()),
+    ('DiningRoom/DiningRoom-SideTable1', 'Candle1', 'SM_CandleStick', (159, -229, 73), '白蜡烛', '蜡', 0.15, 'hull', ()),
+    ('DiningRoom/DiningRoom-SideTable2', 'Vase3', 'SM_Vase_06', (320, -70, 69), '黄铜花瓶', '黄铜', 0.8, 'hull', ()),
+    ('Plants/CoffeeTablePlant', 'Pot1', 'SM_Vase_03', (-476, -66, 36), '粗肋草小盆栽', '大理石花盆', 1.2, 'hull',
+     ('AglaonemaPlant', 'Dirt')),
+    ('Plants/SideTableFlower', 'Vase9', 'SM_Vase_02', (-279, -179, 52), '朱顶红插花', '陶瓷花瓶', 0.5, 'hull',
+     ('AmaryllisFlower1', 'AmaryllisFlower2', 'Dirt2')),
+    ('LivingRoom/TVStand', 'Vase5', 'SM_Vase_06', (-568, 246, 45), '白色大理石矮花瓶', '大理石', 0.7, 'hull', ()),
+    ('LivingRoom/TVStand', 'TV Remote', 'SM_TVRemote', (-457, 248, 45), '电视遥控器', '塑料', 0.12, 'box', ()),
+    ('LivingRoom/LadderShelf', 'Candle2', 'SM_Candle', (-151, 254, 60), '香薰蜡烛', '黄铜杯、蜡', 0.4, 'hull', ()),
+)
+# 只有一个整体凸包、但形状是凹的家具（梯架的隔板、木头多面体放在里面的篮子）：改成用三角面碰撞
+CONCAVE_SUPPORTS = ('SM_LadderShelf', 'SM_Basket')
 
 actors_sub = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 level_sub = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
@@ -262,8 +287,85 @@ def build():
             volume.set_editor_property('settings', pp)
             log(f'{volume.get_actor_label()} 曝光补偿 {old:.2f} → {EXPOSURE_BIAS:.2f}')
 
+    # ---- 9. 摆件 ----
+    make_props(to_local)
+
     level_sub.save_current_level()
     log(f'已保存 {TARGET_MAP}')
+
+
+def make_props(to_local):
+    """挑出来的小摆件换成 AToyProp（能拿起来），再给家具、墙加上物理能用的碰撞。"""
+    actors = [a for a in actors_sub.get_all_level_actors() if isinstance(a, unreal.StaticMeshActor)]
+    changed_meshes = {}
+    converted = set()
+    for index, (fold, label, mesh, where, name, material, mass, shape, riders) in enumerate(PROPS, 1):
+        found = [a for a in actors if folder(a) == fold and a.get_actor_label() == label and mesh_name(a) == mesh]
+        if len(found) != 1:
+            raise RuntimeError(f'摆件 {name}：{fold}/{label} [{mesh}] 找到 {len(found)} 个')
+        old = found[0]
+        comp = old.static_mesh_component
+        sm = comp.static_mesh
+        lx, ly = to_local(old.get_actor_location())
+        center, extent = old.get_actor_bounds(False)
+        drift = math.dist((lx, ly), where[:2])
+        if drift > 20.0:
+            raise RuntimeError(f'摆件 {name} 离预期位置 {drift:.0f}cm（样板间换了版本？）')
+        # 网格加简单碰撞（同一个网格的其他实例也跟着有了碰撞，不影响它们）
+        # 我们加的碰撞每次重新算（反复跑结果一样），网格自带的不动
+        how = unreal.ToyArchVizTools.ensure_prop_collision(sm, shape == 'box')
+        if '加了' in how:
+            changed_meshes[sm.get_path_name()] = sm
+        # 生成 AToyProp：网格、每个材质槽、位置朝向缩放照搬
+        prop = actors_sub.spawn_actor_from_class(unreal.ToyProp, old.get_actor_location(), old.get_actor_rotation())
+        prop.set_actor_scale3d(old.get_actor_scale3d())
+        prop_mesh = prop.get_editor_property('mesh')
+        prop_mesh.set_static_mesh(sm)
+        for slot in range(comp.get_num_materials()):
+            prop_mesh.set_material(slot, comp.get_material(slot))
+        prop.set_editor_property('display_name', name)
+        prop.set_editor_property('material_text', material)
+        prop.set_editor_property('mass_kg', mass)
+        prop.set_actor_label(f'Prop{index:02d}_{label.replace(" ", "")}')
+        prop.set_folder_path('Props')
+        # 盆里的植物、瓶里的花：改成可移动、关掉碰撞，挂到摆件上跟着走
+        rider_names = []
+        for rider_label in riders:
+            near = [a for a in actors if a.get_actor_label() == rider_label
+                    and math.dist((a.get_actor_location().x, a.get_actor_location().y), (center.x, center.y)) < 25.0]
+            if len(near) != 1:
+                raise RuntimeError(f'摆件 {name} 的 {rider_label} 找到 {len(near)} 个')
+            rider = near[0]
+            rider.static_mesh_component.set_mobility(unreal.ComponentMobility.MOVABLE)
+            rider.static_mesh_component.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
+            rider.attach_to_actor(prop, '', unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD,
+                                  unreal.AttachmentRule.KEEP_WORLD, False)
+            rider_names.append(f'{rider_label}[{mesh_name(rider)}]')
+            converted.add(rider)
+        actors_sub.destroy_actor(old)
+        size = sorted((extent.x * 2, extent.y * 2, extent.z * 2), reverse=True)
+        log(f'摆件 {index:02d} {name}（{material}，{mass}kg）← {fold}/{label} [{mesh}]，{size[0]:.0f}×{size[1]:.0f}×{size[2]:.0f}cm，'
+            f'工作室坐标 ({lx:.0f}, {ly:.0f}, {center.z - extent.z:.0f})，碰撞：{how}' + (f'，带上 {"、".join(rider_names)}' if rider_names else ''))
+
+    # 家具、墙、地毯：示例里大多只有复杂碰撞（三角面），物理模拟碰不到，摆件放上去 / 扔过去会穿过去。
+    # 没有简单碰撞的都改成"复杂碰撞当简单碰撞"；梯架只有一个整体凸包（斜着的梯子会被包成一个楔子），也改
+    actors = [a for a in actors_sub.get_all_level_actors() if isinstance(a, unreal.StaticMeshActor) and a not in converted]
+    solid = []
+    for actor in actors:
+        sm = actor.static_mesh_component.static_mesh
+        if not sm or sm.get_name() == 'SM_BackgroundGeometry' or sm.get_name() in solid:
+            continue
+        flag = sm.get_editor_property('body_setup').get_editor_property('collision_trace_flag')
+        if flag == unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE:
+            solid.append(sm.get_name())       # 上次生成已经改过
+        elif unreal.ToyArchVizTools.get_simple_collision_count(sm) == 0 or sm.get_name() in CONCAVE_SUPPORTS:
+            if unreal.ToyArchVizTools.use_complex_as_simple(sm):
+                changed_meshes[sm.get_path_name()] = sm
+                solid.append(sm.get_name())
+    log(f'{len(solid)} 个家具 / 墙网格用三角面做物理碰撞：{", ".join(sorted(solid))}')
+    for sm in changed_meshes.values():
+        unreal.EditorAssetLibrary.save_loaded_asset(sm, False)
+    log(f'已保存 {len(changed_meshes)} 个改了碰撞的网格（只在本机 Content/ArchViz 里）')
 
 
 

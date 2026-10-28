@@ -15,6 +15,7 @@ class UStaticMeshComponent;
  * 由样板间生成脚本（Tools/archviz/build_studio_archviz.py）把原来的静态摆件换成它：网格、材质、位置照搬，
  * 改成可移动 + 物理模拟（开局睡着，碰到才醒，叠着放的书不会自己乱跳）。
  * 抓法和方块一样：自由捏取，松手恢复物理、按手的速度扔出去。触屏「摆件复位」把所有摆件放回开局的位置。
+ * 盆里的植物、花瓶里的花是挂在它下面的静态网格 Actor（生成脚本 attach 上来）：跟着走、一起高亮，没有碰撞，捏的是盆 / 瓶。
  */
 UCLASS()
 class VRTOYBOX_API AToyProp : public AActor, public IToyGrabbable
@@ -67,4 +68,8 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> HoverMaterial;
+
+	/** 挂在摆件上的其他网格（植物、土、花），高亮时一起叠材质。 */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UStaticMeshComponent>> RiderMeshes;
 };

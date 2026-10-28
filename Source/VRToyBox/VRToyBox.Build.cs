@@ -14,5 +14,11 @@ public class VRToyBox : ModuleRules
 		{
 			"Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "XRBase", "Json", "UMG", "Slate", "SlateCore"
 		});
+
+		// 样板间生成脚本给摆件加凸包碰撞要读网格顶点（ToyArchVizTools，只在编辑器里）
+		if (Target.bBuildEditor)
+		{
+			PrivateDependencyModuleNames.AddRange(new string[] { "MeshDescription", "StaticMeshDescription" });
+		}
 	}
 }

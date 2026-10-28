@@ -1,9 +1,13 @@
 #include "ToyProp.h"
 
 #include "ToyHand.h"
+#include "ToyStudio.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/CollisionProfile.h"
+#include "Engine/OverlapResult.h"
 #include "Engine/StaticMesh.h"
+#include "Engine/World.h"
+#include "EngineUtils.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
 namespace ToyPropLocal
@@ -17,6 +21,10 @@ namespace ToyPropLocal
 
 	// 最长边小于这个（厘米）就用捏，否则整手握
 	constexpr float PinchMaxCm = 12.f;
+
+	constexpr float AngularDamping = 1.f;
+	/** 卡在别的东西里松手时，往外挤的最大速度（厘米 / 秒） */
+	constexpr float MaxDepenetrationSpeed = 40.f;
 }
 
 using namespace ToyPropLocal;
@@ -31,6 +39,10 @@ AToyProp::AToyProp()
 	Mesh->BodyInstance.bStartAwake = false;
 	// 扔得快的时候防止穿过桌面和地板
 	Mesh->BodyInstance.bUseCCD = true;
+	// 摆件放回去要很快停稳：侧躺的陀螺、倒下的蜡烛不会来回晃好几秒
+	Mesh->SetAngularDamping(AngularDamping);
+	// 拿着的时候摆件不受碰撞（会伸进架子、桌面里），在里面松手时慢慢挤出来，不要一下弹飞几米
+	Mesh->BodyInstance.SetMaxDepenetrationVelocity(MaxDepenetrationSpeed);
 	SetRootComponent(Mesh);
 }
 
@@ -39,6 +51,22 @@ void AToyProp::BeginPlay()
 	Super::BeginPlay();
 	HomeTransform = GetActorTransform();
 
+	// 挂在上面的植物、花：注册时会被焊进摆件的刚体（碰撞形状、质量都算进去，花的凸包一大圈），拆开、关掉碰撞，只跟着走
+	TArray<AActor*> Riders;
+	GetAttachedActors(Riders, true, true);
+	for (AActor* Rider : Riders)
+	{
+		TArray<UStaticMeshComponent*> Meshes;
+		Rider->GetComponents(Meshes);
+		for (UStaticMeshComponent* RiderMesh : Meshes)
+		{
+			RiderMesh->UnWeldFromParent();
+			RiderMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+		Rider->SetActorEnableCollision(false);
+		RiderMeshes.Append(Meshes);
+	}
+
 	const FVector Size = Mesh->Bounds.BoxExtent * 2.f;
 	const float Mass = MassKg > 0.f ? MassKg : FMath::Clamp(static_cast<float>(Size.X * Size.Y * Size.Z) * RoughDensity, 0.05f, 3.f);
 	Mesh->SetMassOverrideInKg(NAME_None, Mass, true);
@@ -46,7 +74,13 @@ void AToyProp::BeginPlay()
 	if (UMaterialInterface* Ghost = LoadObject<UMaterialInterface>(nullptr, GhostMaterialPath))
 	{
 		HoverMaterial = UMaterialInstanceDynamic::Create(Ghost, this);
-		HoverMaterial->SetVectorParameterValue(TEXT("Color"), FLinearColor(1.f, 0.85f, 0.3f) * EmissiveBoost);
+		// 样板间是固定曝光、再减 1.5 档，发光的东西要和触屏、信息牌一样按工作室的倍数提亮，不然高亮几乎看不见
+		float Brightness = 1.f;
+		for (TActorIterator<AToyStudio> It(GetWorld()); It; ++It)
+		{
+			Brightness = It->UiBrightnessScale;
+		}
+		HoverMaterial->SetVectorParameterValue(TEXT("Color"), FLinearColor(1.f, 0.85f, 0.3f) * EmissiveBoost * Brightness);
 		HoverMaterial->SetScalarParameterValue(TEXT("Opacity"), 0.3f);
 	}
 	if (!Mesh->GetStaticMesh() || !Mesh->GetBodySetup())
@@ -85,6 +119,18 @@ FTransform AToyProp::ComputeHoldTransform(const FToyGripContext& Grip) const
 void AToyProp::OnGrabbed(AToyHand* Hand)
 {
 	Holder = Hand;
+	// 叠在它上面的摆件（书上的几何摆件）是睡着的，底下的东西被拿走也不会自己醒，会悬在半空：先叫醒
+	TArray<FOverlapResult> Overlaps;
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyPropNeighbours), false, this);
+	GetWorld()->OverlapMultiByObjectType(Overlaps, Mesh->Bounds.Origin, FQuat::Identity, FCollisionObjectQueryParams(ECC_PhysicsBody),
+		FCollisionShape::MakeBox(Mesh->Bounds.BoxExtent + FVector(2.f)), Params);
+	for (const FOverlapResult& Overlap : Overlaps)
+	{
+		if (AToyProp* Other = Cast<AToyProp>(Overlap.GetActor()); Other && !Other->Holder.IsValid())
+		{
+			Other->Mesh->WakeRigidBody();
+		}
+	}
 	// 物理模拟中的刚体不跟随父组件，必须先关掉才能挂到手上
 	Mesh->SetSimulatePhysics(false);
 }
@@ -116,7 +162,15 @@ void AToyProp::RemoveHover()
 
 void AToyProp::RefreshOverlay()
 {
-	Mesh->SetOverlayMaterial(HoverCount > 0 ? HoverMaterial.Get() : nullptr);
+	UMaterialInterface* Overlay = HoverCount > 0 ? HoverMaterial.Get() : nullptr;
+	Mesh->SetOverlayMaterial(Overlay);
+	for (UStaticMeshComponent* Rider : RiderMeshes)
+	{
+		if (Rider)
+		{
+			Rider->SetOverlayMaterial(Overlay);
+		}
+	}
 }
 
 EToyGripStyle AToyProp::GetGripStyle() const
