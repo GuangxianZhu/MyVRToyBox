@@ -41,6 +41,25 @@ set "ARCHVIZ_STEP=bake"
 "%UE_ROOT%\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%PROJECT%" -run=pythonscript -script=__import__('runpy').run_path(__import__('os').environ['ARCHVIZ_SCRIPT']) -unattended -nosplash -AllowCommandletRendering
 if errorlevel 1 goto :fail
 if not exist "%CD%\Content\ArchViz\Maps\L_StudioArchViz_BuiltData.uasset" goto :fail
+
+rem 第二个场景：Fab 上的 Home Interior（拷在 Content\Home_Interior），从样板间前门走出去就到它的入户走廊
+if not exist "%CD%\Content\Home_Interior\Maps\Home_Interior.umap" (
+  echo [样板间] 没有 Content\Home_Interior，跳过第二个场景（前门不通别的地方）
+  goto :done
+)
+echo [样板间] 生成第二个场景 L_HomeStudio 并烘焙光照 ...
+rem 上次生成的关卡先删文件：编辑器里删它有时会被拒绝（"An asset already exists"）
+del /q "%CD%\Content\Home_Interior\Maps\L_HomeStudio.umap" "%CD%\Content\Home_Interior\Maps\L_HomeStudio_BuiltData.uasset" 2>nul
+set "ARCHVIZ_STEP=home"
+"%UE_ROOT%\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%PROJECT%" -run=pythonscript -script=__import__('runpy').run_path(__import__('os').environ['ARCHVIZ_SCRIPT']) -unattended -nosplash -nullrhi
+if errorlevel 1 goto :fail
+if not exist "%CD%\Content\Home_Interior\Maps\L_HomeStudio.umap" goto :fail
+set "ARCHVIZ_STEP=home_bake"
+"%UE_ROOT%\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%PROJECT%" -run=pythonscript -script=__import__('runpy').run_path(__import__('os').environ['ARCHVIZ_SCRIPT']) -unattended -nosplash -AllowCommandletRendering
+if errorlevel 1 goto :fail
+if not exist "%CD%\Content\Home_Interior\Maps\L_HomeStudio_BuiltData.uasset" goto :fail
+
+:done
 echo [样板间] 完成。双击 一键启动.bat 或 一键启动_VR直玩.bat 就进样板间工作室
 pause
 exit /b 0

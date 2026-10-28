@@ -98,6 +98,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ToyBox", meta = (EditCondition = "!bBuildRoom"))
 	float DeskLightRadiusCm = 300.f;
 
+	/** bBuildRoom = false 时要不要桌子、触屏和桌子上方的主灯。只用来逛、拿摆件的场景（Home Interior 那套房子）关掉，
+	 *  工作室只剩站立点、WalkArea 和摆件复位这些。 */
+	UPROPERTY(EditAnywhere, Category = "ToyBox", meta = (EditCondition = "!bBuildRoom"))
+	bool bWithDesk = true;
+
 	/** 不受光照的界面（触屏、零件信息牌）整体再乘的倍数。界面亮度跟着曝光走，样板间的曝光和自己的房间不一样，由生成脚本按场景填。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float UiBrightnessScale = 1.f;

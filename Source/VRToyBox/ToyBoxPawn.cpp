@@ -10,6 +10,8 @@
 #include "Camera/PlayerCameraManager.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/CollisionProfile.h"
+#include "Engine/Engine.h"
+#include "Engine/GameViewportClient.h"
 #include "Engine/StaticMesh.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -60,6 +62,23 @@ namespace
 			Pawn->Camera->SetRelativeRotation(FRotator(Args.Num() > 1 ? FCString::Atof(*Args[1]) : -40.f, Yaw, 0.f));
 		}));
 
+	FAutoConsoleCommandWithWorldAndArgs StandCommand(TEXT("toy.Stand"),
+		TEXT("把玩家挪到工作室坐标 (X, Y)（厘米，原点是开局站立点，X 朝桌子），身体朝向和工作室一致：toy.Stand <X> <Y>。")
+		TEXT("测帧率时站到别处用，比如 toy.Stand 160 0 再 toy.Look 180 -10 = 绕到桌子后面看客厅"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+		{
+			AToyBoxPawn* Pawn = World ? Cast<AToyBoxPawn>(UGameplayStatics::GetPlayerPawn(World, 0)) : nullptr;
+			AToyStudio* Studio = AToyStudio::Find(World);
+			if (!Pawn || !Studio || Args.Num() < 2)
+			{
+				return;
+			}
+			const FTransform StudioTransform = Studio->GetActorTransform();
+			FVector Target = StudioTransform.TransformPosition(FVector(FCString::Atof(*Args[0]), FCString::Atof(*Args[1]), 0.f));
+			Target.Z = Pawn->GetActorLocation().Z;
+			Pawn->SetActorLocationAndRotation(Target, FRotator(0.f, StudioTransform.Rotator().Yaw, 0.f));
+		}));
+
 	FAutoConsoleCommandWithWorldAndArgs AfterCommand(TEXT("toy.After"),
 		TEXT("过几秒再执行一条控制台命令：toy.After <秒> <命令...>。-ExecCmds 里的命令都在开局一起执行，测帧率要等着色器、动画稳定再测"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
@@ -72,8 +91,10 @@ namespace
 			TWeakObjectPtr<UWorld> WeakWorld = World;
 			FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([WeakWorld, Command](float)
 			{
-				// 走玩家控制器，和在控制台里敲一样（shot、stat 这些要视口处理的命令 GEngine->Exec 不认）
-				if (APlayerController* PC = WeakWorld.IsValid() ? WeakWorld->GetFirstPlayerController() : nullptr)
+				// 走玩家控制器，和在控制台里敲一样（shot、stat 这些要视口处理的命令 GEngine->Exec 不认）。
+				// 中间穿门换了关卡的话，原来的世界已经没了，用现在视口里的世界
+				UWorld* Current = WeakWorld.IsValid() ? WeakWorld.Get() : (GEngine && GEngine->GameViewport ? GEngine->GameViewport->GetWorld() : nullptr);
+				if (APlayerController* PC = Current ? Current->GetFirstPlayerController() : nullptr)
 				{
 					PC->ConsoleCommand(Command);
 				}

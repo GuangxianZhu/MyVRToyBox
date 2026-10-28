@@ -5,6 +5,7 @@
 #include "ToyDexHandRig.h"
 #include "ToyGrabbable.h"
 #include "ToyHandCalib.h"
+#include "ToyLightGroupComponent.h"
 #include "ToyMenuPanel.h"
 #include "ToySettings.h"
 #include "ToyClawToolRig.h"
@@ -1003,6 +1004,8 @@ void AToyHand::Grab(AActor* Target)
 
 	Grabbable->OnGrabbed(this);
 	Target->AttachToComponent(GripPoint, FAttachmentTransformRules::KeepWorldTransform);
+	// 从模型上拿下来的零件单独投影，不再算在整个模型那一份阴影里
+	UToyLightGroupComponent::RefreshLightingGroup(Target);
 
 	SnapFrom = Target->GetRootComponent()->GetRelativeTransform();
 	SnapTo = Hold;
@@ -1044,6 +1047,7 @@ void AToyHand::ReleaseHeld(bool bThrow)
 		return;
 	}
 	Target->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	UToyLightGroupComponent::RefreshLightingGroup(Target);
 	bSecurePending = false;
 	const FVector Velocity = bThrow ? GetThrowVelocity() : FVector::ZeroVector;
 	Feedback(EToyFeedback::Release, GetPinchLocation(), Target, static_cast<float>(Velocity.Size()));

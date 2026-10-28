@@ -268,8 +268,10 @@ void AToyPropTest::Plan()
 		for (int32 I = 0; I < Props.Num(); ++I)
 		{
 			AToyProp* Prop = Props[I].Get();
-			const float Y = (I - (Props.Num() - 1) * 0.5f) * 32.f;
-			const FVector Drop = Frame.TransformPosition(FVector(-100.f, Y, 100.f));
+			// 每排 7 件、间隔 30cm 往身后排（一排 20 多件会排到墙外面去）
+			const float Y = (I % 7 - 3) * 30.f;
+			const float X = -100.f - (I / 7) * 30.f;
+			const FVector Drop = Frame.TransformPosition(FVector(X, Y, 100.f));
 			Prop->SetActorLocation(Drop + (Prop->GetActorLocation() - Center(Prop)), false, nullptr, ETeleportType::ResetPhysics);
 			Prop->Mesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
 			Prop->Mesh->WakeRigidBody();

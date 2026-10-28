@@ -10,7 +10,9 @@
 #include "Algo/AnyOf.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
+#include "GameFramework/GameModeBase.h"
 #include "HAL/IConsoleManager.h"
+#include "Kismet/GameplayStatics.h"
 #include "Misc/Paths.h"
 
 namespace
@@ -270,10 +272,23 @@ void AToyStudio::ApplyRoomVisibility()
 	// 自己的房间：构造函数里按名字建的那些组件。桌子、触屏、模型支架不在里面；主灯（桌子正上方）留着，只改照射半径
 	static const TCHAR* const RoomPrefixes[] = { TEXT("MainLight"), TEXT("Floor"), TEXT("Ceiling"), TEXT("Wall"), TEXT("Rug"), TEXT("Shelf"),
 		TEXT("LampShade"), TEXT("FillLight"), TEXT("BackLight") };
+	// 不要桌子时：桌面、桌腿、主灯也藏起来（触屏子 Actor 在 BeginPlay 里删）
+	static const TCHAR* const DeskPrefixes[] = { TEXT("TableTop"), TEXT("TableLeg"), TEXT("MainLight") };
+	const bool bShowDesk = bBuildRoom || bWithDesk;
 	TInlineComponentArray<USceneComponent*> Components(this);
 	for (USceneComponent* Component : Components)
 	{
 		const FString Name = Component->GetName();
+		if (!bShowDesk && Algo::AnyOf(DeskPrefixes, [&Name](const TCHAR* Prefix) { return Name.StartsWith(Prefix); }))
+		{
+			Component->SetVisibility(false);
+			Component->SetHiddenInGame(true);
+			if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+			{
+				Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			}
+			continue;
+		}
 		const bool bRoomPart = Algo::AnyOf(RoomPrefixes, [&Name](const TCHAR* Prefix) { return Name.StartsWith(Prefix); });
 		if (!bRoomPart)
 		{
@@ -316,12 +331,16 @@ void AToyStudio::BeginPlay()
 	}
 
 	// 触屏是构造时建好的子 Actor（编辑器里也看得见），这里只接上回调
+	if (!bBuildRoom && !bWithDesk)
+	{
+		ScreenChild->DestroyChildActor();
+	}
 	Screen = Cast<AToyTouchScreen>(ScreenChild->GetChildActor());
 	if (Screen)
 	{
 		Screen->SetStudio(this);
 	}
-	else
+	else if (bBuildRoom || bWithDesk)
 	{
 		UE_LOG(LogTemp, Error, TEXT("ToyBox: 工作室的触屏子 Actor 没生成"));
 	}
@@ -331,7 +350,14 @@ void AToyStudio::BeginPlay()
 	Params.Owner = this;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	Menu = GetWorld()->SpawnActor<AToyMenuPanel>(AToyMenuPanel::StaticClass(), GetActorTransform(), Params);
-	if (Menu)
+	// 从另一个场景穿门过来的（?Arrive=…）已经开始玩了，不再弹主菜单
+	const AGameModeBase* GameMode = GetWorld()->GetAuthGameMode();
+	const bool bArrivedThroughDoor = GameMode && UGameplayStatics::HasOption(GameMode->OptionsString, TEXT("Arrive"));
+	if (Menu && bArrivedThroughDoor)
+	{
+		Menu->Close();
+	}
+	else if (Menu)
 	{
 		Menu->Open();
 	}

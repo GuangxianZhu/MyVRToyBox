@@ -1,6 +1,7 @@
 #include "ToyExplodedModel.h"
 
 #include "ToyHand.h"
+#include "ToyLightGroupComponent.h"
 #include "ToyPartUnit.h"
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -46,7 +47,8 @@ AToyExplodedModel::AToyExplodedModel()
 	Root->SetMobility(EComponentMobility::Movable);
 	SetRootComponent(Root);
 
-	ModelRoot = CreateDefaultSubobject<USceneComponent>(TEXT("ModelRoot"));
+	// 所有零件挂在一个光照组根下面：整个模型只渲一张固定太阳光的逐物体阴影，不是每个零件一张（见 UToyLightGroupComponent）
+	ModelRoot = CreateDefaultSubobject<UToyLightGroupComponent>(TEXT("ModelRoot"));
 	ModelRoot->SetupAttachment(Root);
 
 	// 整机的检测盒：和零件的一样只做查询（手的重叠查 WorldDynamic，桌面鼠标射线查 Visibility）
@@ -352,6 +354,7 @@ FTransform AToyExplodedModel::GetUnitHomeWorld(const AToyPartUnit* Unit) const
 void AToyExplodedModel::OnUnitHome(AToyPartUnit* Unit)
 {
 	Unit->AttachToComponent(ModelRoot, FAttachmentTransformRules::KeepWorldTransform);
+	UToyLightGroupComponent::RefreshLightingGroup(Unit);
 	// 飞回来的过程有插值误差，挂回去后直接写准确的相对变换，免得一点点漂
 	Unit->SetActorRelativeTransform(FTransform(FQuat::Identity, Unit->GetExplodeOffset(Progress), FVector::OneVector));
 }
