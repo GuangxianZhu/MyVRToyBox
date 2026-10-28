@@ -11,6 +11,7 @@
 #include "ToyFeedback.h"
 #include "Components/AudioComponent.h"
 #include "ToyTouchScreen.h"
+#include "ToyStudio.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Animation/AnimSequence.h"
 #include "Components/ArrowComponent.h"
@@ -312,6 +313,12 @@ void AToyHand::InitHand(AToyBoxPawn* InPawn, EControllerHand InSide)
 		.Font(FCoreStyle::GetDefaultFontStyle("Regular", 17))
 		.ColorAndOpacity(FLinearColor(0.85f, 0.9f, 1.f))
 		.AutoWrapText(true);
+	// 套用样板间时曝光不一样，信息牌跟触屏一起按工作室的倍数提亮
+	if (const AToyStudio* Studio = AToyStudio::Find(GetWorld()))
+	{
+		const float Boost = LabelBoost * Studio->UiBrightnessScale;
+		InfoLabel->SetTintColorAndOpacity(FLinearColor(Boost, Boost, Boost, 1.f));
+	}
 	InfoLabel->SetSlateWidget(
 		SNew(SBox)
 		.WidthOverride(LabelWidthPx)

@@ -76,6 +76,23 @@ namespace
 	FAutoConsoleCommandWithWorldAndArgs ScreenCommandRef(TEXT("toy.Screen"),
 		TEXT("和戳触屏按钮一样：toy.Screen Lathe MoveNear MoveNear Explode（可以连着写几个）"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&ScreenCommand));
+
+	FAutoConsoleCommandWithWorldAndArgs UiBrightnessCommand(TEXT("toy.UiBrightness"),
+		TEXT("现场调 UiBrightnessScale（触屏马上变；零件信息牌下次开局才跟着变）：toy.UiBrightness 3。调好了填到关卡里 ToyStudio 上"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+		{
+			AToyStudio* Studio = AToyStudio::Find(World);
+			if (!Studio || Args.Num() == 0)
+			{
+				return;
+			}
+			Studio->UiBrightnessScale = FCString::Atof(*Args[0]);
+			for (TActorIterator<AToyTouchScreen> It(World); It; ++It)
+			{
+				It->SetStudio(Studio);
+			}
+			UE_LOG(LogTemp, Log, TEXT("ToyBox: UiBrightnessScale = %.2f"), Studio->UiBrightnessScale);
+		}));
 }
 
 AToyStudio::AToyStudio()
@@ -254,8 +271,8 @@ void AToyStudio::OnConstruction(const FTransform& Transform)
 
 void AToyStudio::ApplyRoomVisibility()
 {
-	// 自己的房间：构造函数里按名字建的那些组件。桌子、触屏、模型支架和主灯（桌子正上方）不在里面
-	static const TCHAR* const RoomPrefixes[] = { TEXT("Floor"), TEXT("Ceiling"), TEXT("Wall"), TEXT("Rug"), TEXT("Shelf"),
+	// 自己的房间：构造函数里按名字建的那些组件。桌子、触屏、模型支架不在里面；主灯（桌子正上方）留着，只改照射半径
+	static const TCHAR* const RoomPrefixes[] = { TEXT("MainLight"), TEXT("Floor"), TEXT("Ceiling"), TEXT("Wall"), TEXT("Rug"), TEXT("Shelf"),
 		TEXT("LampShade"), TEXT("FillLight"), TEXT("BackLight") };
 	TInlineComponentArray<USceneComponent*> Components(this);
 	for (USceneComponent* Component : Components)
@@ -264,6 +281,11 @@ void AToyStudio::ApplyRoomVisibility()
 		const bool bRoomPart = Algo::AnyOf(RoomPrefixes, [&Name](const TCHAR* Prefix) { return Name.StartsWith(Prefix); });
 		if (!bRoomPart)
 		{
+			continue;
+		}
+		if (UPointLightComponent* Light = Cast<UPointLightComponent>(Component); Light && Name == TEXT("MainLight"))
+		{
+			Light->SetAttenuationRadius(bBuildRoom ? 900.f : DeskLightRadiusCm);
 			continue;
 		}
 		Component->SetVisibility(bBuildRoom);
