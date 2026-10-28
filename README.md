@@ -38,6 +38,7 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 | `导入万用表模型.bat` | 万用表模型改了才需要：ITBasics 里用 Blender 重新生成并导入（见下文） |
 | `导入发动机模型.bat` | 四缸发动机模型改了才需要：ITBasics 里用 Blender 重新生成并导入（见下文） |
 | `导入灵巧手模型.bat` | 五指灵巧手模型改了才需要：ITBasics 里用 Blender 重新生成并导入（见下文） |
+| `生成样板间工作室.bat` | 装了 ArchViz 样板间素材才需要：生成并烘焙 `L_StudioArchViz`（见下文「样板间场景」），约 11 分钟 |
 | `导入刻蚀机模型.bat` | 干法刻蚀机模型或网页里的原理内容改了才需要：ITBasics 里用 Blender 重新生成并导入，顺带拷讲解文字和标准答案（见下文） |
 
 - 引擎不在 `C:\Program Files\Epic Games\UE_5.8` 的话，先设置环境变量 `UE_ROOT` 指向引擎根目录（脚本也会读 Epic 启动器写的注册表）。
@@ -45,6 +46,17 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 - 编辑器里：Play 按钮旁的下拉菜单选 **VR Preview** 进头显；直接点 Play 是桌面调试模式。
 - **默认关卡 `Content/Maps/L_Studio`**：编辑器一打开就是它，视口里直接看得到房间、桌子、灯和触屏（镜头停在房间后角看着桌子）。它**只是个壳**：里面只有一个 `ToyStudio`（原点）和一个 PlayerStart，房间、桌子、触屏都在 `AToyStudio` 的 C++ 构造函数里建，**改场景还是改 C++**，不用动关卡。会动的东西（方块、爆炸图模型、手）仍然在按 Play 之后生成。出生点由 GameMode 固定在工作室中央，PlayerStart 不起作用。在 Entry 之类的空地图里跑也行，GameMode 会自己生成一个工作室。
 - 关卡坏了或想重建：`Tools/create_studio_level.py`（编辑器命令行跑，见文件开头）重新生成 L_Studio；`Tools/studio_viewport_shot.py`（编辑器里 `py <路径>` 跑）摆好视口镜头、存关卡、截下面这张图。
+
+### 样板间场景（ArchViz Interior，只在本机）
+
+工作室可以摆进 Epic 的 ArchViz Interior 样板间（北欧风客厅 + 餐厅）：餐桌换成我们的桌子和触屏，玩家面朝矮柜和挂画那面墙，餐厅窗户在左手边。
+
+- **素材不进仓库**：这个仓库是公开的，Fab / Epic 素材的许可证不允许把源文件再分发。素材放在 `Content/ArchViz/`，已写进 `.gitignore`。
+- **怎么装**：Epic 启动器 → Fab 库 → ArchViz Interior → ＋ → 勾「显示所有工程」→ 选 VRToyBox，版本选最高的 4.27 → 添加。**添加会把 `Config/DefaultEngine.ini`、`DefaultGame.ini` 换成样例的设置**，装完先 `git checkout -- Config`；素材会散在 `Content/` 根目录，要在编辑器里统一挪进 `Content/ArchViz/`（保持子目录）。然后双击 `生成样板间工作室.bat`。
+- **生成脚本** `Tools/archviz/build_studio_archviz.py`：复制 `ArchVis_Lightmap` 成 `L_StudioArchViz`，删掉餐桌、6 把椅子、桌上摆件、两盏吊灯和过场动画，清掉关卡的 GameMode 覆盖，摆一个 `bBuildRoom = false` 的 `ToyStudio`（只留桌子、触屏、模型支架和主灯，自己的房间隐藏、没有碰撞），曝光补偿 +1.76 → -1.5，再用 CPU Lightmass（Production）烘焙。GPU Lightmass 在 5.8 上对这张图一启动就崩，所以用 CPU。
+- **一键启动**：本机有 `Content/ArchViz/Maps/L_StudioArchViz.umap` 就自动打开它；想回原来的方块房间，先 `set TOY_CLASSIC=1` 再启动。
+- **传送**：套用样板间时，落点认 `ToyStudio.WalkArea` 范围里、和站立点等高的朝上表面（地板、地毯），沙发座面、桌面不算。
+- **性能**：样板间约 560 万三角面、没有 Nanite，光照贴图约 450 MB。5090 桌面模式约 2 ms/帧；以后要上 Quest 一体机得减面、降光照贴图分辨率。
 
 ![编辑器视口：打开 L_Studio 就能看到工作室](docs/screenshots/editor_viewport.jpg)
 
