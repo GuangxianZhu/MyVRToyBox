@@ -113,7 +113,8 @@ EToyMaterial UToyFeedback::ClassifyMaterial(const FString& Text)
 		{ TEXT("橡胶"), EToyMaterial::Rubber }, { TEXT("硅胶"), EToyMaterial::Rubber }, { TEXT("TPE"), EToyMaterial::Rubber },
 		{ TEXT("玻璃"), EToyMaterial::Brittle }, { TEXT("陶瓷"), EToyMaterial::Brittle }, { TEXT("硅片"), EToyMaterial::Brittle },
 		{ TEXT("晶圆"), EToyMaterial::Brittle }, { TEXT("单晶硅"), EToyMaterial::Brittle }, { TEXT("多晶硅"), EToyMaterial::Brittle },
-		{ TEXT("石英"), EToyMaterial::Brittle }, { TEXT("蓝宝石"), EToyMaterial::Brittle },
+		{ TEXT("石英"), EToyMaterial::Brittle }, { TEXT("蓝宝石"), EToyMaterial::Brittle }, { TEXT("大理石"), EToyMaterial::Brittle },
+		{ TEXT("瓷"), EToyMaterial::Brittle },
 	};
 	int32 BestIndex = MAX_int32;
 	EToyMaterial Best = EToyMaterial::HardPlastic;

@@ -16,8 +16,7 @@ struct FToyScreenBrushes;
 UENUM()
 enum class EToyScreenAction : uint8
 {
-	SpawnCube,
-	ClearCubes,
+	ResetProps,
 	ToggleMotor,
 	ToggleValve,
 	ToggleDrone,
@@ -43,7 +42,7 @@ enum class EToyScreenAction : uint8
 /** 界面上一块能点的区域（按钮或模型卡片），坐标是界面像素（左上角为原点）。 */
 struct FToyScreenItem
 {
-	EToyScreenAction Action = EToyScreenAction::SpawnCube;
+	EToyScreenAction Action = EToyScreenAction::ResetProps;
 	FBox2D Rect = FBox2D(ForceInit);
 	FLinearColor Color = FLinearColor::White;
 	/** 模型卡片在第几页；INDEX_NONE = 每页都有。 */
@@ -166,7 +165,7 @@ private:
 	FText StatusText() const;
 	FText ModelTitle() const;
 	FText ModelState() const;
-	FText CubeText() const;
+	FText PropText() const;
 	FText DistanceText() const;
 	FText ItemLabel(int32 Index) const;
 
