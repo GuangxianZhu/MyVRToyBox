@@ -144,6 +144,11 @@ HOME_PROPS = (
     ('SM_Vase_2', 'SM_Vase_01', (-999, 1375, 133), '斗柜上的细花瓶', '陶瓷', 0.4, 'hull', ()),
     ('SM_Box_3', 'SM_Box_01', (-1562, 1455, 71), '置物架下层的收纳盒', '木', 0.8, 'hull', ()),
     ('SM_Dish_01', 'SM_Dish_01', (-1552, 1449, 149), '置物架上的浅盘', '陶瓷', 0.5, 'hull', ()),
+    # 补的 4 件：底面平、平放、不在灶台和隔板边上；叠在上面的东西挂上去一起走（以前分开做摆件时一醒就歪）
+    ('SM_Book_13', 'SM_Book_01', (-1271, 1537, 55), '茶几上的两本书', '纸', 0.6, 'hull', ('SM_Book_14',)),
+    ('SM_Plate_3', 'SM_Plate_02', (-1342, 1503, 69), '小碟和咖啡杯', '陶瓷', 0.4, 'hull', ('SM_Cup_8',)),
+    ('SM_Bucket3', 'SM_Bucket', (-1109, 2229, 104), '另一盆香草', '陶瓷花盆', 0.6, 'hull', ('SM_Greenery5', 'SM_Greenery6', 'SM_Greenery7')),
+    ('SM_Bucket4', 'SM_Bucket', (-1126, 2228, 104), '第三盆香草', '陶瓷花盆', 0.6, 'hull', ('SM_Greenery8',)),
 )
 # 餐巾薄得只有几毫米，杯子、刀叉压在上面会被它的三角面顶歪：餐巾不要碰撞
 NO_COLLISION_MESHES = ('SM_Napkin',)
@@ -490,6 +495,15 @@ def build_wing():
         if sm:
             unreal.EditorAssetLibrary.save_loaded_asset(sm, False)
     log(f'{len(changed)} 个墙 / 家具网格用三角面做物理碰撞')
+    # 摆件的网格要用凸包（物理模拟不能用三角面）：表里后来加的摆件，网格以前可能被上面这步改成了三角面碰撞，改回来
+    for actor in actors_sub.get_all_level_actors():
+        sm = actor.static_mesh_component.static_mesh if isinstance(actor, unreal.StaticMeshActor) else None
+        if sm and sm.get_name() in prop_meshes:
+            body = sm.get_editor_property('body_setup')
+            if body.get_editor_property('collision_trace_flag') == unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE:
+                body.set_editor_property('collision_trace_flag', unreal.CollisionTraceFlag.CTF_USE_DEFAULT)
+                unreal.EditorAssetLibrary.save_loaded_asset(sm, False)
+                log(f'{sm.get_name()} 是摆件的网格，碰撞改回凸包')
     make_props(HOME_PROPS, lambda p: (p.x, p.y), with_folder=False, fix_supports=False, label_prefix='Home')
 
     # ---- 6. 入户走廊尽头的墙上开门洞：复制一份 SM_Scene，减掉一个门洞大小的盒子 ----
