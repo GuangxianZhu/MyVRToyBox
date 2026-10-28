@@ -76,6 +76,23 @@ namespace
 	FAutoConsoleCommandWithWorldAndArgs ScreenCommandRef(TEXT("toy.Screen"),
 		TEXT("和戳触屏按钮一样：toy.Screen Lathe MoveNear MoveNear Explode（可以连着写几个）"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&ScreenCommand));
+
+	FAutoConsoleCommandWithWorldAndArgs UiBrightnessCommand(TEXT("toy.UiBrightness"),
+		TEXT("现场调 UiBrightnessScale（触屏马上变；零件信息牌下次开局才跟着变）：toy.UiBrightness 3。调好了填到关卡里 ToyStudio 上"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+		{
+			AToyStudio* Studio = AToyStudio::Find(World);
+			if (!Studio || Args.Num() == 0)
+			{
+				return;
+			}
+			Studio->UiBrightnessScale = FCString::Atof(*Args[0]);
+			for (TActorIterator<AToyTouchScreen> It(World); It; ++It)
+			{
+				It->SetStudio(Studio);
+			}
+			UE_LOG(LogTemp, Log, TEXT("ToyBox: UiBrightnessScale = %.2f"), Studio->UiBrightnessScale);
+		}));
 }
 
 AToyStudio::AToyStudio()

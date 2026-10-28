@@ -74,6 +74,9 @@ public:
 	/** 调试命令（toy.GrabAudit）接管右手时打开：桌面模式不再读鼠标、不再摆手。 */
 	void SetExternalControl(bool bEnabled) { bExternalControl = bEnabled; }
 
+	/** 绕头顶转身（VR 里摇杆转身用；toy.Look 在 VR 里也用它）。 */
+	void SnapTurn(float Degrees);
+
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<USceneComponent> VROrigin;
 
@@ -142,7 +145,6 @@ private:
 	void ApplyMode(bool bNewVR);
 	void TickVR();
 	void TickDesktop();
-	void SnapTurn(float Degrees);
 
 	/** 平滑移动：Input.X = 右，Input.Y = 前（相对头的水平朝向），带死区，用胶囊体扫掠挡墙和桌子。 */
 	void SmoothMove(FVector2D Input, float DeltaSeconds);

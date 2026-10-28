@@ -39,6 +39,48 @@ namespace
 			}
 		}));
 
+	FAutoConsoleCommandWithWorldAndArgs LookCommand(TEXT("toy.Look"),
+		TEXT("把镜头转到指定朝向（相对玩家开局的朝向，度）：toy.Look <Yaw> [Pitch，默认 -40]。测帧率、截图时用，比如 toy.Look 180 -10 看身后。")
+		TEXT("VR 里头的朝向由头显决定，只转身（Yaw），Pitch 不管"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+		{
+			AToyBoxPawn* Pawn = World ? Cast<AToyBoxPawn>(UGameplayStatics::GetPlayerPawn(World, 0)) : nullptr;
+			if (!Pawn || Args.Num() == 0)
+			{
+				return;
+			}
+			const float Yaw = FCString::Atof(*Args[0]);
+			if (UHeadMountedDisplayFunctionLibrary::IsHeadMountedDisplayEnabled())
+			{
+				static TMap<TWeakObjectPtr<AToyBoxPawn>, float> StartYaw;
+				const float Start = StartYaw.FindOrAdd(Pawn, Pawn->GetActorRotation().Yaw);
+				Pawn->SnapTurn(FRotator::NormalizeAxis(Start + Yaw - Pawn->GetActorRotation().Yaw));
+				return;
+			}
+			Pawn->Camera->SetRelativeRotation(FRotator(Args.Num() > 1 ? FCString::Atof(*Args[1]) : -40.f, Yaw, 0.f));
+		}));
+
+	FAutoConsoleCommandWithWorldAndArgs AfterCommand(TEXT("toy.After"),
+		TEXT("过几秒再执行一条控制台命令：toy.After <秒> <命令...>。-ExecCmds 里的命令都在开局一起执行，测帧率要等着色器、动画稳定再测"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+		{
+			if (Args.Num() < 2)
+			{
+				return;
+			}
+			const FString Command = FString::Join(TArrayView<const FString>(Args).RightChop(1), TEXT(" "));
+			TWeakObjectPtr<UWorld> WeakWorld = World;
+			FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([WeakWorld, Command](float)
+			{
+				// 走玩家控制器，和在控制台里敲一样（shot、stat 这些要视口处理的命令 GEngine->Exec 不认）
+				if (APlayerController* PC = WeakWorld.IsValid() ? WeakWorld->GetFirstPlayerController() : nullptr)
+				{
+					PC->ConsoleCommand(Command);
+				}
+				return false;
+			}), FCString::Atof(*Args[0]));
+		}));
+
 	const TCHAR* ArcMeshPath = TEXT("/Engine/BasicShapes/Sphere.Sphere");
 	const TCHAR* RingMeshPath = TEXT("/Engine/BasicShapes/Cylinder.Cylinder");
 	const TCHAR* GlowMaterialPath = TEXT("/Game/Materials/M_ToyGhost.M_ToyGhost");

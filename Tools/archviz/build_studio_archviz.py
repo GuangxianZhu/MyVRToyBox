@@ -40,7 +40,8 @@ STANDING_CLEARANCE = 60.0
 WALK_MARGIN = 30.0
 EXPOSURE_BIAS = float(os.environ.get('ARCHVIZ_EXPOSURE', '-1.5'))
 # 触屏、信息牌这些不受光照的界面跟着曝光走：样板间是固定曝光再减 1.5 档，比自己房间的自动曝光暗，整体再提亮这么多倍
-UI_BRIGHTNESS = float(os.environ.get('ARCHVIZ_UI_BRIGHTNESS', '4'))
+# 7 是量出来的：站位看触屏，屏幕区域平均亮度 34.8（L_Studio 里 33.7），4 只有 23.1。头显里还嫌暗 / 亮，游戏里 toy.UiBrightness <倍数> 现场试
+UI_BRIGHTNESS = float(os.environ.get('ARCHVIZ_UI_BRIGHTNESS', '7'))
 
 actors_sub = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 level_sub = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
