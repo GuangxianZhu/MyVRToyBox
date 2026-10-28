@@ -611,15 +611,9 @@ void AToyBoxPawn::SmoothMove(FVector2D Input, float DeltaSeconds)
 
 bool AToyBoxPawn::IsTeleportTargetValid(const FHitResult& Hit) const
 {
-	// 只能落在工作室的地板上（地毯也算地板），房间以内，脚下那块地方站得下一个胶囊体（不在桌子底下、不贴墙）
-	const AToyStudio* Studio = Cast<AToyStudio>(Hit.GetActor());
-	const UPrimitiveComponent* Component = Hit.GetComponent();
-	if (!Studio || !Component || Hit.ImpactNormal.Z < 0.8f)
-	{
-		return false;
-	}
-	const FString Name = Component->GetName();
-	if (!Name.StartsWith(TEXT("Floor")) && !Name.StartsWith(TEXT("Rug")))
+	// 只能落在工作室的地板上（地毯也算地板；套用样板间时是样板间的地面），房间以内，脚下那块地方站得下一个胶囊体（不在桌子底下、不贴墙）
+	const AToyStudio* Studio = AToyStudio::Find(GetWorld());
+	if (!Studio || !Studio->IsFloorHit(Hit))
 	{
 		return false;
 	}
@@ -677,8 +671,10 @@ bool AToyBoxPawn::UpdateTeleportAim(const FVector& Start, const FVector& Directi
 		FCollisionQueryParams FloorParams(SCENE_QUERY_STAT(ToyTeleportFloor), false, this);
 		AddIgnoredForMove(FloorParams);
 		const FVector From = Result.HitResult.ImpactPoint + FVector(0.f, 0.f, 1.f);
+		// 套用样板间时，样板间的地面也算地
+		const AToyStudio* Studio = AToyStudio::Find(GetWorld());
 		if (GetWorld()->LineTraceSingleByChannel(Floor, From, From - FVector(0.f, 0.f, 500.f), ECC_Visibility, FloorParams)
-			&& Cast<AToyStudio>(Floor.GetActor()) && Floor.ImpactNormal.Z > 0.8f)
+			&& Floor.ImpactNormal.Z > 0.8f && (Cast<AToyStudio>(Floor.GetActor()) || (Studio && !Studio->bBuildRoom)))
 		{
 			TeleportRing->SetWorldLocation(Floor.ImpactPoint + FVector(0.f, 0.f, 0.6f));
 			bRingOnFloor = true;

@@ -33,11 +33,20 @@ if errorlevel 1 (
   exit /b 1
 )
 
+rem 装了 ArchViz 样板间（只在本机，不进仓库）并生成过 L_StudioArchViz 就进样板间；想回原来的方块房间，先 set TOY_CLASSIC=1
+set "MAP="
+if not "%TOY_CLASSIC%"=="1" if exist "%CD%\Content\ArchViz\Maps\L_StudioArchViz.umap" set "MAP=/Game/ArchViz/Maps/L_StudioArchViz"
+if defined MAP (
+  echo [启动] 场景：ArchViz 样板间 %MAP%
+) else (
+  echo [启动] 场景：默认工作室 L_Studio
+)
+
 if /i "%MODE%"=="vr" (
   echo [启动] 以 VR 游戏模式启动，请先打开 SteamVR 或 Meta Quest Link
-  start "" "%EDITOR%" "%PROJECT%" -game -vr
+  start "" "%EDITOR%" "%PROJECT%" %MAP% -game -vr
 ) else (
   echo [启动] 打开编辑器。点工具栏 Play 旁边的下拉菜单选 VR Preview 就能进头显
-  start "" "%EDITOR%" "%PROJECT%"
+  start "" "%EDITOR%" "%PROJECT%" %MAP%
 )
 exit /b 0

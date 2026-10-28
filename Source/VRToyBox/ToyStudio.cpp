@@ -7,6 +7,7 @@
 #include "ToyTouchScreen.h"
 #include "Components/ChildActorComponent.h"
 #include "Components/PointLightComponent.h"
+#include "Algo/AnyOf.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "HAL/IConsoleManager.h"
@@ -215,9 +216,69 @@ AToyStudio::AToyStudio()
 	ScreenChild->SetChildActorClass(AToyTouchScreen::StaticClass());
 }
 
+AToyStudio* AToyStudio::Find(const UWorld* World)
+{
+	if (World)
+	{
+		for (TActorIterator<AToyStudio> It(World); It; ++It)
+		{
+			return *It;
+		}
+	}
+	return nullptr;
+}
+
+bool AToyStudio::IsFloorHit(const FHitResult& Hit) const
+{
+	const UPrimitiveComponent* Component = Hit.GetComponent();
+	if (!Component || Hit.ImpactNormal.Z < 0.8f)
+	{
+		return false;
+	}
+	if (bBuildRoom)
+	{
+		const FString Name = Component->GetName();
+		return Hit.GetActor() == this && (Name.StartsWith(TEXT("Floor")) || Name.StartsWith(TEXT("Rug")));
+	}
+	// 套用别的房间：样板间的地板、地毯都行；沙发座面、桌面这些比站立点高出一截的不算
+	const FVector Local = GetActorTransform().InverseTransformPosition(Hit.ImpactPoint);
+	return Hit.GetActor() != this && FMath::Abs(Local.Z) < 5.f
+		&& Local.X >= WalkArea.Min.X && Local.X <= WalkArea.Max.X && Local.Y >= WalkArea.Min.Y && Local.Y <= WalkArea.Max.Y;
+}
+
+void AToyStudio::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+	ApplyRoomVisibility();
+}
+
+void AToyStudio::ApplyRoomVisibility()
+{
+	// 自己的房间：构造函数里按名字建的那些组件。桌子、触屏、模型支架和主灯（桌子正上方）不在里面
+	static const TCHAR* const RoomPrefixes[] = { TEXT("Floor"), TEXT("Ceiling"), TEXT("Wall"), TEXT("Rug"), TEXT("Shelf"),
+		TEXT("LampShade"), TEXT("FillLight"), TEXT("BackLight") };
+	TInlineComponentArray<USceneComponent*> Components(this);
+	for (USceneComponent* Component : Components)
+	{
+		const FString Name = Component->GetName();
+		const bool bRoomPart = Algo::AnyOf(RoomPrefixes, [&Name](const TCHAR* Prefix) { return Name.StartsWith(Prefix); });
+		if (!bRoomPart)
+		{
+			continue;
+		}
+		Component->SetVisibility(bBuildRoom);
+		Component->SetHiddenInGame(!bBuildRoom);
+		if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+		{
+			Primitive->SetCollisionEnabled(bBuildRoom ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
+		}
+	}
+}
+
 void AToyStudio::BeginPlay()
 {
 	Super::BeginPlay();
+	ApplyRoomVisibility();
 
 	// L_Studio 是在有 ModelAnchor 之前存的：关卡里的工作室把电机 / 阀门 / 无人机的支架存成挂在 Root 上（原点 = 地板），
 	// 构造函数里的 SetupAttachment 盖不过关卡里存的值。这里统一挂回 ModelAnchor，不然这三个模型摆在桌子前面的地上
