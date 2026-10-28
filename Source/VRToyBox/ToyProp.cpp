@@ -10,11 +10,12 @@
 #include "EngineUtils.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
+// 常量名带 Prop 前缀：unity 合并编译时 ToyExplodedModel.cpp 的匿名命名空间里有同名的 GhostMaterialPath / EmissiveBoost，using namespace 后会二义
 namespace ToyPropLocal
 {
 	// 手靠近时的高亮：和零件一样，用虚影材质（M_ToyGhost）做一层半透明发光的叠加材质
-	const TCHAR* GhostMaterialPath = TEXT("/Game/Materials/M_ToyGhost.M_ToyGhost");
-	constexpr float EmissiveBoost = 12.f;
+	const TCHAR* PropGhostMaterialPath = TEXT("/Game/Materials/M_ToyGhost.M_ToyGhost");
+	constexpr float PropEmissiveBoost = 12.f;
 
 	// 粗估质量用的平均密度（千克 / 立方厘米）：摆件大多空心，按实心水的 1/4 算，再限制在 0.05~3kg
 	constexpr float RoughDensity = 0.00025f;
@@ -71,7 +72,7 @@ void AToyProp::BeginPlay()
 	const float Mass = MassKg > 0.f ? MassKg : FMath::Clamp(static_cast<float>(Size.X * Size.Y * Size.Z) * RoughDensity, 0.05f, 3.f);
 	Mesh->SetMassOverrideInKg(NAME_None, Mass, true);
 
-	if (UMaterialInterface* Ghost = LoadObject<UMaterialInterface>(nullptr, GhostMaterialPath))
+	if (UMaterialInterface* Ghost = LoadObject<UMaterialInterface>(nullptr, PropGhostMaterialPath))
 	{
 		HoverMaterial = UMaterialInstanceDynamic::Create(Ghost, this);
 		// 样板间是固定曝光、再减 1.5 档，发光的东西要和触屏、信息牌一样按工作室的倍数提亮，不然高亮几乎看不见
@@ -80,7 +81,7 @@ void AToyProp::BeginPlay()
 		{
 			Brightness = It->UiBrightnessScale;
 		}
-		HoverMaterial->SetVectorParameterValue(TEXT("Color"), FLinearColor(1.f, 0.85f, 0.3f) * EmissiveBoost * Brightness);
+		HoverMaterial->SetVectorParameterValue(TEXT("Color"), FLinearColor(1.f, 0.85f, 0.3f) * PropEmissiveBoost * Brightness);
 		HoverMaterial->SetScalarParameterValue(TEXT("Opacity"), 0.3f);
 	}
 	if (!Mesh->GetStaticMesh() || !Mesh->GetBodySetup())
