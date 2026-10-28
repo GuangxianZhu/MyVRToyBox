@@ -78,8 +78,24 @@ public:
 	/** 桌上现在摆着的模型，没有就是空（调试命令 toy.GrabAudit 用）。 */
 	AToyExplodedModel* GetModel() const { return Model; }
 
+	/** 关卡里第一个工作室（没有就是空）。 */
+	static AToyStudio* Find(const UWorld* World);
+
+	/** 这一下命中的是不是能站人的地板（传送落点用）。
+	 *  有自己的房间时只认自己的地板 / 地毯；套用别的房间（bBuildRoom = false）时，认 WalkArea 里、和站立点差不多高的朝上表面。 */
+	bool IsFloorHit(const FHitResult& Hit) const;
+
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	int32 MaxCubes = 20;
+
+	/** 建自己的 6m 房间（地板、墙、天花板、地毯、置物架、补光和背光）。
+	 *  摆进现成的样板间（例如 ArchViz）时关掉：这些组件隐藏并且不再有碰撞，只留桌子、触屏、模型支架和桌子上方的主灯。 */
+	UPROPERTY(EditAnywhere, Category = "ToyBox")
+	bool bBuildRoom = true;
+
+	/** bBuildRoom = false 时能传送到的范围（工作室坐标，厘米，只看 XY）。样板间的生成脚本按房间大小填。 */
+	UPROPERTY(EditAnywhere, Category = "ToyBox", meta = (EditCondition = "!bBuildRoom"))
+	FBox WalkArea = FBox(FVector(-300.f, -300.f, -50.f), FVector(300.f, 300.f, 50.f));
 
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<USceneComponent> Root;
@@ -188,9 +204,13 @@ public:
 	float ModelLengthCm = 50.f;
 
 protected:
+	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
 
 private:
+	/** 按 bBuildRoom 显示 / 隐藏自己的房间。 */
+	void ApplyRoomVisibility();
+
 	UPROPERTY(Transient)
 	TObjectPtr<AToyTouchScreen> Screen;
 
