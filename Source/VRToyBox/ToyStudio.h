@@ -94,6 +94,15 @@ public:
 	bool bBuildRoom = true;
 
 	/** bBuildRoom = false 时能传送到的范围（工作室坐标，厘米，只看 XY）。样板间的生成脚本按房间大小填。 */
+	/** bBuildRoom = false 时桌子上方主灯的照射半径（厘米）。样板间自己有烘焙光照，主灯只管照亮桌面和模型；
+	 *  半径小了，它的整场景阴影只画桌子附近的东西，不会把整个客厅（几百万三角面）每帧再画 6 遍。 */
+	UPROPERTY(EditAnywhere, Category = "ToyBox", meta = (EditCondition = "!bBuildRoom"))
+	float DeskLightRadiusCm = 300.f;
+
+	/** 不受光照的界面（触屏、零件信息牌）整体再乘的倍数。界面亮度跟着曝光走，样板间的曝光和自己的房间不一样，由生成脚本按场景填。 */
+	UPROPERTY(EditAnywhere, Category = "ToyBox")
+	float UiBrightnessScale = 1.f;
+
 	UPROPERTY(EditAnywhere, Category = "ToyBox", meta = (EditCondition = "!bBuildRoom"))
 	FBox WalkArea = FBox(FVector(-300.f, -300.f, -50.f), FVector(300.f, 300.f, 50.f));
 

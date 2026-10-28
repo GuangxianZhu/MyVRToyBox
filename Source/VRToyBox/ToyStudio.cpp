@@ -254,8 +254,8 @@ void AToyStudio::OnConstruction(const FTransform& Transform)
 
 void AToyStudio::ApplyRoomVisibility()
 {
-	// 自己的房间：构造函数里按名字建的那些组件。桌子、触屏、模型支架和主灯（桌子正上方）不在里面
-	static const TCHAR* const RoomPrefixes[] = { TEXT("Floor"), TEXT("Ceiling"), TEXT("Wall"), TEXT("Rug"), TEXT("Shelf"),
+	// 自己的房间：构造函数里按名字建的那些组件。桌子、触屏、模型支架不在里面；主灯（桌子正上方）留着，只改照射半径
+	static const TCHAR* const RoomPrefixes[] = { TEXT("MainLight"), TEXT("Floor"), TEXT("Ceiling"), TEXT("Wall"), TEXT("Rug"), TEXT("Shelf"),
 		TEXT("LampShade"), TEXT("FillLight"), TEXT("BackLight") };
 	TInlineComponentArray<USceneComponent*> Components(this);
 	for (USceneComponent* Component : Components)
@@ -264,6 +264,11 @@ void AToyStudio::ApplyRoomVisibility()
 		const bool bRoomPart = Algo::AnyOf(RoomPrefixes, [&Name](const TCHAR* Prefix) { return Name.StartsWith(Prefix); });
 		if (!bRoomPart)
 		{
+			continue;
+		}
+		if (UPointLightComponent* Light = Cast<UPointLightComponent>(Component); Light && Name == TEXT("MainLight"))
+		{
+			Light->SetAttenuationRadius(bBuildRoom ? 900.f : DeskLightRadiusCm);
 			continue;
 		}
 		Component->SetVisibility(bBuildRoom);

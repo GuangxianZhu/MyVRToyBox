@@ -39,6 +39,8 @@ STRUCTURE_LABELS = ('SM_Floor', 'SM_Ceiling', 'SM_Wall', 'DiningRoom-Rug', 'Livi
 STANDING_CLEARANCE = 60.0
 WALK_MARGIN = 30.0
 EXPOSURE_BIAS = float(os.environ.get('ARCHVIZ_EXPOSURE', '-1.5'))
+# 触屏、信息牌这些不受光照的界面跟着曝光走：样板间是固定曝光再减 1.5 档，比自己房间的自动曝光暗，整体再提亮这么多倍
+UI_BRIGHTNESS = float(os.environ.get('ARCHVIZ_UI_BRIGHTNESS', '4'))
 
 actors_sub = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 level_sub = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
@@ -246,6 +248,7 @@ def build():
     studio.set_actor_label('ToyStudio')
     studio.set_editor_property('build_room', False)
     studio.set_editor_property('walk_area', walk)
+    studio.set_editor_property('ui_brightness_scale', UI_BRIGHTNESS)
     log(f'放置 AToyStudio 于 {fmt(origin)} yaw {yaw:.0f}，bBuildRoom = False')
 
     # ---- 8. 曝光 ----

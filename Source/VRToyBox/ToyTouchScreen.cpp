@@ -197,13 +197,17 @@ void AToyTouchScreen::BeginPlay()
 	}
 
 	Brushes = MakeShared<FToyScreenBrushes>();
-	Gui->SetTintColorAndOpacity(FLinearColor(Brightness, Brightness, Brightness, 1.f));
+	// 工作室可能已经先接上了（SetStudio），按它的倍数提亮
+	const float Scaled = Brightness * (Studio.IsValid() ? Studio->UiBrightnessScale : 1.f);
+	Gui->SetTintColorAndOpacity(FLinearColor(Scaled, Scaled, Scaled, 1.f));
 	Gui->SetSlateWidget(BuildGui());
 }
 
 void AToyTouchScreen::SetStudio(AToyStudio* InStudio)
 {
 	Studio = InStudio;
+	const float Scaled = Brightness * (Studio.IsValid() ? Studio->UiBrightnessScale : 1.f);
+	Gui->SetTintColorAndOpacity(FLinearColor(Scaled, Scaled, Scaled, 1.f));
 }
 
 void AToyTouchScreen::BuildItems()
