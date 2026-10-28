@@ -6,7 +6,7 @@
 #include "Engine/StaticMesh.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
-namespace
+namespace ToyPropLocal
 {
 	// 手靠近时的高亮：和零件一样，用虚影材质（M_ToyGhost）做一层半透明发光的叠加材质
 	const TCHAR* GhostMaterialPath = TEXT("/Game/Materials/M_ToyGhost.M_ToyGhost");
@@ -18,6 +18,8 @@ namespace
 	// 最长边小于这个（厘米）就用捏，否则整手握
 	constexpr float PinchMaxCm = 12.f;
 }
+
+using namespace ToyPropLocal;
 
 AToyProp::AToyProp()
 {
