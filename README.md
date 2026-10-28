@@ -38,7 +38,7 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 | `导入万用表模型.bat` | 万用表模型改了才需要：ITBasics 里用 Blender 重新生成并导入（见下文） |
 | `导入发动机模型.bat` | 四缸发动机模型改了才需要：ITBasics 里用 Blender 重新生成并导入（见下文） |
 | `导入灵巧手模型.bat` | 五指灵巧手模型改了才需要：ITBasics 里用 Blender 重新生成并导入（见下文） |
-| `生成样板间工作室.bat` | 装了 ArchViz 样板间素材才需要：生成并烘焙 `L_StudioArchViz`（见下文「样板间场景」），约 11 分钟 |
+| `生成样板间工作室.bat` | 装了 ArchViz 样板间素材才需要：生成并烘焙 `L_StudioArchViz`（见下文「样板间场景」；装了 Home Interior 会接在前门外一起烘焙），约 20 分钟 |
 | `导入刻蚀机模型.bat` | 干法刻蚀机模型或网页里的原理内容改了才需要：ITBasics 里用 Blender 重新生成并导入，顺带拷讲解文字和标准答案（见下文） |
 
 - 引擎不在 `C:\Program Files\Epic Games\UE_5.8` 的话，先设置环境变量 `UE_ROOT` 指向引擎根目录（脚本也会读 Epic 启动器写的注册表）。
@@ -53,9 +53,9 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 
 - **素材不进仓库**：这个仓库是公开的，Fab / Epic 素材的许可证不允许把源文件再分发。素材放在 `Content/ArchViz/`，已写进 `.gitignore`。
 - **怎么装**：Epic 启动器 → Fab 库 → ArchViz Interior → ＋ → 勾「显示所有工程」→ 选 VRToyBox，版本选最高的 4.27 → 添加。**添加会把 `Config/DefaultEngine.ini`、`DefaultGame.ini` 换成样例的设置**，装完先 `git checkout -- Config`；素材会散在 `Content/` 根目录，要在编辑器里统一挪进 `Content/ArchViz/`（保持子目录）。然后双击 `生成样板间工作室.bat`。
-- **生成脚本** `Tools/archviz/build_studio_archviz.py`：复制 `ArchVis_Lightmap` 成 `L_StudioArchViz`，删掉餐桌、6 把椅子、桌上摆件、两盏吊灯和过场动画，清掉关卡的 GameMode 覆盖，摆一个 `bBuildRoom = false` 的 `ToyStudio`（只留桌子、触屏、模型支架和主灯，自己的房间隐藏、没有碰撞），曝光补偿 +1.76 → -1.5，把 20 件小摆件换成能拿起来的 `AToyProp`（见下面），前门里侧摆一个通往第二个场景的门口（见「第二个场景」），再用 CPU Lightmass（Production）烘焙。GPU Lightmass 在 5.8 上对这张图一启动就崩，所以用 CPU。
+- **生成脚本** `Tools/archviz/build_studio_archviz.py`：复制 `ArchVis_Lightmap` 成 `L_StudioArchViz`，删掉餐桌、6 把椅子、桌上摆件、两盏吊灯和过场动画，清掉关卡的 GameMode 覆盖，摆一个 `bBuildRoom = false` 的 `ToyStudio`（只留桌子、触屏、模型支架和主灯，自己的房间隐藏、没有碰撞），曝光补偿 +1.76 → -1.5，把 20 件小摆件换成能拿起来的 `AToyProp`（见下面），装了 Home Interior 的话把它接到前门外（见「第二个场景」），再用 CPU Lightmass（Production）把两套房子一起烘焙。GPU Lightmass 在 5.8 上对这张图一启动就崩，所以用 CPU。
 - **一键启动**：本机有 `Content/ArchViz/Maps/L_StudioArchViz.umap` 就自动打开它；想回原来的方块房间，先 `set TOY_CLASSIC=1` 再启动。
-- **传送**：套用样板间时，落点认 `ToyStudio.WalkArea` 范围里、和站立点等高的朝上表面（地板、地毯），沙发座面、桌面不算。
+- **传送**：套用样板间时，落点认 `ToyStudio.WalkArea` 和 `ExtraWalkAreas`（前门外的走廊、Home Interior）范围里、和站立点等高的朝上表面（地板、地毯），沙发座面、桌面不算。
 - **能拿起来的摆件**：生成脚本按 `PROPS` 表把 20 件小摆件换成 `AToyProp`（网格、材质、位置照搬，原来的静态 Actor 删掉，所以烘焙后不会留下它们的影子）。手靠近时金色高亮，捏起来手边信息牌显示名字和"材料：…"（声音按材料分），松手按手速扔出去；开局是睡着的（叠着的书不会自己弹开），被拿起、被撞到才醒。触屏 **摆件复位** 全部放回原处，按钮上方一行显示"摆件 20 件，N 件不在原位"；没有摆件的房间（L_Studio）显示"这个房间没有能拿起来的摆件"。
 
   | # | 名字 | 材料 | 质量 | 大小（cm） | 在哪（站在桌前看） | 碰撞 |
@@ -95,38 +95,41 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
   - 复现：`toy.Stand <X> <Y>`（把玩家挪到工作室坐标，X 朝桌子）+ `toy.Look 180 -10`，例如
     `UnrealEditor.exe VRToyBox.uproject /Game/ArchViz/Maps/L_StudioArchViz -game -emulatestereo -windowed -ResX=3840 -ResY=2160 -ForceRes "-ExecCmds=r.ScreenPercentage 140,toy.After 4 toy.Stand 160 0,toy.After 4.5 toy.Look 180 -10,toy.After 14 startfpschart,toy.After 24 stopfpschart,toy.After 28 toy.Screen Engine,toy.After 40 startfpschart,toy.After 50 stopfpschart"`，结果在 `Saved/Profiling/FPSChartStats/`。
 
-### 第二个场景（Home Interior，只在本机）
+### 第二个场景（Home Interior，只在本机）：前门外接着另一套房子
 
-从样板间的前门走出去，进到另一套房子：Fab 上 Olga Chekunova 的 **Home Interior**（开放式厨房 + 餐桌 + 客厅，约 10×9m）。
+从样板间的前门走出去，穿过一段 2 米的走廊，就进到另一套房子：Fab 上 Olga Chekunova 的 **Home Interior**（开放式厨房 + 餐桌 + 客厅，约 10×9m）。两套房子在同一个世界里，不换关卡、不黑场，站在样板间门口就能一直看到那边的客厅。
 
-- **素材不进仓库**：放在 `Content/Home_Interior/`（已写进 `.gitignore`）。Fab → Home Interior →「添加到工程」选 VRToyBox，它自己就放在 `Content/Home_Interior/` 下面，Config 没被改。然后双击 `生成样板间工作室.bat`（会接着生成这个场景）。
-- **两个门对起来**：样板间前门里侧 120cm 是一个 `AToyDoorway`（门口），头走进门前那块（门里侧 0~80cm）→ 黑场 0.3 秒 → 打开 `L_HomeStudio`，人出现在它入户走廊的门洞，面朝屋里；走回走廊尽头 → 回到样板间前门里侧，面朝屋里。Home Interior 的走廊尽头原来是一面白墙，生成脚本把 ArchViz 前门那一套（门框、门、把手）原样装了过去，两边看起来是同一扇门。控制台 `toy.Door` 不用走过去直接穿门。
-- **为什么是换关卡而不是拼成一张图**：两套房子各有自己的太阳、天光、后期和烘焙光照，拼在一起要重新打光而且会互相照亮 / 投影；分开烘焙、穿门换关卡最稳。代价：换过去模型 / 摆件的状态不保留（回来是开局的样子）。
-- **生成**：`build_studio_archviz.py` 的 `ARCHVIZ_STEP=home`（复制 `Home_Interior` → `L_HomeStudio`、删示例相机、两条可移动面光源关阴影、墙和家具改三角面碰撞、装门、摆门口和一个不带桌子的 `ToyStudio`（`bWithDesk = false`：只管出生点、传送范围、摆件复位）、摆件换成 `AToyProp`）和 `home_bake`（CPU Lightmass）。
-- **能拿起来的东西**（`HOME_PROPS`，20 件，Home Interior 的网格都自带凸包）：
+- **素材不进仓库**：放在 `Content/Home_Interior/`（已写进 `.gitignore`）。Fab → Home Interior →「添加到工程」选 VRToyBox，它自己就放在 `Content/Home_Interior/` 下面，Config 没被改。然后双击 `生成样板间工作室.bat`（会自动接上）。没装的话前门照旧关着。
+- **怎么拼的**（`build_studio_archviz.py` 的 `ARCHVIZ_STEP=home`，在烘焙之前跑）：
+  - `Home_Interior` 复制成子关卡 `L_StudioArchViz_Home`（`L_StudioArchViz` 里一直加载），整套房子平移到前门外：它的入户走廊尽头对着样板间前门，中间一段 2m 长、1.1m 宽、2.5m 高的走廊（引擎方块拼的，墙面 / 地板用 Home 的材质，顶上一盏静态灯）。不用转方向：Home 的窗户朝 +X、背对样板间；样板间的窗户朝 -X / -Y，两边从窗户都看不到对方的外墙。
+  - 门洞：样板间前墙是一整块实心墙板（门只是贴在上面的门框和门板），Home 的入户走廊尽头原来是一面白墙。两边都复制一份网格（`SM_Wall_Front_ToyDoor`、`SM_Scene_ToyDoor`，在本机素材目录里），用 Geometry Script 减掉一个 82×203cm 的门洞；样板间的门板、把手和盖住前墙的阻挡体积删掉，Home 那头装上同一套门框。门一直开着。
+  - 一套天：Home 的太阳、天光、天空球、大气雾、窗外的背景板（会从样板间餐厅窗户斜着看到）和平面反射都删掉，Home 窗外看到的是样板间的城市。Home 原来靠天光从窗户照进来，改成每扇窗里侧两块静态面光源（和样板间窗户补光一个做法）。
+  - 曝光统一：Home 原来是自动曝光、屋里暗（一直顶在 EV100 上限，等效 EV 0.65），样板间是固定 EV 5.5、补偿 -1.5（等效 EV 7）。Home 的灯全部改成静态，亮度乘 2^(7 - 0.65 - 1.5) ≈ 29（多减的 1.5 档是和原来的 Home 截图对比调的，`HOME_BRIGHTNESS_STOPS`）；Home 的后期体积只罩住 Home（从走廊中间开始），曝光和样板间一样固定，色温、泛光还是 Home 自己的。所以触屏、信息牌、摆件高亮两边一样亮。
+  - 摆件：`HOME_PROPS` 的 17 件换成 `AToyProp`（标签 `Home01_…`），墙和家具改三角面碰撞。工作室只有样板间那一个，`ExtraWalkAreas` 加上走廊和 Home，传送、摇杆走路都能过去；触屏 **摆件复位** 管两边一共 37 件。
+- **烘焙**：两个关卡一起烘焙（CPU Lightmass Production，用样板间的 Lightmass 设置；体积光照贴图内存上限 30 → 80MB，房子大了一倍多也不降精度）。
+- **以前的版本**（穿门换关卡、`L_HomeStudio`）不再生成，bat 会删掉旧的 `L_HomeStudio`。`AToyDoorway` 类和 `toy.Door` 还留着，现在的地图里没有用到。
+- **能拿起来的东西**（`HOME_PROPS`，17 件，Home Interior 的网格都自带凸包；标签 `Home01…17`）：
 
   | # | 名字 | 材料 | 在哪 |
   |---|---|---|---|
   | 1 | 餐桌上的水壶 | 陶瓷 | 餐桌 |
   | 2 | 红酒瓶 | 玻璃 | 餐桌 |
   | 3 / 4 | 红酒杯 ×2 | 玻璃 | 餐桌 |
-  | 5 | 玻璃水杯 | 玻璃 | 餐桌 |
-  | 6 | 餐桌上的马克杯 | 陶瓷 | 餐桌 |
-  | 7 | 樱桃果盘 | 陶瓷 | 餐桌（11 颗樱桃挂在盘子上一起走） |
-  | 8 | 餐刀 | 不锈钢 | 餐桌 |
-  | 9 / 10 | 岛台上的马克杯 ×2 | 陶瓷 | 厨房岛台 |
-  | 11 | 灶台上的汤锅 | 不锈钢 | 灶台 |
-  | 12 | 香草小盆栽 | 陶瓷花盆 | 厨房台面（香草挂在盆上） |
-  | 13 | 置物架上的花瓶 | 陶瓷 | 入口旁的置物架 |
-  | 14 | 收纳小盒 | 木 | 入口旁的玻璃柜 |
-  | 15 | 茶几上的蜡烛 | 玻璃杯、蜡 | 茶几 |
-  | 16 / 17 | 斗柜上的花瓶、细花瓶 | 陶瓷 | 镜子旁的斗柜 |
-  | 18 | 置物架上的细高花瓶 | 陶瓷 | 入口旁的置物架 |
-  | 19 | 置物架下层的收纳盒 | 木 | 入口旁的置物架下层 |
-  | 20 | 置物架上的浅盘 | 陶瓷 | 入口旁的置物架 |
+  | 5 | 餐桌上的马克杯 | 陶瓷 | 餐桌 |
+  | 6 | 樱桃果盘 | 陶瓷 | 餐桌（11 颗樱桃挂在盘子上一起走） |
+  | 7 | 餐刀 | 不锈钢 | 餐桌 |
+  | 8 / 9 | 岛台上的马克杯 ×2 | 陶瓷 | 厨房岛台 |
+  | 10 | 香草小盆栽 | 陶瓷花盆 | 厨房台面（香草挂在盆上） |
+  | 11 | 置物架上的花瓶 | 陶瓷 | 入口旁的置物架 |
+  | 12 | 收纳小盒 | 木 | 入口旁的玻璃柜 |
+  | 13 | 茶几上的蜡烛 | 玻璃杯、蜡 | 茶几 |
+  | 14 / 15 | 斗柜上的花瓶、细花瓶 | 陶瓷 | 镜子旁的斗柜 |
+  | 16 | 置物架下层的收纳盒 | 木 | 入口旁的置物架下层 |
+  | 17 | 置物架上的浅盘 | 陶瓷 | 入口旁的置物架 |
 
+  接到样板间以后去掉了 3 件（两套房子 40 件一起跑 PropTest 时不稳，原来单独一张图时也是擦线过的）：玻璃水杯（一醒歪 3°）、灶台上的汤锅（一醒在灶架上滑 1~2cm）、置物架上的细高花瓶（松手有时落到上一层隔板）。
   餐巾去掉了碰撞（几毫米厚的三角面会把压在上面的杯子顶歪）。没挑的：碗（凹的）、单颗樱桃、竖着排的书、挤在一起的蜡烛和盆栽、叠着的盘子、挂在钩子上的手套和锅铲、两米高的吊柜和搁板；试过又拿掉的：沙发 / 椅子上的靠垫和坐墩（软面上放不稳，一醒就滑）、盘子上的餐叉（一醒歪 3°）、小圆桌上的红色马克杯（桌面是玻璃，没有碰撞，放回去会掉到地上）、盘子里的果冻（丢到地上那一步没落下来）、茶几上叠着的书和碟子上的咖啡杯（一醒就歪几度）、玻璃柜里的花瓶和窗边架子上的储物盒（会滑 / 放回去落到别的隔层）。
-- **自检**：`toy.PropTest quit` 在这张图上同样能跑：`UnrealEditor.exe VRToyBox.uproject /Game/Home_Interior/Maps/L_HomeStudio -game -windowed -ResX=1280 -ResY=720 "-ExecCmds=toy.PropTest quit"`。
+- **自检**：`L_StudioArchViz` 上的 `toy.PropTest quit` 一次测两边 37 件（Home 的 17 件按标签排在 `Prop01…20` 前面）。
 
 ![编辑器视口：打开 L_Studio 就能看到工作室](docs/screenshots/editor_viewport.jpg)
 
@@ -623,7 +626,7 @@ OpenXR 只会给"项目里用到的按键"向运行时申请绑定，所以 `Con
 | `ToyCube` | 可抓方块和 6 个抓点，抓点对齐的数学 |
 | `ToyExplodedModel` | 读 parts.json、生成抓取单元，原始 / 爆炸切换动画，整机抓取，虚影 / 高亮 / 复位 |
 | `ToyPartUnit` | 一个抓取单元：小件捏到捏合点、其余自由捏取（旧的圆柱面 / 实心盒 / 贴实物表面贴合在 `toy.PalmSnap 1` 下），松手飞回原位，磁吸 |
-| `ToyDoorway` | 两个场景之间的门口：头走进门前的盒子 → 黑场 → 换关卡，`?Arrive=<门名>` 让 GameMode 把人放到那边同名的门口；`toy.Door` |
+| `ToyDoorway` | 两个场景之间的门口：头走进门前的盒子 → 黑场 → 换关卡，`?Arrive=<门名>` 让 GameMode 把人放到那边同名的门口；`toy.Door`（现在样板间和 Home Interior 是直接连通的，地图里没有用到） |
 | `ToyLightGroupComponent` | 模型的光照组根（`ModelRoot`）：不画东西，整个模型共用一张固定太阳光的逐物体阴影，不是每个零件一张 |
 | `ToyGrabAudit` | 调试命令 `toy.GrabAudit`：自动把每个单元抓一遍、截图、写 summary.csv |
 | `ToyDemoRecorder` | 调试命令 `toy.Demo`：录 README 演示动图的逐帧截图（装配 → 爆炸 → 捏起一个零件 → 装配回去） |

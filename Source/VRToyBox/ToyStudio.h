@@ -110,6 +110,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ToyBox", meta = (EditCondition = "!bBuildRoom"))
 	FBox WalkArea = FBox(FVector(-300.f, -300.f, -50.f), FVector(300.f, 300.f, 50.f));
 
+	/** WalkArea 以外也能传送的地方（工作室坐标，只看 XY）：样板间前门外的走廊、走廊那头的 Home Interior。 */
+	UPROPERTY(EditAnywhere, Category = "ToyBox", meta = (EditCondition = "!bBuildRoom"))
+	TArray<FBox> ExtraWalkAreas;
+
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<USceneComponent> Root;
 

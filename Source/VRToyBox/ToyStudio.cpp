@@ -257,8 +257,15 @@ bool AToyStudio::IsFloorHit(const FHitResult& Hit) const
 	}
 	// 套用别的房间：样板间的地板、地毯都行；沙发座面、桌面这些比站立点高出一截的不算
 	const FVector Local = GetActorTransform().InverseTransformPosition(Hit.ImpactPoint);
-	return Hit.GetActor() != this && FMath::Abs(Local.Z) < 5.f
-		&& Local.X >= WalkArea.Min.X && Local.X <= WalkArea.Max.X && Local.Y >= WalkArea.Min.Y && Local.Y <= WalkArea.Max.Y;
+	if (Hit.GetActor() == this || FMath::Abs(Local.Z) >= 5.f)
+	{
+		return false;
+	}
+	auto Inside = [&Local](const FBox& Area)
+	{
+		return Local.X >= Area.Min.X && Local.X <= Area.Max.X && Local.Y >= Area.Min.Y && Local.Y <= Area.Max.Y;
+	};
+	return Inside(WalkArea) || Algo::AnyOf(ExtraWalkAreas, Inside);
 }
 
 void AToyStudio::OnConstruction(const FTransform& Transform)
