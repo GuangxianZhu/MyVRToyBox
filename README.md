@@ -3,8 +3,8 @@
 UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 
 - 一间 6m × 6m 的小工作室，你站在一张桌子前面；
-- 桌上一个支架触屏，屏幕上是一块中文 GUI（模型卡片、方块、爆炸 / 复位、挪动方向键），用食指戳 **生成方块**，桌上就掉下一个随机颜色的 10cm 方块；**清空方块** 清空；
-- 方块可以用拇指和食指捏起来（扣扳机）、换手、扔出去；捏起时保持捏住那一刻的位置和角度，捏合点有一个半透明小球表示范围。
+- 桌上一个支架触屏，屏幕上是一块中文 GUI（模型卡片、爆炸 / 复位、挪动方向键、摆件复位），用食指戳；
+- 样板间里挑出来的摆件（花瓶、书、杯子……，`AToyProp`）可以用拇指和食指捏起来（扣扳机）、换手、扔出去；捏起时保持捏住那一刻的位置和角度，捏合点有一个半透明小球表示范围。触屏 **摆件复位** 把它们全部放回原处。（以前的"生成方块 / 清空方块"已经去掉。）
 - 左摇杆平滑移动，右摇杆左右快速转身，右摇杆往前推瞄准传送（抛物线 + 落点圈）。
 - 触屏上能摆出五个爆炸图模型（一次一个，换模型时先收起原来的）：**三相电机**（ITBasics 里的 YE4-132M-4）、**气动球阀**（three.js 写的三片式球阀 + 齿轮齿条气动执行器）、**涵道无人机**（ITBasics 里的 3 寸涵道穿越机）、**迷你车床**（ITBasics 里照产品图建的 8 合 1 小车床）和**数字万用表**（外观参考 SATA DO5054 的原理爆炸图），前四个缩放到最长边约 0.5 米，万用表 0.4 米。点模型卡片摆出（再点一次或点 **收起模型** 收起），**爆炸拆开 / 组装回去** 让桌上的模型在爆炸图和原始装配之间切换，零件按真实拆装顺序先后飞出。
 - **挪模型**：触屏右下角的方向键 **推远 / 拉近 / 左移 / 右移**，每按一下把桌上的模型整体挪 10cm（离站立点 55~95cm、左右 -40~+20cm，不会挪出桌面或撞上触屏），方向键中间显示现在离你多远。所有模型共用这个位置，换模型也不会弹回去。默认放在 70cm（以前是 90cm，站着伸手够不着）。
@@ -78,7 +78,7 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 | --- | --- | --- |
 | ![](docs/screenshots/move_back.jpg) | ![](docs/screenshots/teleport_valid.jpg) | ![](docs/screenshots/teleport_invalid.jpg) |
 
-控制台输入 `toy.Screen <按钮>` 等于戳触屏上那个按钮，可以连着写：`toy.Screen Lathe MoveNear MoveNear Explode`（按钮名：Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Server / Robot / Engine / Hand / Hide / Explode / Reset / MoveNear / MoveFar / MoveLeft / MoveRight / Menu），命令行里用 `-ExecCmds=` 也行。`toy.ShowGrabPoints 1` 可以在游戏里看到手和方块的抓点箭头（之后生成的方块生效）。`toy.PalmSnap 1` 切回旧的"手掌贴合"抓法（见「零件抓取」）。`toy.HandPreview 1 / 2 / 3` 在桌面模式下把左手侧着摆到镜头前（张开 / 握拳 / 来回握），用来检查手模型。
+控制台输入 `toy.Screen <按钮>` 等于戳触屏上那个按钮，可以连着写：`toy.Screen Lathe MoveNear MoveNear Explode`（按钮名：Props（摆件复位）/ Motor / Valve / Drone / Lathe / Meter / Server / Robot / Engine / Hand / Hide / Explode / Reset / MoveNear / MoveFar / MoveLeft / MoveRight / Menu），命令行里用 `-ExecCmds=` 也行。`toy.ShowGrabPoints 1` 可以在游戏里看到手和方块的抓点箭头（之后生成的方块生效）。`toy.PalmSnap 1` 切回旧的"手掌贴合"抓法（见「零件抓取」）。`toy.HandPreview 1 / 2 / 3` 在桌面模式下把左手侧着摆到镜头前（张开 / 握拳 / 来回握），用来检查手模型。
 
 ## 手的模型
 

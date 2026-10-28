@@ -1,6 +1,6 @@
 #include "ToyStudio.h"
 
-#include "ToyCube.h"
+#include "ToyProp.h"
 #include "ToyExplodedModel.h"
 #include "ToyMenuPanel.h"
 #include "ToyShapeComponent.h"
@@ -36,12 +36,12 @@ namespace
 	const FLinearColor LegColor(0.1f, 0.1f, 0.1f);
 	const FLinearColor ShelfColor(0.3f, 0.2f, 0.12f);
 
-	// 调试命令 toy.Screen <按钮名>：和戳触屏上那个按钮一样（Spawn / Clear / Motor / Valve / Drone / Lathe / Meter / Server / Robot / Engine / Hand / Etcher / Hide / Explode / Reset /
+	// 调试命令 toy.Screen <按钮名>：和戳触屏上那个按钮一样（Props / Motor / Valve / Drone / Lathe / Meter / Server / Robot / Engine / Hand / Etcher / Hide / Explode / Reset /
 	// MoveNear / MoveFar / MoveLeft / MoveRight），可以在 -ExecCmds 里连着写，不用鼠标点
 	void ScreenCommand(const TArray<FString>& Args, UWorld* World)
 	{
 		static const TMap<FString, EToyScreenAction> Names = {
-			{ TEXT("spawn"), EToyScreenAction::SpawnCube }, { TEXT("clear"), EToyScreenAction::ClearCubes },
+			{ TEXT("props"), EToyScreenAction::ResetProps }, { TEXT("resetprops"), EToyScreenAction::ResetProps },
 			{ TEXT("motor"), EToyScreenAction::ToggleMotor }, { TEXT("valve"), EToyScreenAction::ToggleValve },
 			{ TEXT("drone"), EToyScreenAction::ToggleDrone }, { TEXT("lathe"), EToyScreenAction::ToggleLathe },
 			{ TEXT("meter"), EToyScreenAction::ToggleMultimeter }, { TEXT("multimeter"), EToyScreenAction::ToggleMultimeter },
@@ -154,10 +154,6 @@ AToyStudio::AToyStudio()
 		FVector(40.f, 40.f, 4.f), FVector(TableX, 0.f, RoomHeight - 2.f), FLinearColor(1.f, 0.95f, 0.85f), FRotator::ZeroRotator);
 	Bulb->SetCastShadow(false);
 
-	// 方块出生点：桌面左手边靠前的角落（UE 里 +Y 是右边），离桌面 15cm 落下（桌面中间留给电机）
-	SpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("SpawnPoint"));
-	SpawnPoint->SetupAttachment(Root);
-	SpawnPoint->SetRelativeLocation(FVector(TableX - 20.f, -60.f, TableHeight + 15.f));
 
 	// 所有模型的支架都挂在 ModelAnchor 下面：触屏的 NEAR / FAR / LEFT / RIGHT 挪的就是它，换模型也保持挪过的位置。
 	// 默认放在离站立点 70cm（桌子中间偏近），以前放在 90cm，伸手够不着
@@ -302,6 +298,12 @@ void AToyStudio::BeginPlay()
 	Super::BeginPlay();
 	ApplyRoomVisibility();
 
+	// 关卡里能拿起来的摆件（样板间生成脚本放的），触屏「摆件复位」用
+	for (TActorIterator<AToyProp> It(GetWorld()); It; ++It)
+	{
+		Props.Add(*It);
+	}
+
 	// L_Studio 是在有 ModelAnchor 之前存的：关卡里的工作室把电机 / 阀门 / 无人机的支架存成挂在 Root 上（原点 = 地板），
 	// 构造函数里的 SetupAttachment 盖不过关卡里存的值。这里统一挂回 ModelAnchor，不然这三个模型摆在桌子前面的地上
 	for (USceneComponent* Mount : { MotorMount.Get(), ValveMount.Get(), DroneMount.Get(), LatheMount.Get(), MultimeterMount.Get(), ServerMount.Get(), OrbMount.Get(), EngineMount.Get(), DexHandMount.Get(), EtcherMount.Get() })
@@ -335,40 +337,15 @@ void AToyStudio::BeginPlay()
 	}
 }
 
-bool AToyStudio::SpawnCube()
+void AToyStudio::ResetProps()
 {
-	Cubes.RemoveAll([](const TWeakObjectPtr<AToyCube>& Cube) { return !Cube.IsValid(); });
-	if (Cubes.Num() >= MaxCubes)
+	for (const TWeakObjectPtr<AToyProp>& Prop : Props)
 	{
-		return false;
-	}
-
-	const FVector Offset(FMath::FRandRange(-8.f, 8.f), FMath::FRandRange(-8.f, 8.f), 0.f);
-	const FTransform SpawnTransform(FRotator(0.f, FMath::FRandRange(0.f, 90.f), 0.f), SpawnPoint->GetComponentLocation() + Offset);
-
-	FActorSpawnParameters Params;
-	Params.Owner = this;
-	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-	AToyCube* Cube = GetWorld()->SpawnActor<AToyCube>(AToyCube::StaticClass(), SpawnTransform, Params);
-	if (!Cube)
-	{
-		return false;
-	}
-	Cube->SetBaseColor(FLinearColor::MakeFromHSV8(static_cast<uint8>(FMath::RandRange(0, 255)), 190, 235));
-	Cubes.Add(Cube);
-	return true;
-}
-
-void AToyStudio::ClearCubes()
-{
-	for (const TWeakObjectPtr<AToyCube>& Cube : Cubes)
-	{
-		if (AToyCube* Alive = Cube.Get())
+		if (AToyProp* Alive = Prop.Get())
 		{
-			Alive->Destroy();
+			Alive->ResetToHome();
 		}
 	}
-	Cubes.Reset();
 }
 
 FString AToyStudio::KindName(EToyModelKind Kind)
@@ -392,8 +369,7 @@ void AToyStudio::HandleScreenAction(EToyScreenAction Action)
 {
 	switch (Action)
 	{
-	case EToyScreenAction::SpawnCube:     SpawnCube(); break;
-	case EToyScreenAction::ClearCubes:    ClearCubes(); break;
+	case EToyScreenAction::ResetProps:    ResetProps(); break;
 	case EToyScreenAction::ToggleMotor:   ToggleModel(EToyModelKind::Motor); break;
 	case EToyScreenAction::ToggleValve:   ToggleModel(EToyModelKind::Valve); break;
 	case EToyScreenAction::ToggleDrone:   ToggleModel(EToyModelKind::Drone); break;
@@ -522,16 +498,16 @@ FString AToyStudio::GetStatusText() const
 	}
 	const FString Name = !Model ? TEXT("MODEL") : KindName(ModelKind);
 	const FString State = !Model ? TEXT("OFF") : (Model->IsExploded() ? TEXT("EXPLODED") : TEXT("ASSEMBLED"));
-	return FString::Printf(TEXT("CUBES %d / %d    %s %s    %.0f CM AWAY"), GetCubeCount(), MaxCubes, *Name, *State,
+	return FString::Printf(TEXT("PROPS %d AWAY / %d    %s %s    %.0f CM AWAY"), GetPropsAwayCount(), GetPropCount(), *Name, *State,
 		GetModelDistanceCm());
 }
 
-int32 AToyStudio::GetCubeCount() const
+int32 AToyStudio::GetPropCount() const
 {
-	int32 Count = 0;
-	for (const TWeakObjectPtr<AToyCube>& Cube : Cubes)
-	{
-		Count += Cube.IsValid() ? 1 : 0;
-	}
-	return Count;
+	return Props.FilterByPredicate([](const TWeakObjectPtr<AToyProp>& Prop) { return Prop.IsValid(); }).Num();
+}
+
+int32 AToyStudio::GetPropsAwayCount() const
+{
+	return Props.FilterByPredicate([](const TWeakObjectPtr<AToyProp>& Prop) { return Prop.IsValid() && Prop->IsAwayFromHome(); }).Num();
 }

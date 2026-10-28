@@ -214,7 +214,7 @@ void AToyTouchScreen::BuildItems()
 {
 	// 布局（像素，界面 1280 × 880，左上角为原点）：
 	//   顶栏 0~90：标题、提示、右上角菜单
-	//   左 30~850：模型卡片 4 × 2（150~630），方块两个大按钮（700~840）
+	//   左 30~850：模型卡片 4 × 2（150~630），摆件复位大按钮（700~840）
 	//   右 870~1260：当前模型（爆炸 / 复位）和挪动方向键
 	Items.Reset();
 	auto Add = [this](EToyScreenAction Action, const FBox2D& Rect, const FLinearColor& Color, int32 InPage = INDEX_NONE, int32 InModel = INDEX_NONE)
@@ -238,8 +238,7 @@ void AToyTouchScreen::BuildItems()
 	Add(EToyScreenAction::PrevPage, PixelRect(690.f, 96.f, 74.f, 46.f), GreyButton);
 	Add(EToyScreenAction::NextPage, PixelRect(776.f, 96.f, 74.f, 46.f), GreyButton);
 
-	Add(EToyScreenAction::SpawnCube, PixelRect(30.f, 700.f, 400.f, 140.f), FLinearColor(0.04f, 0.25f, 0.1f));
-	Add(EToyScreenAction::ClearCubes, PixelRect(450.f, 700.f, 400.f, 140.f), FLinearColor(0.3f, 0.06f, 0.05f));
+	Add(EToyScreenAction::ResetProps, PixelRect(30.f, 700.f, 820.f, 140.f), FLinearColor(0.04f, 0.25f, 0.1f));
 
 	Add(EToyScreenAction::ToggleExplode, PixelRect(890.f, 236.f, 350.f, 120.f), FLinearColor(0.34f, 0.2f, 0.02f));
 	Add(EToyScreenAction::ResetParts, PixelRect(890.f, 372.f, 350.f, 96.f), GreyButton);
@@ -299,7 +298,7 @@ TSharedRef<SWidget> AToyTouchScreen::BuildGui()
 
 	// 左边的小标题
 	AddText(PixelRect(30.f, 96.f, 300.f, 46.f), FText::FromString(TEXT("模型")), 20, DimTextColor, HAlign_Left);
-	AddText(PixelRect(30.f, 646.f, 820.f, 46.f), TAttribute<FText>::CreateLambda(Live(Weak, &AToyTouchScreen::CubeText, FText())), 20, DimTextColor, HAlign_Left);
+	AddText(PixelRect(30.f, 646.f, 820.f, 46.f), TAttribute<FText>::CreateLambda(Live(Weak, &AToyTouchScreen::PropText, FText())), 20, DimTextColor, HAlign_Left);
 
 	// 右边：当前模型的名字和状态、挪动标题、方向键中间的距离
 	AddText(PixelRect(890.f, 104.f, 350.f, 34.f), FText::FromString(TEXT("当前模型")), 16, DimTextColor, HAlign_Left);
@@ -717,12 +716,17 @@ FText AToyTouchScreen::ModelState() const
 	return FText::FromString(StudioActor->IsModelExploded() ? TEXT("爆炸图 · 零件可以拿起来看") : TEXT("装配状态"));
 }
 
-FText AToyTouchScreen::CubeText() const
+FText AToyTouchScreen::PropText() const
 {
 	const AToyStudio* StudioActor = Studio.Get();
-	return FText::FromString(StudioActor
-		? FString::Printf(TEXT("方块  %d / %d"), StudioActor->GetCubeCount(), StudioActor->MaxCubes)
-		: FString(TEXT("方块")));
+	if (!StudioActor || StudioActor->GetPropCount() == 0)
+	{
+		return FText::FromString(TEXT("这个房间没有能拿起来的摆件"));
+	}
+	const int32 Away = StudioActor->GetPropsAwayCount();
+	return FText::FromString(Away > 0
+		? FString::Printf(TEXT("摆件  %d 件，%d 件不在原位"), StudioActor->GetPropCount(), Away)
+		: FString::Printf(TEXT("摆件  %d 件，都在原位"), StudioActor->GetPropCount()));
 }
 
 FText AToyTouchScreen::DistanceText() const
@@ -746,8 +750,7 @@ FText AToyTouchScreen::ItemLabel(int32 Index) const
 	case EToyScreenAction::HideModel:     return FText::FromString(TEXT("收起模型"));
 	case EToyScreenAction::PrevPage:      return FText::FromString(TEXT("上页"));
 	case EToyScreenAction::NextPage:      return FText::FromString(TEXT("下页"));
-	case EToyScreenAction::SpawnCube:     return FText::FromString(TEXT("生成方块"));
-	case EToyScreenAction::ClearCubes:    return FText::FromString(TEXT("清空方块"));
+	case EToyScreenAction::ResetProps:    return FText::FromString(TEXT("摆件复位"));
 	case EToyScreenAction::ToggleExplode: return FText::FromString(StudioActor && StudioActor->IsModelExploded() ? TEXT("组装回去") : TEXT("爆炸拆开"));
 	case EToyScreenAction::ResetParts:    return FText::FromString(TEXT("零件复位"));
 	case EToyScreenAction::MoveFar:       return FText::FromString(TEXT("推远"));

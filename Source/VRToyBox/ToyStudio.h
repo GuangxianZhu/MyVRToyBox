@@ -5,7 +5,7 @@
 #include "ToyTouchScreen.h"
 #include "ToyStudio.generated.h"
 
-class AToyCube;
+class AToyProp;
 class AToyMenuPanel;
 class UChildActorComponent;
 class AToyExplodedModel;
@@ -40,10 +40,12 @@ class VRTOYBOX_API AToyStudio : public AActor
 public:
 	AToyStudio();
 
-	/** 在桌上 SpawnPoint 附近掉下一个随机颜色的方块。数量到上限时返回 false。 */
-	bool SpawnCube();
-	void ClearCubes();
-	int32 GetCubeCount() const;
+	/** 关卡里所有能拿起来的摆件（AToyProp）放回开局的位置。 */
+	void ResetProps();
+
+	/** 摆件总数、不在原位的件数（触屏状态栏）。 */
+	int32 GetPropCount() const;
+	int32 GetPropsAwayCount() const;
 
 	/** 触屏按钮的入口。 */
 	void HandleScreenAction(EToyScreenAction Action);
@@ -85,9 +87,6 @@ public:
 	 *  有自己的房间时只认自己的地板 / 地毯；套用别的房间（bBuildRoom = false）时，认 WalkArea 里、和站立点差不多高的朝上表面。 */
 	bool IsFloorHit(const FHitResult& Hit) const;
 
-	UPROPERTY(EditAnywhere, Category = "ToyBox")
-	int32 MaxCubes = 20;
-
 	/** 建自己的 6m 房间（地板、墙、天花板、地毯、置物架、补光和背光）。
 	 *  摆进现成的样板间（例如 ArchViz）时关掉：这些组件隐藏并且不再有碰撞，只留桌子、触屏、模型支架和桌子上方的主灯。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
@@ -108,9 +107,6 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<USceneComponent> Root;
-
-	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
-	TObjectPtr<USceneComponent> SpawnPoint;
 
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<USceneComponent> ScreenMount;
@@ -233,7 +229,8 @@ private:
 
 	EToyModelKind ModelKind = EToyModelKind::Motor;
 
-	TArray<TWeakObjectPtr<AToyCube>> Cubes;
+	/** 开局时收集的摆件（样板间生成脚本放进关卡的 AToyProp）。 */
+	TArray<TWeakObjectPtr<AToyProp>> Props;
 
 	TOptional<EToyModelKind> MissingKind;
 };
