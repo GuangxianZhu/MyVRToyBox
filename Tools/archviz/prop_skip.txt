@@ -48,3 +48,6 @@ AutoA_DiningRoom-DiningRoom-SideTable1-Basket1
 AutoA_LivingRoom-LadderShelf-Hedra1
 AutoH_SM_Candle_02
 AutoH_SM_Cup_3
+AutoHall_Hall-Hall_SM_Telephone
+AutoA_LivingRoom-LadderShelf-Vase4
+AutoH_SM_Bottle_6
