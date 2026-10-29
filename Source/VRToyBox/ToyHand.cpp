@@ -1003,17 +1003,25 @@ void AToyHand::Grab(AActor* Target)
 	const FTransform Hold = Grabbable->ComputeHoldTransform(Context);
 
 	Grabbable->OnGrabbed(this);
-	Target->AttachToComponent(GripPoint, FAttachmentTransformRules::KeepWorldTransform);
-	// 从模型上拿下来的零件单独投影，不再算在整个模型那一份阴影里
-	UToyLightGroupComponent::RefreshLightingGroup(Target);
-
-	SnapFrom = Target->GetRootComponent()->GetRelativeTransform();
-	SnapTo = Hold;
-	SnapTo.SetScale3D(SnapFrom.GetScale3D());
-	SnapAlpha = SnapTime > 0.f ? 0.f : 1.f;
-	if (SnapAlpha >= 1.f)
+	if (Grabbable->IsConstrained())
 	{
-		Target->GetRootComponent()->SetRelativeTransform(SnapTo);
+		// 柜门、抽屉：不挂到手上，TickHeld 每帧把捏合点交给它
+		SnapAlpha = 1.f;
+	}
+	else
+	{
+		Target->AttachToComponent(GripPoint, FAttachmentTransformRules::KeepWorldTransform);
+		// 从模型上拿下来的零件单独投影，不再算在整个模型那一份阴影里
+		UToyLightGroupComponent::RefreshLightingGroup(Target);
+
+		SnapFrom = Target->GetRootComponent()->GetRelativeTransform();
+		SnapTo = Hold;
+		SnapTo.SetScale3D(SnapFrom.GetScale3D());
+		SnapAlpha = SnapTime > 0.f ? 0.f : 1.f;
+		if (SnapAlpha >= 1.f)
+		{
+			Target->GetRootComponent()->SetRelativeTransform(SnapTo);
+		}
 	}
 
 	HeldActor = Target;
@@ -1046,8 +1054,12 @@ void AToyHand::ReleaseHeld(bool bThrow)
 	{
 		return;
 	}
-	Target->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-	UToyLightGroupComponent::RefreshLightingGroup(Target);
+	IToyGrabbable* Released = AsGrabbable(Target);
+	if (!Released || !Released->IsConstrained())
+	{
+		Target->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		UToyLightGroupComponent::RefreshLightingGroup(Target);
+	}
 	bSecurePending = false;
 	const FVector Velocity = bThrow ? GetThrowVelocity() : FVector::ZeroVector;
 	Feedback(EToyFeedback::Release, GetPinchLocation(), Target, static_cast<float>(Velocity.Size()));
@@ -1128,6 +1140,11 @@ void AToyHand::TickInfo()
 void AToyHand::TickHeld(float DeltaSeconds)
 {
 	AActor* Target = HeldActor.Get();
+	if (IToyGrabbable* Constrained = AsGrabbable(Target); Constrained && Constrained->IsConstrained())
+	{
+		Constrained->UpdateConstrainedGrab(GetPinchLocation());
+		return;
+	}
 	if (!Target || SnapAlpha >= 1.f)
 	{
 		return;

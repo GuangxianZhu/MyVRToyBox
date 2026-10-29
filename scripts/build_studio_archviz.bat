@@ -4,7 +4,7 @@ setlocal EnableExtensions
 rem ArchViz 样板间工作室：把 Epic 的 ArchViz Interior 示例（本机 Content\ArchViz，不进仓库）改成 L_StudioArchViz，
 rem 餐桌换成我们的桌子和触屏，再用 CPU Lightmass 烘焙光照（GPU Lightmass 会崩）。烘焙要几十分钟
 rem 生成之后 一键启动.bat 会自动进这个样板间；想回原来的方块房间，先 set TOY_CLASSIC=1
-rem 装了 Home Interior（Content\Home_Interior）的话，它接在样板间前门外（子关卡 L_StudioArchViz_Home），走廊走过去就到，两边一起烘焙
+rem 装了 Home Interior（Content\Home_Interior）的话，它接在样板间前门外（子关卡 L_StudioArchViz_Home），穿过门厅走过去就到，两边一起烘焙
 cd /d "%~dp0.."
 set "PROJECT=%CD%\VRToyBox.uproject"
 
@@ -37,6 +37,8 @@ del /q "%CD%\Content\Home_Interior\Maps\L_StudioArchViz_Home.umap" "%CD%\Content
 del /q "%CD%\Content\Home_Interior\Meshes\SM_Scene_ToyDoor.uasset" 2>nul
 del /q "%CD%\Content\ArchViz\BuildingMeshes\SM_Wall_Front_ToyDoor.uasset" 2>nul
 del /q "%CD%\Content\Home_Interior\Maps\L_HomeStudio.umap" "%CD%\Content\Home_Interior\Maps\L_HomeStudio_BuiltData.uasset" 2>nul
+rem 门厅的地板、墙、天花板网格是每次重新生成的
+if exist "%CD%\Content\ArchViz\ToyHall" rd /s /q "%CD%\Content\ArchViz\ToyHall"
 rem -script= 遇到带空格的路径（Unreal Projects）会被拆成两段，所以只传一行不含空格的 Python，脚本路径走环境变量
 set "ARCHVIZ_SCRIPT=%CD%\Tools\archviz\build_studio_archviz.py"
 set "ARCHVIZ_STEP=build"
@@ -49,7 +51,7 @@ if not exist "%CD%\Content\Home_Interior\Maps\Home_Interior.umap" (
   echo [样板间] 没有 Content\Home_Interior，前门关着，不接别的房子
   goto :bake
 )
-echo [样板间] 把 Home Interior 接到前门外（子关卡 L_StudioArchViz_Home + 走廊）...
+echo [样板间] 把 Home Interior 接到前门外（子关卡 L_StudioArchViz_Home + 门厅）...
 set "ARCHVIZ_STEP=home"
 "%UE_ROOT%\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%PROJECT%" -run=pythonscript -script=__import__('runpy').run_path(__import__('os').environ['ARCHVIZ_SCRIPT']) -unattended -nosplash -nullrhi
 if errorlevel 1 goto :fail

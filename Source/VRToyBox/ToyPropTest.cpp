@@ -35,7 +35,15 @@ namespace ToyPropTestLocal
 			Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 			if (AToyPropTest* Test = World->SpawnActor<AToyPropTest>(Params))
 			{
-				Test->Start(Args.ContainsByPredicate([](const FString& Arg) { return Arg.Equals(TEXT("quit"), ESearchCase::IgnoreCase); }));
+				FString Filter;
+				for (const FString& Arg : Args)
+				{
+					if (!Arg.Equals(TEXT("quit"), ESearchCase::IgnoreCase))
+					{
+						Filter += (Filter.IsEmpty() ? TEXT("") : TEXT(",")) + Arg;
+					}
+				}
+				Test->Start(Args.ContainsByPredicate([](const FString& Arg) { return Arg.Equals(TEXT("quit"), ESearchCase::IgnoreCase); }), Filter);
 			}
 		}));
 
@@ -54,9 +62,10 @@ AToyPropTest::AToyPropTest()
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>(TEXT("Root")));
 }
 
-void AToyPropTest::Start(bool bInQuitWhenDone)
+void AToyPropTest::Start(bool bInQuitWhenDone, const FString& InFilter)
 {
 	bQuitWhenDone = bInQuitWhenDone;
+	InFilter.ParseIntoArray(Filters, TEXT(","), true);
 	OutDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir() / TEXT("ArchVizCheck"));
 	IFileManager::Get().MakeDirectory(*OutDir, true);
 	UE_LOG(LogTemp, Log, TEXT("ToyBox: PropTest 开始"));
@@ -131,10 +140,19 @@ FVector AToyPropTest::Center(const AToyProp* Prop) const
 	return Prop->Mesh->Bounds.Origin;
 }
 
-void AToyPropTest::Fail(const FString& What)
+void AToyPropTest::Fail(const FString& What, const AToyProp* Prop)
 {
 	++Failures;
 	UE_LOG(LogTemp, Warning, TEXT("ToyBox: PropTest 问题：%s"), *What);
+	if (Prop)
+	{
+		FailureLines.Add(FString::Printf(TEXT("%s\t%s"), *Prop->GetActorNameOrLabel(), *What));
+	}
+}
+
+FString AToyPropTest::Label(const AToyProp* Prop) const
+{
+	return Prop ? FString::Printf(TEXT("%s〔%s〕"), *Prop->DisplayName, *Prop->GetActorNameOrLabel()) : FString(TEXT("?"));
 }
 
 void AToyPropTest::Shot(const FString& Name)
@@ -170,7 +188,11 @@ void AToyPropTest::Plan()
 	P->GetRightHand()->AddTickPrerequisiteActor(this);
 	for (TActorIterator<AToyProp> It(GetWorld()); It; ++It)
 	{
-		Props.Add(*It);
+		const FString Name = It->GetActorNameOrLabel();
+		if (Filters.Num() == 0 || Filters.ContainsByPredicate([&Name](const FString& F) { return Name.Contains(F); }))
+		{
+			Props.Add(*It);
+		}
 	}
 	// 按生成脚本起的标签排（Prop01_…），截图编号和 README 的表对得上
 	auto SortKey = [](const TWeakObjectPtr<AToyProp>& Prop)
@@ -223,7 +245,7 @@ void AToyPropTest::Plan()
 			Still->Add(Moved(I));
 			if ((*Still)[I] > StillTolerance)
 			{
-				Fail(FString::Printf(TEXT("%s 开局 2 秒就离开原位 %.2fcm"), *Props[I]->DisplayName, (*Still)[I]));
+				Fail(FString::Printf(TEXT("%s 开局 2 秒就离开原位 %.2fcm"), *Label(I), (*Still)[I]), Props[I].Get());
 			}
 		}
 		for (const TWeakObjectPtr<AToyProp>& Prop : Props)
@@ -237,10 +259,10 @@ void AToyPropTest::Plan()
 		{
 			Woken->Add(Moved(I));
 			const float Turn = FMath::RadiansToDegrees(Props[I]->GetActorQuat().AngularDistance(Homes[I].GetRotation()));
-			UE_LOG(LogTemp, Log, TEXT("ToyBox: PropTest %s 开局 %.2fcm，叫醒 2 秒后 %.2fcm / %.1f°"), *Props[I]->DisplayName, (*Still)[I], (*Woken)[I], Turn);
+			UE_LOG(LogTemp, Log, TEXT("ToyBox: PropTest %s 开局 %.2fcm，叫醒 2 秒后 %.2fcm / %.1f°"), *Label(I), (*Still)[I], (*Woken)[I], Turn);
 			if ((*Woken)[I] > StillTolerance || Turn > 2.f)
 			{
-				Fail(FString::Printf(TEXT("%s 叫醒后自己动了 %.2fcm / %.1f°（碰撞和旁边的东西顶着，或者底下没有碰撞）"), *Props[I]->DisplayName, (*Woken)[I], Turn));
+				Fail(FString::Printf(TEXT("%s 叫醒后自己动了 %.2fcm / %.1f°（碰撞和旁边的东西顶着，或者底下没有碰撞）"), *Label(I), (*Woken)[I], Turn), Props[I].Get());
 			}
 		}
 		Studio->ResetProps();
@@ -260,43 +282,55 @@ void AToyPropTest::Plan()
 		PlanProp(I);
 	}
 
-	// ---- 3. 从 1 米高丢到站立点身后的空地上 ----
-	TSharedRef<TArray<float>> FloorZ = MakeShared<TArray<float>>();
-	Then(0.5f, [this]()
+	// ---- 3. 从 1 米高丢到站立点身后的空地上：每批 30 件（每排 10 件、间隔 30cm、3 排），落定检查完放回原位再丢下一批
+	//      （一排 20 多件会排到墙外面去；排到第 6 排会落到沙发上）----
+	constexpr int32 DropBatch = 30;
+	for (int32 First = 0; First < Props.Num(); First += DropBatch)
 	{
-		const FTransform Frame = Studio->GetActorTransform();
-		for (int32 I = 0; I < Props.Num(); ++I)
+		const int32 Last = FMath::Min(First + DropBatch, Props.Num());
+		Then(0.5f, [this, First, Last]()
 		{
-			AToyProp* Prop = Props[I].Get();
-			// 每排 10 件、间隔 30cm 往身后排（一排 20 多件会排到墙外面去；两套房子 40 件时排 4 排，第 6 排会落到沙发上）
-			const float Y = (I % 10 - 4.5f) * 30.f;
-			const float X = -100.f - (I / 10) * 30.f;
-			const FVector Drop = Frame.TransformPosition(FVector(X, Y, 100.f));
-			Prop->SetActorLocation(Drop + (Prop->GetActorLocation() - Center(Prop)), false, nullptr, ETeleportType::ResetPhysics);
-			Prop->Mesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
-			Prop->Mesh->WakeRigidBody();
-		}
-	});
-	Then(3.f, [this, FloorZ]()
-	{
-		const float Floor = Studio->GetActorLocation().Z;
-		for (int32 I = 0; I < Props.Num(); ++I)
-		{
-			const AToyProp* Prop = Props[I].Get();
-			// 摆件下面打到的东西离地面多高（地毯约 1.7cm）；摆件中心要在它上面
-			const float Bottom = SupportZ(Prop) - Floor;
-			const float Above = static_cast<float>(Prop->Mesh->Bounds.Origin.Z) - Floor;
-			FloorZ->Add(Bottom);
-			UE_LOG(LogTemp, Log, TEXT("ToyBox: PropTest %s 丢到地上：落在离地 %.1fcm 的面上，中心离地 %.1fcm"), *Prop->DisplayName, Bottom, Above);
-			if (Bottom < -0.5f || Bottom > 3.f || Above < 0.f || Above > 30.f)
+			const FTransform Frame = Studio->GetActorTransform();
+			for (int32 I = First; I < Last; ++I)
 			{
-				Fail(FString::Printf(TEXT("%s 丢到地上后落在离地 %.1fcm 的面上、中心离地 %.1fcm（穿过地板或卡在半空）"), *Prop->DisplayName, Bottom, Above));
+				AToyProp* Prop = Props[I].Get();
+				const int32 K = I - First;
+				const float Y = (K % 10 - 4.5f) * 30.f;
+				const float X = -100.f - (K / 10) * 30.f;
+				const FVector Drop = Frame.TransformPosition(FVector(X, Y, 100.f));
+				Prop->SetActorLocation(Drop + (Prop->GetActorLocation() - Center(Prop)), false, nullptr, ETeleportType::ResetPhysics);
+				Prop->Mesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
+				Prop->Mesh->WakeRigidBody();
 			}
-			Rows[I] += FString::Printf(TEXT(",%.1f"), Bottom);
-		}
-		AimAt(Studio->GetActorTransform().TransformPosition(FVector(-100.f, 0.f, 10.f)), 190.f, 120.f);
-	});
-	Then(0.6f, [this]() { Shot(TEXT("props_floor")); });
+		});
+		Then(3.f, [this, First, Last]()
+		{
+			const float Floor = Studio->GetActorLocation().Z;
+			for (int32 I = First; I < Last; ++I)
+			{
+				AToyProp* Prop = Props[I].Get();
+				// 摆件下面打到的东西离地面多高（地毯约 1.7cm）；摆件中心要在它上面
+				const float Bottom = SupportZ(Prop) - Floor;
+				const float Above = static_cast<float>(Prop->Mesh->Bounds.Origin.Z) - Floor;
+				UE_LOG(LogTemp, Log, TEXT("ToyBox: PropTest %s 丢到地上：落在离地 %.1fcm 的面上，中心离地 %.1fcm"), *Label(Prop), Bottom, Above);
+				if (Bottom < -0.5f || Bottom > 3.f || Above < 0.f || Above > 30.f)
+				{
+					Fail(FString::Printf(TEXT("%s 丢到地上后落在离地 %.1fcm 的面上、中心离地 %.1fcm（穿过地板或卡在半空）"), *Label(Prop), Bottom, Above), Prop);
+				}
+				Rows[I] += FString::Printf(TEXT(",%.1f"), Bottom);
+			}
+			AimAt(Studio->GetActorTransform().TransformPosition(FVector(-130.f, 0.f, 10.f)), 190.f, 120.f);
+		});
+		Then(0.6f, [this, First]() { Shot(FString::Printf(TEXT("props_floor_%02d"), First / DropBatch + 1)); });
+		Then(0.f, [this, First, Last]()
+		{
+			for (int32 I = First; I < Last; ++I)
+			{
+				Props[I]->ResetToHome();
+			}
+		});
+	}
+
 
 	// ---- 4. 触屏「摆件复位」 ----
 	Then(0.5f, AimScreen);
@@ -316,7 +350,7 @@ void AToyPropTest::Plan()
 			Rows[I] += bAway ? TEXT(",away") : TEXT(",ok");
 			if (bAway)
 			{
-				Fail(FString::Printf(TEXT("%s 摆件复位后不在原位"), *Props[I]->DisplayName));
+				Fail(FString::Printf(TEXT("%s 摆件复位后不在原位"), *Label(I)), Props[I].Get());
 			}
 		}
 		UE_LOG(LogTemp, Log, TEXT("ToyBox: PropTest 摆件复位：%d 件里 %d 件不在原位"), Props.Num(), Away);
@@ -371,7 +405,7 @@ void AToyPropTest::PlanProp(int32 I)
 		Rows[I] += bHover ? TEXT(",1") : TEXT(",0");
 		if (!bHover)
 		{
-			Fail(FString::Printf(TEXT("%s 手伸过去没有高亮"), *Props[I]->DisplayName));
+			Fail(FString::Printf(TEXT("%s 手伸过去没有高亮"), *Label(I)), Props[I].Get());
 		}
 		Shot(FString::Printf(TEXT("props_%02d_hover"), I + 1));
 	});
@@ -385,7 +419,7 @@ void AToyPropTest::PlanProp(int32 I)
 		*Grabbed = Prop->GetActorLocation();
 		if (!bHeld)
 		{
-			Fail(FString::Printf(TEXT("%s 没抓到（手里是 %s）"), *Prop->DisplayName, *GetNameSafe(Hand->GetHeldActor())));
+			Fail(FString::Printf(TEXT("%s 没抓到（手里是 %s）"), *Label(Prop), *GetNameSafe(Hand->GetHeldActor())), Prop);
 			return;
 		}
 		Hand->SetActorLocation(Hand->GetActorLocation() + FVector(0.f, 0.f, LiftCm));
@@ -397,7 +431,7 @@ void AToyPropTest::PlanProp(int32 I)
 		Rows[I] += FString::Printf(TEXT(",%.1f"), Lift);
 		if (Pawn->GetRightHand()->GetHeldActor() == Prop && FMath::Abs(Lift - LiftCm) > 2.f)
 		{
-			Fail(FString::Printf(TEXT("%s 手提了 %.0fcm，摆件只跟了 %.1fcm"), *Prop->DisplayName, LiftCm, Lift));
+			Fail(FString::Printf(TEXT("%s 手提了 %.0fcm，摆件只跟了 %.1fcm"), *Label(Prop), LiftCm, Lift), Prop);
 		}
 		const float Size = static_cast<float>(Prop->Mesh->Bounds.BoxExtent.GetMax()) * 2.f;
 		AimAt(Center(Prop), 50.f + Size * 1.5f, 15.f);
@@ -421,7 +455,7 @@ void AToyPropTest::PlanProp(int32 I)
 			Prop->Mesh->GetPhysicsLinearVelocity().Size());
 		if (FMath::Abs(Dz) > LandTolerance)
 		{
-			Fail(FString::Printf(TEXT("%s 松手后没落回原来的台面（高差 %.1fcm）"), *Prop->DisplayName, Dz));
+			Fail(FString::Printf(TEXT("%s 松手后没落回原来的台面（高差 %.1fcm）"), *Label(Prop), Dz), Prop);
 		}
 		Studio->ResetProps();
 	});
@@ -432,6 +466,7 @@ void AToyPropTest::Finish()
 	const FString Path = OutDir / TEXT("props_summary.csv");
 	const FString Header = TEXT("index,name,material,mass_kg,size_cm,still_cm,woken_cm,hover,grabbed,lift_cm,landed_support_dz_cm,floor_support_cm,reset");
 	FFileHelper::SaveStringToFile(Header + TEXT("\n") + FString::Join(Rows, TEXT("\n")) + TEXT("\n"), *Path, FFileHelper::EEncodingOptions::ForceUTF8);
+	FFileHelper::SaveStringToFile(FString::Join(FailureLines, TEXT("\n")) + TEXT("\n"), *(OutDir / TEXT("props_failures.tsv")), FFileHelper::EEncodingOptions::ForceUTF8);
 	UE_LOG(LogTemp, Log, TEXT("ToyBox: PropTest 完成：%d 件，问题 %d 个，结果 %s"), Props.Num(), Failures, *Path);
 	if (AToyBoxPawn* P = Pawn.Get())
 	{

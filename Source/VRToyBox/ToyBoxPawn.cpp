@@ -91,6 +91,17 @@ namespace
 			}
 		}));
 
+	FAutoConsoleCommandWithWorldAndArgs HideHandsCommand(TEXT("toy.HideHands"),
+		TEXT("截图用：toy.HideHands 1 把两只手藏起来（桌面模式右手跟着鼠标，会挡在画面中间），0 = 显示"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+		{
+			const bool bHide = Args.Num() == 0 || FCString::Atoi(*Args[0]) != 0;
+			for (TActorIterator<AToyHand> It(World); It; ++It)
+			{
+				It->SetActorHiddenInGame(bHide);
+			}
+		}));
+
 	FAutoConsoleCommandWithWorldAndArgs AfterCommand(TEXT("toy.After"),
 		TEXT("过几秒再执行一条控制台命令：toy.After <秒> <命令...>。-ExecCmds 里的命令都在开局一起执行，测帧率要等着色器、动画稳定再测"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)

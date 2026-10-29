@@ -22,7 +22,8 @@ GPU Lightmass 在这台机器上会崩，所以烘焙走 CPU Lightmass。
 ARCHVIZ_STEP=home（在 bake 之前跑）：Fab 上 Olga Chekunova 的 Home Interior（本机 Content/Home_Interior，同样不进仓库）接到样板间前门外，
 走过去就到，不换关卡：
   1. 复制 Home_Interior → L_StudioArchViz_Home，当成 L_StudioArchViz 的子关卡（一直加载），整套房子平移到前门外：
-     Home 入户走廊尽头对着样板间前门，中间 CORRIDOR_LENGTH 长的一段走廊（引擎方块拼的，材质用 Home 的墙面 / 地板）。
+     Home 入户走廊尽头对着样板间前门，中间是一间 HALL_LENGTH × HALL_WIDTH 的门厅（build_hall：层高和样板间一样，地板、墙、天花板用
+     Geometry Script 生成、样板间的材质；踢脚线、吸顶灯、门套、餐边柜和挂画、绿植、皮墩、地毯，侧墙上一扇假的不锈钢电梯门）。
      不用转：Home 的窗户朝 +X、背对样板间；样板间的窗户朝 -X / -Y，两边的窗户互相看不到对方的外墙
   2. 只留样板间那一套天（太阳、天空球、高度雾）：Home 的太阳、天光、天空球、大气雾、窗外背景板（从样板间餐厅窗户斜着看得到）都删掉，
      窗外看到的是样板间的城市。Home 原来靠天光从窗户照进来，改成每扇窗里侧两块静态面光源（和样板间窗户的补光一个做法）
@@ -30,8 +31,11 @@ ARCHVIZ_STEP=home（在 bake 之前跑）：Fab 上 Olga Chekunova 的 Home Inte
      亮度乘 2^(差的档数)，后期体积只罩住 Home，曝光和样板间一样固定，色温、泛光还是 Home 自己的。这样触屏 / 信息牌的亮度两边一样
   4. Home 入户走廊尽头的墙上开门洞（复制一份 SM_Scene，用 Geometry Script 减掉一个门洞大小的盒子），装上样板间前门的门框；
      样板间前门的门板、把手和盖住门洞的阻挡体积删掉，门一直开着
-  5. HOME_PROPS 表里的 20 件换成 AToyProp（标签 Home01_…），墙和家具改三角面碰撞；ToyStudio 的 ExtraWalkAreas 加上走廊和 Home，
-     传送、摇杆走路都能过去；摆件复位管两边一共 40 件
+  5. HOME_PROPS 表里的 20 件换成 AToyProp（标签 Home01_…），墙和家具改三角面碰撞；ToyStudio 的 ExtraWalkAreas 加上门厅和 Home，
+     传送、摇杆走路都能过去
+  门框（SM_DoorFrame_Outer / Inner）自带的简单碰撞是盖住整个门洞的盒子，门开着以后会把人挡在门口：改成三角面碰撞。
+表里没有的小东西（样板间、Home、门厅三处）由 auto_props 按大小、够不够得着、底下有没有台面自动挑出来，也换成 AToyProp
+（标签 AutoA_ / AutoH_ / AutoHall_…，叠在上面的挂上去一起走）；toy.PropTest 测出来不稳的放进 ARCHVIZ_PROP_SKIP / AUTO_PROP_SKIP。
 之后 bake 一步把两个关卡一起烘焙（子关卡一直加载，Lightmass 一次算完）。
 """
 import math
@@ -59,6 +63,8 @@ EXPOSURE_BIAS = float(os.environ.get('ARCHVIZ_EXPOSURE', '-1.5'))
 # 触屏、信息牌这些不受光照的界面跟着曝光走：样板间是固定曝光再减 1.5 档，比自己房间的自动曝光暗，整体再提亮这么多倍
 # 7 是量出来的：站位看触屏，屏幕区域平均亮度 34.8（L_Studio 里 33.7），4 只有 23.1。头显里还嫌暗 / 亮，游戏里 toy.UiBrightness <倍数> 现场试
 UI_BRIGHTNESS = float(os.environ.get('ARCHVIZ_UI_BRIGHTNESS', '7'))
+# 太阳（固定光）的亮度倍数：示例原来的太阳照进来的那几块地板、窗台过曝
+SUN_SCALE = float(os.environ.get('ARCHVIZ_SUN_SCALE', '0.55'))
 
 # 能拿起来的摆件（AToyProp）：(文件夹, 标签, 网格, 工作室坐标 (X, Y, 底面高) 约数, 名字, 材料, 质量 kg, 碰撞, 挂在上面一起走的 Actor)
 # 挑的是站在房间里伸手够得到、不超过 35cm、放在台面 / 架子上的：左手边餐边柜、正前方矮柜、边几、茶几、电视柜、梯架。
@@ -98,7 +104,7 @@ CONCAVE_SUPPORTS = ('SM_LadderShelf', 'SM_Basket')
 HOME_SOURCE = '/Game/Home_Interior/Maps/Home_Interior'
 HOME_WING = '/Game/Home_Interior/Maps/L_StudioArchViz_Home'
 # Home 原来的打光比样板间的曝光换算出来的还亮一些（截图对比亮 1.5 档左右）：灯再整体调这么多档（2 的次方）
-HOME_BRIGHTNESS_STOPS = float(os.environ.get('HOME_BRIGHTNESS_STOPS', '-1.5'))
+HOME_BRIGHTNESS_STOPS = float(os.environ.get('HOME_BRIGHTNESS_STOPS', '-2.3'))
 # Home Interior 的入户走廊：在客厅西墙（世界 X ≈ -1607）开的 93cm 门洞，往西 1.2m 到尽头（量 SM_Scene 的碰撞盒得来）
 HOME_CORRIDOR_Y = 1681.5
 HOME_CORRIDOR_END_X = -1722.0      # 尽头墙面，生成时沿走廊打线再量一次
@@ -106,15 +112,15 @@ HOME_FLOOR_Z = 10.0
 # Home 的客厅中间（原来单独一张图时的站立点）和能传送的范围（以它为原点）
 HOME_ORIGIN = (-1250.0, 1700.0)
 HOME_WALK = ((-480.0, -315.0), (480.0, 530.0))
-# 两个门洞之间的走廊（厘米）：长度 = 样板间前墙外皮到 Home 外墙皮
-CORRIDOR_LENGTH = float(os.environ.get('ARCHVIZ_CORRIDOR', '200'))
-CORRIDOR_WIDTH = 110.0
-CORRIDOR_HEIGHT = 250.0
-CORRIDOR_FLOOR_MATERIAL = '/Game/Home_Interior/Materials/Wood/Mi_Wood_Laminate_01.Mi_Wood_Laminate_01'
-CORRIDOR_WALL_MATERIAL = '/Game/Home_Interior/Materials/Plaster/Mi_Plaster_03.Mi_Plaster_03'
-CORRIDOR_LIGHT_CD = float(os.environ.get('ARCHVIZ_CORRIDOR_LIGHT', '100'))
+# 两个门洞之间的门厅（厘米）：长度 = 样板间前墙外皮到 Home 外墙皮，宽度差不多一个房间，层高和样板间一样（生成时往上打线量）
+HALL_LENGTH = float(os.environ.get('ARCHVIZ_HALL_LENGTH', '500'))
+HALL_WIDTH = float(os.environ.get('ARCHVIZ_HALL_WIDTH', '350'))
+# 三盏吸顶灯（静态面光源，烘焙进光照贴图），每盏的亮度
+HALL_LIGHT_CD = float(os.environ.get('ARCHVIZ_HALL_LIGHT', '450'))
+# 门厅的网格（地板、墙、天花板）是生成的，放在本机素材目录里（不进仓库）
+HALL_MESH_DIR = '/Game/ArchViz/ToyHall'
 # Home 窗户里侧的补光（每扇窗两块）、Home 的灯乘的倍数（0 = 按两边曝光差自动算）、Home 后期的曝光补偿
-HOME_WINDOW_CD = float(os.environ.get('HOME_WINDOW_LIGHT', '850'))
+HOME_WINDOW_CD = float(os.environ.get('HOME_WINDOW_LIGHT', '500'))
 HOME_LIGHT_SCALE = float(os.environ.get('HOME_LIGHT_SCALE', '0'))
 HOME_EXPOSURE_BIAS = float(os.environ.get('HOME_EXPOSURE', os.environ.get('ARCHVIZ_EXPOSURE', '-1.5')))
 # ArchViz 前门的门框（里外两层），照搬到 Home 那头的门洞；门板、把手不要
@@ -152,6 +158,17 @@ HOME_PROPS = (
 )
 # 餐巾薄得只有几毫米，杯子、刀叉压在上面会被它的三角面顶歪：餐巾不要碰撞
 NO_COLLISION_MESHES = ('SM_Napkin',)
+# 墙上的开关、插座：凸出墙面一两厘米，摇杆走路的胶囊体贴着门边走会被它们卡住（门口的开关就在门框旁边）。只对 Pawn 不挡
+WALL_FIXTURES = ('switch', 'socket', 'outlet', 'thermostat')
+
+
+def pawn_ignore_fixtures():
+    n = 0
+    for a in actors_sub.get_all_level_actors():
+        if isinstance(a, unreal.StaticMeshActor) and any(k in mesh_name(a).lower() for k in WALL_FIXTURES):
+            a.static_mesh_component.set_collision_response_to_channel(unreal.CollisionChannel.ECC_PAWN, unreal.CollisionResponseType.ECR_IGNORE)
+            n += 1
+    log(f'墙上的开关 / 插座 {n} 个不挡走路')
 
 actors_sub = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 level_sub = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
@@ -286,6 +303,7 @@ def build():
     log(f'站立点（工作室原点）{fmt(origin)}，地面 SM_Floor 有碰撞，Z = {floor_hit.z:.2f}')
 
     # ---- 3. 删餐桌一套 + 和桌子重叠的东西 ----
+    pawn_ignore_fixtures()
     for actor in actors_sub.get_all_level_actors():
         if folder(actor).startswith(DELETE_FOLDERS) or mesh_name(actor).startswith(DELETE_MESH_PREFIXES):
             delete(actor, '餐桌一套')
@@ -369,7 +387,13 @@ def build():
     studio.set_editor_property('ui_brightness_scale', UI_BRIGHTNESS)
     log(f'放置 AToyStudio 于 {fmt(origin)} yaw {yaw:.0f}，bBuildRoom = False')
 
-    # ---- 8. 曝光 ----
+    # ---- 8. 曝光、太阳 ----
+    for sun in actors_sub.get_all_level_actors():
+        if isinstance(sun, unreal.DirectionalLight) and SUN_SCALE != 1.0:
+            c = sun.get_component_by_class(unreal.LightComponent)
+            old = c.get_editor_property('intensity')
+            c.set_editor_property('intensity', old * SUN_SCALE)
+            log(f'太阳 {sun.get_actor_label()} 亮度 {old:.1f} → {old * SUN_SCALE:.1f}')
     for volume in actors_sub.get_all_level_actors():
         if isinstance(volume, unreal.PostProcessVolume):
             pp = volume.settings
@@ -381,6 +405,8 @@ def build():
 
     # ---- 9. 摆件 ----
     make_props(PROPS, to_local)
+    add_archviz_decor(world, to_world)
+    auto_props(world, '样板间', 'AutoA')
 
     level_sub.save_current_level()
     log(f'已保存 {TARGET_MAP}')
@@ -388,6 +414,8 @@ def build():
 
 def build_wing():
     """Home Interior 接到样板间前门外：复制成子关卡 L_StudioArchViz_Home，整套房子平移到前门外，中间一段走廊，一起烘焙。"""
+    # 门厅里能开合的柜子（Modern House 包）先从它的 Demo 关卡里抄下来
+    kits = read_furniture_kits()
     # ---- 1. 样板间这边：前门的位置、门框那一套 ----
     level_sub.load_level(TARGET_MAP)
     studio = find_one(lambda a: isinstance(a, unreal.ToyStudio), 'L_StudioArchViz 里的 ToyStudio（先跑一遍不带 ARCHVIZ_STEP 的生成）')
@@ -412,6 +440,18 @@ def build_wing():
             c = a.static_mesh_component
             frame_parts.append((a.get_actor_label(), c.static_mesh, [c.get_material(i) for i in range(c.get_num_materials())],
                                 a.get_actor_transform().make_relative(arch_anchor)))
+    # 门框（尤其外圈的门套 SM_DoorFrame_Outer）自带的简单碰撞是一整个盒子，把门洞整个堵住了：原来门一直关着看不出来，
+    # 门开了以后摇杆走路的胶囊体在门口被它挡住、传送的落点也站不下。改成用三角面碰撞，门洞才是空的
+    for sm in {part[1].get_path_name(): part[1] for part in frame_parts}.values():
+        if unreal.ToyArchVizTools.use_complex_as_simple(sm):
+            unreal.EditorAssetLibrary.save_loaded_asset(sm, False)
+            log(f'{sm.get_name()} 的简单碰撞是盖住整个门洞的盒子 → 改成三角面碰撞')
+    # 门厅那面的门套：外圈门套相对"墙里皮、门洞中心、朝屋里"的变换，照搬到门厅一侧
+    face_anchor = unreal.Transform(unreal.Vector(wall_lo.x, door_y, floor_z), unreal.Rotator(roll=0.0, pitch=0.0, yaw=180.0), unreal.Vector(1, 1, 1))
+    casing_parts = [(a.get_actor_label(), a.static_mesh_component.static_mesh,
+                     [a.static_mesh_component.get_material(i) for i in range(a.static_mesh_component.get_num_materials())],
+                     a.get_actor_transform().make_relative(face_anchor))
+                    for a in actors_sub.get_all_level_actors() if folder(a) == 'FrontDoor' and mesh_name(a) == 'SM_DoorFrame_Outer']
     log(f'样板间前门：门洞 {hole_width:.0f}×{hole_height:.0f}cm，中心 Y {door_y:.1f}，墙外皮 X {outer_x:.1f}，地面 Z {floor_z:.2f}，'
         f'门框 {len(frame_parts)} 件；样板间曝光 EV {arch_ev:.1f}，补偿 {EXPOSURE_BIAS:+.1f}')
 
@@ -424,8 +464,8 @@ def build_wing():
     home_floor = floor_hit.z if floor_hit else HOME_FLOOR_Z
     _, end_hit = trace_first(world, unreal.Vector(-1650.0, HOME_CORRIDOR_Y, 120.0), unreal.Vector(-1900.0, HOME_CORRIDOR_Y, 120.0), lambda a: True)
     end_x = end_hit.x if end_hit else HOME_CORRIDOR_END_X
-    # 平移量：Home 入户走廊尽头的外墙皮离样板间前门外墙皮 CORRIDOR_LENGTH，门洞中心对齐，地面对齐（不转：Home 的窗户朝 +X，背对样板间）
-    shift = unreal.Vector(outer_x + CORRIDOR_LENGTH - scene_lo.x, door_y - HOME_CORRIDOR_Y, floor_z - home_floor)
+    # 平移量：Home 入户走廊尽头的外墙皮离样板间前门外墙皮 HALL_LENGTH，门洞中心对齐，地面对齐（不转：Home 的窗户朝 +X，背对样板间）
+    shift = unreal.Vector(outer_x + HALL_LENGTH - scene_lo.x, door_y - HOME_CORRIDOR_Y, floor_z - home_floor)
     pp_actor = find_one(lambda a: isinstance(a, unreal.PostProcessVolume), 'Home Interior 的后期体积')
     home_pp = pp_actor.settings
     home_ev = home_pp.get_editor_property('auto_exposure_max_brightness') - home_pp.get_editor_property('auto_exposure_bias')
@@ -448,6 +488,7 @@ def build_wing():
             delete(actor, '窗外照背景板的面光源')
         elif mesh_name(actor) in NO_COLLISION_MESHES:
             actor.static_mesh_component.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
+    pawn_ignore_fixtures()
 
     # ---- 4. 灯：全部改成静态（烘焙进光照贴图，运行时不花钱，也不占固定光的 4 个阴影通道），亮度换算到样板间的曝光 ----
     lights = [a for a in actors_sub.get_all_level_actors() if isinstance(a, unreal.Light)]
@@ -505,6 +546,7 @@ def build_wing():
                 unreal.EditorAssetLibrary.save_loaded_asset(sm, False)
                 log(f'{sm.get_name()} 是摆件的网格，碰撞改回凸包')
     make_props(HOME_PROPS, lambda p: (p.x, p.y), with_folder=False, fix_supports=False, label_prefix='Home')
+    auto_props(world, 'Home Interior', 'AutoH', floor_z=home_floor)
 
     # ---- 6. 入户走廊尽头的墙上开门洞：复制一份 SM_Scene，减掉一个门洞大小的盒子 ----
     cut_mesh = cut_door(scene.static_mesh_component.static_mesh, scene.get_actor_transform(),
@@ -544,8 +586,9 @@ def build_wing():
             actor.set_actor_location(actor.get_actor_location() + shift, False, True)
             moved += 1
     log(f'平移了 {moved} 个 Actor')
-    corridor_mid = outer_x + CORRIDOR_LENGTH * 0.5
-    fit_box_x(pp_actor, corridor_mid, None)
+    # Home 的后期从 Home 的门开始（门厅算样板间那边的风格）
+    hall_end = outer_x + HALL_LENGTH
+    fit_box_x(pp_actor, hall_end, None)
     importance = find_one(lambda a: isinstance(a, unreal.LightmassImportanceVolume), 'Home Interior 的 Lightmass 重要体积')
     fit_box_x(importance, outer_x - 30.0, None)
     unreal.EditorLoadingAndSavingUtils.save_dirty_packages(True, True)
@@ -571,13 +614,25 @@ def build_wing():
         wall.static_mesh_component.static_mesh, wall.get_actor_transform(),
         unreal.Vector(wall_lo.x - 3.0, door_y - hole_width * 0.5, floor_z + 0.05),
         unreal.Vector(outer_x + 10.0, door_y + hole_width * 0.5, floor_z + hole_height)))
-    # 走廊这些新东西放在样板间（persistent）里，所以子关卡最后再挂
-    build_corridor(outer_x, outer_x + CORRIDOR_LENGTH, door_y, floor_z)
+    # 门厅这些新东西放在样板间（persistent）里，所以子关卡最后再挂
+    hall = build_hall(world, outer_x, outer_x + HALL_LENGTH, door_y, floor_z, hole_width, hole_height, casing_parts)
+    hall_ex = (hall['lo'].x + hall['hi'].x) * 0.5
+    place_furniture_kits(world, kits, hall, hall_ex, hall['hi'].y - 1.5, floor_z)
+    add_hall_decor(world, hall_ex, hall['lo'].y, hall['hi'].y)
+    place_ub_nightstand(world, hall['hi'].x - 75.0, hall['lo'].y + 1.5, -1, floor_z)
+    nx = hall['hi'].x - 75.0
+    add_pack_smalls(world, [
+        (f'{UB}/ArchViz/MokaPot/SM_MokaPot', hall_ex + 28.0, hall['lo'].y + 18.0, 30.0),
+        (f'{UB}/ArchViz/CoffeeGrinder/SM_CoffeeGrinder', hall_ex + 52.0, hall['lo'].y + 16.0, -20.0),
+        (f'{UB}/ArchViz/ForestInAJar/SM_ForestInAJar', nx - 12.0, hall['lo'].y + 20.0, 0.0),
+        (f'{MILRADIO}/SM_Telephone', nx + 12.0, hall['lo'].y + 18.0, 200.0),
+    ], 'Hall')
+    auto_props(world, '门厅', 'AutoHall', lambda a: folder(a).startswith('Hall'))
 
     # 后期：样板间的盒子原来伸到 X 990，盖住了 Home，收到走廊中间
     for volume in actors_sub.get_all_level_actors():
         if isinstance(volume, unreal.PostProcessVolume):
-            fit_box_x(volume, None, corridor_mid)
+            fit_box_x(volume, None, hall_end)
     # 体积光照贴图的格子 10cm，房子大了一倍多，内存上限也放宽（不然自动降精度，样板间也跟着糊）
     settings = world.get_world_settings()
     lm = settings.get_editor_property('lightmass_settings')
@@ -592,13 +647,15 @@ def build_wing():
         b = st.inverse_transform_location(unreal.Vector(x1, y1, floor_z))
         return unreal.Box(min=unreal.Vector(min(a.x, b.x), min(a.y, b.y), -50.0), max=unreal.Vector(max(a.x, b.x), max(a.y, b.y), 50.0))
 
-    corridor_box = box_local(lining_center.x - 60.0, door_y - CORRIDOR_WIDTH * 0.5 + 15.0,
-                             outer_x + CORRIDOR_LENGTH + 40.0, door_y + CORRIDOR_WIDTH * 0.5 - 15.0)
-    home_box = box_local(HOME_ORIGIN[0] + HOME_WALK[0][0] + shift.x, HOME_ORIGIN[1] + HOME_WALK[0][1] + shift.y,
-                         HOME_ORIGIN[0] + HOME_WALK[1][0] + shift.x, HOME_ORIGIN[1] + HOME_WALK[1][1] + shift.y)
-    studio.set_editor_property('extra_walk_areas', [corridor_box, home_box])
-    log(f'能传送的范围加上走廊 X {corridor_box.min.x:.0f}..{corridor_box.max.x:.0f} Y {corridor_box.min.y:.0f}..{corridor_box.max.y:.0f}、'
-        f'Home X {home_box.min.x:.0f}..{home_box.max.x:.0f} Y {home_box.min.y:.0f}..{home_box.max.y:.0f}（工作室坐标）')
+    # 两个门洞（各往两边多伸一点，和屋里、门厅的范围接上）、门厅里面（离墙 25cm）、Home 里面
+    door_half = hole_width * 0.5 - 15.0
+    areas = [('样板间前门', box_local(lining_center.x - 60.0, door_y - door_half, outer_x + 40.0, door_y + door_half)),
+             ('门厅', box_local(hall['lo'].x + 25.0, hall['lo'].y + 25.0, hall['hi'].x - 25.0, hall['hi'].y - 25.0)),
+             ('Home 入户门', box_local(hall_end - 40.0, door_y - door_half, hall_end + 80.0, door_y + door_half)),
+             ('Home', box_local(HOME_ORIGIN[0] + HOME_WALK[0][0] + shift.x, HOME_ORIGIN[1] + HOME_WALK[0][1] + shift.y,
+                                HOME_ORIGIN[0] + HOME_WALK[1][0] + shift.x, HOME_ORIGIN[1] + HOME_WALK[1][1] + shift.y))]
+    studio.set_editor_property('extra_walk_areas', [box for _, box in areas])
+    log('能传送的范围加上 ' + '、'.join(f'{name} X {b.min.x:.0f}..{b.max.x:.0f} Y {b.min.y:.0f}..{b.max.y:.0f}' for name, b in areas) + '（工作室坐标）')
     streaming = unreal.EditorLevelUtils.add_level_to_world(world, HOME_WING, unreal.LevelStreamingAlwaysLoaded)
     if not streaming:
         raise RuntimeError(f'挂不上子关卡 {HOME_WING}')
@@ -663,52 +720,750 @@ def cut_door(source_mesh, transform, lo, hi):
     return copy
 
 
-def build_corridor(x0, x1, door_y, floor_z):
-    """两个门洞之间的走廊：地板、两面墙、天花板，用引擎的方块拼（自带盒子碰撞和光照贴图 UV），材质用 Home 的墙面 / 地板。"""
+def transform_mul(a, b):
+    return a.multiply(b) if hasattr(a, 'multiply') else a * b
+
+
+def materials_of(comp):
+    return [comp.get_material(i) for i in range(comp.get_num_materials())]
+
+
+def find_mesh_component(mesh, min_height=0.0):
+    """关卡里第一个用这个网格的组件（静态网格 Actor、摆件都算），返回 (Actor, 组件)；材质从它身上抄（素材里网格自带的材质很多是灰格子）。"""
+    for a in actors_sub.get_all_level_actors():
+        for c in a.get_components_by_class(unreal.StaticMeshComponent):
+            if c.static_mesh and c.static_mesh.get_name() == mesh:
+                _, e = a.get_actor_bounds(False)
+                if e.z * 2.0 >= min_height:
+                    return a, c
+    return None, None
+
+
+def back_direction(world, actor):
+    """贴着墙放的家具 / 挂画：哪一面朝着墙（往前后左右打线，最近的墙那一面），返回单位向量；四面都没墙返回 None。"""
+    o, e = actor.get_actor_bounds(False)
+    best = None
+    for d in (unreal.Vector(1, 0, 0), unreal.Vector(-1, 0, 0), unreal.Vector(0, 1, 0), unreal.Vector(0, -1, 0)):
+        reach = e.x if d.x else e.y
+        _, p = trace_first(world, o, o + d * (reach + 80.0), lambda a: a.get_actor_label().startswith(('SM_Wall', 'SM_Scene')))
+        if p is not None:
+            gap = (p - o).length() - reach
+            if best is None or gap < best[0]:
+                best = (gap, d)
+    return best[1] if best else None
+
+
+def spawn_mesh(sm, materials, label, rotation, scale, x, y, z_bottom, folder_path='Hall'):
+    """摆一个静态网格：包围盒的底面中心放到 (x, y, z_bottom)。materials 为 None 用网格自带的。"""
+    a = actors_sub.spawn_actor_from_class(unreal.StaticMeshActor, unreal.Vector(x, y, z_bottom), rotation)
+    a.set_actor_scale3d(scale)
+    c = a.static_mesh_component
+    c.set_static_mesh(sm)
+    for i, m in enumerate(materials or ()):
+        c.set_material(i, m)
+    lo, hi = bounds(a)
+    a.set_actor_location(a.get_actor_location() + unreal.Vector(x - (lo.x + hi.x) * 0.5, y - (lo.y + hi.y) * 0.5, z_bottom - lo.z), False, True)
+    a.set_actor_label(label)
+    a.set_folder_path(folder_path)
+    return a
+
+
+def copy_against_wall(world, mesh, label, x, wall_y, toward, z_bottom, gap=0.5, folder_path='Hall'):
+    """把关卡里的某件家具 / 挂画（材质照抄）复制一份，背面贴到门厅的墙上：wall_y 是墙面，toward = +1 / -1 是墙在哪一边（Y 方向）。"""
+    src, comp = find_mesh_component(mesh)
+    if not src:
+        log(f'警告：关卡里没有 {mesh}，门厅里不摆')
+        return None
+    d = back_direction(world, src) or unreal.Vector(1, 0, 0)
+    r = src.get_actor_rotation()
+    yaw = r.yaw + math.degrees(math.atan2(toward, 0.0) - math.atan2(d.y, d.x))
+    a = spawn_mesh(comp.static_mesh, materials_of(comp), label, unreal.Rotator(roll=r.roll, pitch=r.pitch, yaw=yaw),
+                   src.get_actor_scale3d(), x, wall_y, z_bottom, folder_path)
+    lo, hi = bounds(a)
+    face = hi.y if toward > 0 else lo.y
+    a.set_actor_location(a.get_actor_location() + unreal.Vector(0.0, wall_y - toward * gap - face, 0.0), False, True)
+    lo, hi = bounds(a)
+    log(f'门厅：{label} ← 关卡里的 {src.get_actor_label()} [{mesh}]（原来背面朝 {fmt(d)} 的墙）{fmt(lo)}..{fmt(hi)}')
+    return a
+
+
+def box_actor(label, lo, hi, material, folder_path='Hall', collide=True):
+    """引擎方块拼的小件（踢脚线、电梯门这些），世界坐标 lo..hi。"""
     cube = unreal.load_asset('/Engine/BasicShapes/Cube.Cube')
-    floor_mat = unreal.load_asset(CORRIDOR_FLOOR_MATERIAL)
-    wall_mat = unreal.load_asset(CORRIDOR_WALL_MATERIAL)
-    half = CORRIDOR_WIDTH * 0.5
+    a = actors_sub.spawn_actor_from_class(unreal.StaticMeshActor, (lo + hi) * 0.5, unreal.Rotator(roll=0.0, pitch=0.0, yaw=0.0))
+    a.set_actor_scale3d((hi - lo) * 0.01)
+    c = a.static_mesh_component
+    c.set_static_mesh(cube)
+    c.set_material(0, material)
+    if not collide:
+        c.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
+    a.set_actor_label(label)
+    a.set_folder_path(folder_path)
+    return a
+
+
+def hall_mesh(name, size, uv_cm, hole=None):
+    """门厅的一块地板 / 墙 / 天花板：size 大小、中心在原点的盒子，hole = (中心, 大小) 时减掉一个门洞。
+    UV 按每 uv_cm 厘米一格做盒子投影（引擎方块每个面都是 0..1，3~5 米的墙会把木纹、墙纹拉得很长），重新生成光照贴图 UV，三角面碰撞。
+    网格存在本机素材目录 HALL_MESH_DIR（不进仓库）。"""
+    path = f'{HALL_MESH_DIR}/SM_Hall_{name}'
+    if unreal.EditorAssetLibrary.does_asset_exist(path):
+        unreal.EditorAssetLibrary.delete_asset(path)
+    asset = unreal.EditorAssetLibrary.duplicate_asset('/Engine/BasicShapes/Cube', path)
+    if not asset:
+        raise RuntimeError(f'建不了 {path}')
+    mesh = unreal.DynamicMesh()
+    unreal.GeometryScript_Primitives.append_box(mesh, unreal.GeometryScriptPrimitiveOptions(), unreal.Transform(), size.x, size.y, size.z,
+                                                0, 0, 0, unreal.GeometryScriptPrimitiveOriginMode.CENTER)
+    if hole:
+        tool = unreal.DynamicMesh()
+        unreal.GeometryScript_Primitives.append_box(tool, unreal.GeometryScriptPrimitiveOptions(),
+                                                    unreal.Transform(hole[0], unreal.Rotator(roll=0.0, pitch=0.0, yaw=0.0), unreal.Vector(1, 1, 1)),
+                                                    hole[1].x, hole[1].y, hole[1].z, 0, 0, 0, unreal.GeometryScriptPrimitiveOriginMode.CENTER)
+        opts = unreal.GeometryScriptMeshBooleanOptions()
+        opts.set_editor_property('fill_holes', True)
+        opts.set_editor_property('simplify_output', False)
+        unreal.GeometryScript_MeshBooleans.apply_mesh_boolean(mesh, unreal.Transform(), tool, unreal.Transform(),
+                                                              unreal.GeometryScriptBooleanOperation.SUBTRACT, opts)
+    unreal.GeometryScript_UVs.set_mesh_u_vs_from_box_projection(
+        mesh, 0, unreal.Transform(unreal.Vector(0, 0, 0), unreal.Rotator(roll=0.0, pitch=0.0, yaw=0.0), unreal.Vector(uv_cm, uv_cm, uv_cm)),
+        unreal.GeometryScriptMeshSelection(), 2)
+    write = unreal.GeometryScriptCopyMeshToAssetOptions()
+    write.set_editor_property('enable_recompute_tangents', True)
+    write.set_editor_property('generate_lightmap_u_vs', unreal.GeometryScriptGenerateLightmapUVOptions.GENERATE_LIGHTMAP_U_VS)
+    write.set_editor_property('emit_transaction', False)
+    unreal.GeometryScript_AssetUtils.copy_mesh_to_static_mesh(mesh, asset, write, unreal.GeometryScriptMeshWriteLOD(), True)
+    unreal.ToyArchVizTools.use_complex_as_simple(asset)
+    unreal.EditorAssetLibrary.save_loaded_asset(asset, False)
+    return asset
+
+
+def build_hall(world, x0, x1, door_y, floor_z, hole_width, hole_height, casing_parts):
+    """样板间前门和 Home 入户门之间的门厅：差不多一个房间宽，层高和样板间一样。墙、地板、天花板用样板间的材质，
+    踢脚线、吸顶灯（静态面光源）、两边门洞的门套、餐边柜和挂画、两盆绿植（一盆 1.3m 左右的高的）、两个皮墩、地毯，
+    侧墙上一扇假的不锈钢电梯门（双开拉丝门、召唤按钮、楼层显示，不能交互，挡路、不能传送进去）。"""
+    def mat(path):
+        m = unreal.load_asset(path)
+        if not m:
+            raise RuntimeError(f'没有材质 {path}')
+        return m
+
+    V = unreal.Vector
+    # 层高：样板间门口往上打线量天花板
+    _, ceil = trace_first(world, V(x0 - 80.0, door_y, floor_z + 100.0), V(x0 - 80.0, door_y, floor_z + 800.0), lambda a: True)
+    height = (ceil.z - floor_z) if ceil else 300.0
+    yl, yr = door_y - HALL_WIDTH * 0.5, door_y + HALL_WIDTH * 0.5
+    mid = (x0 + x1) * 0.5
+    # 先看看门厅这块地方原来有没有东西（不能和两边房子穿插）
+    hits = set()
+    for z in (20.0, 120.0, height - 20.0):
+        for y in (yl + 5.0, door_y, yr - 5.0):
+            a, _ = trace_first(world, V(x0 + 5.0, y, floor_z + z), V(x1 - 5.0, y, floor_z + z), lambda a: True)
+            if a:
+                hits.add(a.get_actor_label())
+    if hits:
+        log(f'警告：门厅范围里原来就有东西：{", ".join(sorted(hits))}')
+    log(f'门厅 X {x0:.0f}..{x1:.0f}（长 {x1 - x0:.0f}）、Y {yl:.0f}..{yr:.0f}（宽 {HALL_WIDTH:.0f}）、层高 {height:.0f}cm')
+
+    floor_mat = mat('/Game/ArchViz/Materials/MI_Floor')
+    wall_mat = mat('/Game/ArchViz/Materials/MI_Wall1')
+    accent_mat = mat('/Game/ArchViz/Materials/MI_Wall_Accent')
+    ceiling_mat = mat('/Game/ArchViz/Materials/MI_Ceiling')
+    trim_mat = mat('/Game/ArchViz/Materials/MI_WhiteSemiMatte')
+    steel = mat('/Game/Home_Interior/Materials/Metal/M_Metal_Steel')
+    steel_dark = mat('/Game/ArchViz/Materials/MI_SteelDark')
+    black = mat('/Game/Home_Interior/Materials/Metal/M_Metal_Black')
+    glow = mat('/Game/Home_Interior/Materials/Mi_Emissive')
+
+    # ---- 地板、天花板、四面墙（两头的墙贴在两边房子的外墙皮上，开门洞）----
     t = 10.0
-    lo_x, hi_x = x0 - 2.0, x1 + 2.0        # 两头各插进墙里 2cm，接缝不漏光
-    pieces = []
-    # 地板分两段，木纹不至于拉得太长（方块每个面 UV 是 0..1）
-    n = max(1, round((hi_x - lo_x) / 100.0))
-    for i in range(n):
-        a = lo_x + (hi_x - lo_x) * i / n
-        b = lo_x + (hi_x - lo_x) * (i + 1) / n
-        pieces.append((f'Floor{i + 1}', (a, door_y - half - t), (b, door_y + half + t), (floor_z - t, floor_z), floor_mat))
-    pieces.append(('WallLeft', (lo_x, door_y - half - t), (hi_x, door_y - half), (floor_z - t, floor_z + CORRIDOR_HEIGHT + t), wall_mat))
-    pieces.append(('WallRight', (lo_x, door_y + half), (hi_x, door_y + half + t), (floor_z - t, floor_z + CORRIDOR_HEIGHT + t), wall_mat))
-    pieces.append(('Ceiling', (lo_x, door_y - half - t), (hi_x, door_y + half + t), (floor_z + CORRIDOR_HEIGHT, floor_z + CORRIDOR_HEIGHT + t), wall_mat))
-    for label, (ax, ay), (bx, by), (az, bz), mat in pieces:
-        center = unreal.Vector((ax + bx) * 0.5, (ay + by) * 0.5, (az + bz) * 0.5)
+    end_t = 3.0
+    pieces = [
+        ('Floor', V(x0 - 2.0, yl - t, floor_z - t), V(x1 + 2.0, yr + t, floor_z), floor_mat, 1100.0, 512, False),
+        ('Ceiling', V(x0 - 2.0, yl - t, floor_z + height), V(x1 + 2.0, yr + t, floor_z + height + t), ceiling_mat, 400.0, 256, False),
+        ('WallConsole', V(x0 - 2.0, yl - t, floor_z - t), V(x1 + 2.0, yl, floor_z + height + t), accent_mat, 400.0, 256, False),
+        ('WallElevator', V(x0 - 2.0, yr, floor_z - t), V(x1 + 2.0, yr + t, floor_z + height + t), wall_mat, 400.0, 256, False),
+        ('WallArchViz', V(x0, yl, floor_z), V(x0 + end_t, yr, floor_z + height), wall_mat, 400.0, 128, True),
+        ('WallHome', V(x1 - end_t, yl, floor_z), V(x1, yr, floor_z + height), wall_mat, 400.0, 128, True),
+    ]
+    for name, lo, hi, material, uv_cm, lightmap, with_hole in pieces:
+        center = (lo + hi) * 0.5
+        cut = None
+        if with_hole:
+            # 门洞底边比地面低 5cm（布尔减干净），中心对准门洞
+            cut = (V(0.0, door_y - center.y, floor_z + (hole_height - 5.0) * 0.5 - center.z), V(end_t * 4.0, hole_width, hole_height + 5.0))
+        sm = hall_mesh(name, hi - lo, uv_cm, cut)
         a = actors_sub.spawn_actor_from_class(unreal.StaticMeshActor, center, unreal.Rotator(roll=0.0, pitch=0.0, yaw=0.0))
-        a.set_actor_scale3d(unreal.Vector((bx - ax) / 100.0, (by - ay) / 100.0, (bz - az) / 100.0))
         c = a.static_mesh_component
-        c.set_static_mesh(cube)
-        c.set_material(0, mat)
+        c.set_static_mesh(sm)
+        c.set_material(0, material)
         c.set_editor_property('override_light_map_res', True)
-        c.set_editor_property('overridden_light_map_res', 128)
-        a.set_actor_label(f'Corridor_{label}')
-        a.set_folder_path('Corridor')
-    light = actors_sub.spawn_actor_from_class(unreal.RectLight, unreal.Vector((x0 + x1) * 0.5, door_y, floor_z + CORRIDOR_HEIGHT - 2.0),
-                                              unreal.Rotator(roll=0.0, pitch=-90.0, yaw=0.0))
-    c = light.light_component
-    c.set_mobility(unreal.ComponentMobility.STATIC)
-    c.set_editor_property('source_width', 40.0)
-    c.set_editor_property('source_height', 40.0)
-    c.set_editor_property('intensity', CORRIDOR_LIGHT_CD)
-    c.set_editor_property('attenuation_radius', 400.0)
-    c.set_editor_property('use_temperature', True)
-    c.set_editor_property('temperature', 4000.0)
-    light.set_actor_label('Corridor_Light')
-    light.set_folder_path('Corridor')
-    # 走廊也要在 Lightmass 重要体积里
+        c.set_editor_property('overridden_light_map_res', lightmap)
+        a.set_actor_label(f'Hall_{name}')
+        a.set_folder_path('Hall')
+
+    # ---- 两个门洞门厅这一面的门套（照搬样板间前门屋里那面的外圈门套）----
+    for anchor_x, yaw, side in ((x0 + end_t, 0.0, 'ArchViz'), (x1 - end_t, 180.0, 'Home')):
+        anchor = unreal.Transform(V(anchor_x, door_y, floor_z), unreal.Rotator(roll=0.0, pitch=0.0, yaw=yaw), V(1, 1, 1))
+        for label, sm, materials, rel in casing_parts:
+            tr = transform_mul(rel, anchor)
+            a = actors_sub.spawn_actor_from_class(unreal.StaticMeshActor, tr.translation, tr.rotation.rotator())
+            a.set_actor_scale3d(tr.scale3d)
+            a.static_mesh_component.set_static_mesh(sm)
+            for i, m in enumerate(materials):
+                a.static_mesh_component.set_material(i, m)
+            a.set_actor_label(f'Hall_{side}Door_{label}')
+            a.set_folder_path('Hall')
+
+    # ---- 电梯（+Y 那面墙正中）：不锈钢门套、双开拉丝门、门槛、召唤按钮、楼层显示 ----
+    ex = mid
+    ef = 'Hall/Elevator'
+    box_actor('Elevator_Back', V(ex - 55.0, yr - 1.0, floor_z), V(ex + 55.0, yr, floor_z + 212.0), black, ef)
+    box_actor('Elevator_DoorL', V(ex - 55.0, yr - 3.0, floor_z + 0.5), V(ex - 0.4, yr - 1.0, floor_z + 212.0), steel, ef)
+    box_actor('Elevator_DoorR', V(ex + 0.4, yr - 3.0, floor_z + 0.5), V(ex + 55.0, yr - 1.0, floor_z + 212.0), steel, ef)
+    box_actor('Elevator_JambL', V(ex - 67.0, yr - 5.0, floor_z), V(ex - 55.0, yr, floor_z + 227.0), steel_dark, ef)
+    box_actor('Elevator_JambR', V(ex + 55.0, yr - 5.0, floor_z), V(ex + 67.0, yr, floor_z + 227.0), steel_dark, ef)
+    box_actor('Elevator_Header', V(ex - 67.0, yr - 5.0, floor_z + 212.0), V(ex + 67.0, yr, floor_z + 227.0), steel_dark, ef)
+    box_actor('Elevator_Sill', V(ex - 62.0, yr - 15.0, floor_z), V(ex + 62.0, yr - 3.0, floor_z + 0.6), steel_dark, ef)
+    box_actor('Elevator_Display', V(ex - 20.0, yr - 1.5, floor_z + 236.0), V(ex + 20.0, yr, floor_z + 252.0), black, ef)
+    box_actor('Elevator_CallPanel', V(ex + 82.0, yr - 1.5, floor_z + 98.0), V(ex + 95.0, yr, floor_z + 132.0), steel, ef)
+    for i, z in enumerate((122.0, 108.0)):
+        box_actor(f'Elevator_Button{i + 1}', V(ex + 86.0, yr - 2.5, floor_z + z - 2.5), V(ex + 91.0, yr - 1.5, floor_z + z + 2.5), glow, ef, collide=False)
+    for text, dx, size in (('1', 0.0, 12.0),):
+        tr = actors_sub.spawn_actor_from_class(unreal.TextRenderActor, V(ex + dx, yr - 1.7, floor_z + 244.0), unreal.Rotator(roll=0.0, pitch=0.0, yaw=-90.0))
+        tc = tr.text_render
+        tc.set_editor_property('text', text)
+        tc.set_editor_property('world_size', size)
+        tc.set_editor_property('horizontal_alignment', unreal.HorizTextAligment.EHTA_CENTER)
+        tc.set_editor_property('vertical_alignment', unreal.VerticalTextAligment.EVRTA_TEXT_CENTER)
+        tc.set_editor_property('text_render_color', unreal.Color(r=255, g=110, b=40, a=255))
+        tr.set_actor_label('Elevator_FloorNumber')
+        tr.set_folder_path(ef)
+
+    # ---- 踢脚线（两面侧墙、两头墙门洞两边；电梯那一段让开）----
+    sk_h, sk_t = 10.0, 1.5
+    casing_half = hole_width * 0.5 + 9.0
+    skirting = [
+        ('Console', V(x0 + end_t, yl, floor_z), V(x1 - end_t, yl + sk_t, floor_z + sk_h)),
+        ('Elevator1', V(x0 + end_t, yr - sk_t, floor_z), V(ex - 67.0, yr, floor_z + sk_h)),
+        ('Elevator2', V(ex + 67.0, yr - sk_t, floor_z), V(x1 - end_t, yr, floor_z + sk_h)),
+    ]
+    for side, xa, xb in (('ArchViz', x0 + end_t, x0 + end_t + sk_t), ('Home', x1 - end_t - sk_t, x1 - end_t)):
+        skirting.append((f'{side}1', V(xa, yl + sk_t, floor_z), V(xb, door_y - casing_half, floor_z + sk_h)))
+        skirting.append((f'{side}2', V(xa, door_y + casing_half, floor_z), V(xb, yr - sk_t, floor_z + sk_h)))
+    for name, lo, hi in skirting:
+        box_actor(f'Hall_Skirting{name}', lo, hi, trim_mat)
+
+    # ---- 吸顶灯：三盏，灯罩是发光的圆片，光是静态面光源（烘焙）----
+    cylinder = unreal.load_asset('/Engine/BasicShapes/Cylinder.Cylinder')
+    for i, k in enumerate((1.0 / 6.0, 0.5, 5.0 / 6.0)):
+        x = x0 + (x1 - x0) * k
+        a = actors_sub.spawn_actor_from_class(unreal.StaticMeshActor, V(x, door_y, floor_z + height - 0.6), unreal.Rotator(roll=0.0, pitch=0.0, yaw=0.0))
+        a.set_actor_scale3d(V(0.32, 0.32, 0.012))
+        a.static_mesh_component.set_static_mesh(cylinder)
+        a.static_mesh_component.set_material(0, glow)
+        a.static_mesh_component.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
+        a.static_mesh_component.set_editor_property('cast_shadow', False)
+        a.set_actor_label(f'Hall_CeilingLamp{i + 1}')
+        a.set_folder_path('Hall')
+        light = actors_sub.spawn_actor_from_class(unreal.RectLight, V(x, door_y, floor_z + height - 1.5), unreal.Rotator(roll=0.0, pitch=-90.0, yaw=0.0))
+        c = light.light_component
+        c.set_mobility(unreal.ComponentMobility.STATIC)
+        c.set_editor_property('source_width', 30.0)
+        c.set_editor_property('source_height', 30.0)
+        c.set_editor_property('intensity', HALL_LIGHT_CD)
+        c.set_editor_property('attenuation_radius', 700.0)
+        c.set_editor_property('use_temperature', True)
+        c.set_editor_property('temperature', 4500.0)
+        light.set_actor_label(f'Hall_Light{i + 1}')
+        light.set_folder_path('Hall')
+
+    # ---- 家具和装饰（样板间 / Home 的素材，材质照抄关卡里的）----
+    # 餐边柜放在电梯对面那面墙正中，上面摆一只花瓶、一本画册、一个圆环摆件（后面会变成能拿起来的）；墙上两幅画
+    console = copy_against_wall(world, 'SM_SideTable_02', 'Hall_Console', ex, yl + sk_t, -1, floor_z)
+    if console:
+        lo, hi = bounds(console)
+        cy = (lo.y + hi.y) * 0.5
+        for mesh, dx, label in (('SM_Vase_01', -45.0, 'Hall_Vase'), ('SM_Book_05', 10.0, 'Hall_Book'), ('SM_Torus', 48.0, 'Hall_Torus')):
+            src, comp = find_mesh_component(mesh)
+            if src:
+                r = src.get_actor_rotation()
+                spawn_mesh(comp.static_mesh, materials_of(comp), label, unreal.Rotator(roll=r.roll, pitch=r.pitch, yaw=r.yaw + 90.0),
+                           src.get_actor_scale3d(), ex + dx, cy, hi.z + 0.2)
+    # 挑平贴在墙上的画（有的是斜靠在架子上的，挂到墙上会歪着）：复制过来厚度超过 12cm 的不要，换下一个
+    frames = []
+    for mesh in ('SM_Frame_01', 'SM_Frame_03', 'SM_Picture_04', 'SM_Picture_03', 'SM_Picture_01'):
+        if len(frames) == 2:
+            break
+        a = copy_against_wall(world, mesh, f'Hall_Frame{len(frames) + 1}', ex + (-32.0 if not frames else 32.0), yl, -1, floor_z + 128.0, gap=0.3)
+        if a:
+            lo, hi = bounds(a)
+            if hi.y - lo.y > 12.0:
+                log(f'  {mesh} 复制过来厚 {hi.y - lo.y:.0f}cm（原来是斜靠着的），不要')
+                actors_sub.destroy_actor(a)
+            else:
+                frames.append(a)
+    # 高的那盆：样板间素材里的白瓷盆 + 土 + 龙血树拼一盆（总高 1.3m 左右），放在样板间门口那头、电梯这面墙的墙角
+    no_rot, one = unreal.Rotator(roll=0.0, pitch=0.0, yaw=0.0), V(1, 1, 1)
+    px, py = x0 + end_t + 45.0, yr - 45.0
+    p = spawn_mesh(unreal.load_asset('/Game/ArchViz/Meshes/SM_Pot_03'), None, 'Hall_TallPlant_Pot', no_rot, one, px, py, floor_z)
+    _, phi = bounds(p)
+    spawn_mesh(unreal.load_asset('/Game/ArchViz/Meshes/SM_Soil'), None, 'Hall_TallPlant_Soil', no_rot, one, px, py, phi.z - 5.0)
+    leaves = spawn_mesh(unreal.load_asset('/Game/ArchViz/Plants/SM_Dracaena_04'), None, 'Hall_TallPlant',
+                        unreal.Rotator(roll=0.0, pitch=0.0, yaw=35.0), one, px, py, phi.z - 8.0)
+    _, lhi = bounds(leaves)
+    log(f'门厅：高的绿植（SM_Pot_03 + SM_Dracaena_04）总高 {lhi.z - floor_z:.0f}cm，放在 ({px:.0f}, {py:.0f})')
+    # 矮的那盆（Home 的盆栽）在 Home 门口那头，两个皮墩在餐边柜两边
+    spawn_mesh(unreal.load_asset('/Game/Home_Interior/Meshes/SM_Plant'), None, 'Hall_Plant2', unreal.Rotator(roll=0.0, pitch=0.0, yaw=200.0), one,
+               x1 - end_t - 50.0, yl + 50.0, floor_z)
+    puff = unreal.load_asset('/Game/Home_Interior/Meshes/SM_Puff')
+    for i, dx in enumerate((-110.0, 110.0)):
+        spawn_mesh(puff, None, f'Hall_Puff{i + 1}', unreal.Rotator(roll=0.0, pitch=0.0, yaw=30.0 * i), one, ex + dx, yl + sk_t + 30.0, floor_z)
+    # 地毯：客厅那块，长边顺着门厅
+    src, comp = find_mesh_component('SM_Rug_01')
+    if src:
+        r = src.get_actor_rotation()
+        rug = spawn_mesh(comp.static_mesh, materials_of(comp), 'Hall_Rug', r, src.get_actor_scale3d(), ex, door_y, floor_z + 0.1)
+        lo, hi = bounds(rug)
+        if hi.y - lo.y > hi.x - lo.x:
+            rug.set_actor_rotation(unreal.Rotator(roll=r.roll, pitch=r.pitch, yaw=r.yaw + 90.0), False)
+            lo, hi = bounds(rug)
+            rug.set_actor_location(rug.get_actor_location() + V(ex - (lo.x + hi.x) * 0.5, door_y - (lo.y + hi.y) * 0.5, floor_z + 0.1 - lo.z), False, True)
+
+    # ---- 反射球（不锈钢电梯门要有东西可反射），Lightmass 重要体积伸过来 ----
+    cap = actors_sub.spawn_actor_from_class(unreal.BoxReflectionCapture, V(mid, door_y, floor_z + height * 0.5), unreal.Rotator(roll=0.0, pitch=0.0, yaw=0.0))
+    _, e = cap.get_actor_bounds(False)
+    if e.x > 1.0:
+        cap.set_actor_scale3d(V((x1 - x0) * 0.5 / e.x, HALL_WIDTH * 0.5 / e.y, height * 0.5 / e.z))
+    cap.set_actor_label('Hall_ReflectionCapture')
+    cap.set_folder_path('Hall')
     for v in actors_sub.get_all_level_actors():
         if isinstance(v, unreal.LightmassImportanceVolume):
             fit_box_x(v, None, x1 + 30.0)
-    log(f'走廊 X {x0:.0f}..{x1:.0f}，宽 {CORRIDOR_WIDTH:.0f}、高 {CORRIDOR_HEIGHT:.0f}cm，{len(pieces)} 块 + 顶灯 {CORRIDOR_LIGHT_CD:.0f} cd')
+    return {'lo': V(x0, yl, floor_z), 'hi': V(x1, yr, floor_z + height), 'height': height}
+
+
+def make_articulated(part, body_center, front, kind, name, label, material='木', max_value=None):
+    """柜子上单独的一块门板 / 抽屉（StaticMeshActor）换成 AToyArticulated（能捏住拉开，松手停在那里，摆件复位时关上）。
+    body_center：柜子的中心（世界坐标），front：柜子正面朝哪（世界坐标，水平单位向量）。
+    kind = 'hinge'：铰链在门板离柜子中心线远的那条竖边、门板正面那一侧，往外开 0~100°；'slide'：沿 front 拉出 max_value 厘米。"""
+    comp = part.static_mesh_component
+    tr = part.get_actor_transform()
+    lo, hi = bounds(part)
+    center = (lo + hi) * 0.5
+    a = actors_sub.spawn_actor_from_class(unreal.ToyArticulated, part.get_actor_location(), part.get_actor_rotation())
+    a.set_actor_scale3d(part.get_actor_scale3d())
+    m = a.get_editor_property('mesh')
+    m.set_static_mesh(comp.static_mesh)
+    for i, mat in enumerate(materials_of(comp)):
+        m.set_material(i, mat)
+    if kind == 'hinge':
+        side = unreal.Vector(-front.y, front.x, 0.0)
+        # 铰链那条边：门板中心在柜子中心线哪一边，就在那一边的外沿（双开门各开各的）
+        s = 1.0 if (center - body_center).dot(side) >= 0.0 else -1.0
+        half_side = abs(side.x) * (hi.x - lo.x) * 0.5 + abs(side.y) * (hi.y - lo.y) * 0.5
+        half_front = abs(front.x) * (hi.x - lo.x) * 0.5 + abs(front.y) * (hi.y - lo.y) * 0.5
+        pivot_world = center + side * (s * half_side) + front * half_front
+        pivot = tr.inverse_transform_location(pivot_world)
+        axis = tr.inverse_transform_direction(unreal.Vector(0.0, 0.0, 1.0))
+        axis = axis * (1.0 / max(axis.length(), 1e-6))
+        # 正转要往外开：试转 10°，门板中心要往 front 那边走，不然轴反过来
+        mesh_center = comp.static_mesh.get_bounds().origin
+        v = mesh_center - pivot
+        c, sn = math.cos(math.radians(10.0)), math.sin(math.radians(10.0))
+        # 罗德里格斯公式：v 绕单位轴 axis 转 10°
+        turned = v * c + axis.cross(v) * sn + axis * (axis.dot(v) * (1.0 - c))
+        moved = tr.transform_location(pivot + turned)
+        if (moved - center).dot(front) < 0.0:
+            axis = axis * -1.0
+        a.set_editor_property('joint_type', unreal.ToyJointType.HINGE)
+        a.set_editor_property('pivot', pivot)
+        a.set_editor_property('max_value', max_value or 100.0)
+    else:
+        axis = tr.inverse_transform_direction(front)
+        axis = axis * (1.0 / max(axis.length(), 1e-6))
+        a.set_editor_property('joint_type', unreal.ToyJointType.SLIDE)
+        a.set_editor_property('max_value', max_value or 30.0)
+    a.set_editor_property('axis', axis)
+    a.set_editor_property('display_name', name)
+    a.set_editor_property('material_text', material)
+    a.set_actor_label(label)
+    a.set_folder_path(str(part.get_folder_path()) if str(part.get_folder_path()) not in ('', 'None') else 'Articulated')
+    actors_sub.destroy_actor(part)
+    log(f'能开合：{label} {name}（{"柜门，铰链" if kind == "hinge" else "抽屉，往外拉"}，最多 {a.get_editor_property("max_value"):.0f}'
+        f'{"°" if kind == "hinge" else "cm"}）← {comp.static_mesh.get_name()} {fmt(lo)}..{fmt(hi)}')
+    return a
+
+
+# ---- Fab 免费素材包（本机 Content/FabPacks/<包名>，不进仓库；没装就跳过）----
+FAB = '/Game/FabPacks'
+# Modern House V1 里柜子的门板 / 抽屉是单独的网格：照它 Demo 关卡里的摆法（关着的位置）搬到门厅，门 / 抽屉换成 AToyArticulated
+# (柜子在 Demo 里的标签, [(零件标签, 'hinge' / 'slide', 名字)], 门厅里放哪面墙的 X（门厅坐标比例 0..1）, 柜子名字)
+FURNITURE_KITS = (
+    ('SM_Cabinet_8', (('SM_Cabinet_7_Door', 'slide', '矮柜上面的抽屉'), ('SM_Cabinet_7_Door2', 'slide', '矮柜下面的抽屉')), 'elevator_right', '矮柜'),
+    ('SM_Cabinet_16', (('SM_Cabinet_10_Door', 'hinge', '小柜子的门'),), 'elevator_left', '小柜子'),
+)
+FURNITURE_MAP = f'{FAB}/Modern_House_V1/Maps/Demo'
+
+
+def read_furniture_kits():
+    """打开 Modern House 的 Demo 关卡，记下每套柜子的网格、材质和门板 / 抽屉相对柜子的变换。没装这个包返回空。"""
+    if not unreal.EditorAssetLibrary.does_asset_exist(FURNITURE_MAP):
+        log(f'没有 {FURNITURE_MAP}（Fab 的 Modern House V1 没装），门厅不放能开的柜子')
+        return []
+    level_sub.load_level(FURNITURE_MAP)
+    by_label = {a.get_actor_label(): a for a in actors_sub.get_all_level_actors() if isinstance(a, unreal.StaticMeshActor)}
+    kits = []
+    for body_label, parts, where, body_name in FURNITURE_KITS:
+        body = by_label.get(body_label)
+        if not body or not all(p[0] in by_label for p in parts):
+            log(f'警告：Modern House 的 Demo 里找不到 {body_label} 那一套，不放')
+            continue
+        bt = body.get_actor_transform()
+        blo, bhi = bounds(body)
+        bc = (blo + bhi) * 0.5
+        recs = []
+        offset = unreal.Vector(0, 0, 0)
+        for label, kind, name in parts:
+            p = by_label[label]
+            plo, phi = bounds(p)
+            offset = offset + ((plo + phi) * 0.5 - bc)
+            recs.append((p.static_mesh_component.static_mesh, materials_of(p.static_mesh_component), p.get_actor_transform().make_relative(bt), kind, name))
+        # 正面朝哪：柜子水平方向上窄的那个轴，门板 / 抽屉偏向的那一边
+        if (bhi.x - blo.x) < (bhi.y - blo.y):
+            front = unreal.Vector(1.0 if offset.x >= 0 else -1.0, 0.0, 0.0)
+        else:
+            front = unreal.Vector(0.0, 1.0 if offset.y >= 0 else -1.0, 0.0)
+        kits.append({'mesh': body.static_mesh_component.static_mesh, 'materials': materials_of(body.static_mesh_component),
+                     'rotation': body.get_actor_rotation(), 'scale': body.get_actor_scale3d(), 'front': front, 'parts': recs,
+                     'where': where, 'name': body_name, 'label': body_label})
+        log(f'Modern House：{body_label} [{body.static_mesh_component.static_mesh.get_name()}] 正面朝 {fmt(front)}，{len(recs)} 块能开的')
+    return kits
+
+
+def place_furniture_kits(world, kits, hall, ex, wall_y, floor_z):
+    """门厅电梯那面墙（+Y）上、电梯两边各放一套柜子，正面朝 -Y，门 / 抽屉换成能开合的。"""
+    spots = {'elevator_left': (hall['lo'].x + ex) * 0.5 + 20.0, 'elevator_right': (ex + 67.0 + hall['hi'].x) * 0.5 - 5.0}
+    placed = []
+    for kit in kits:
+        f = kit['front']
+        dyaw = math.degrees(math.atan2(-1.0, 0.0) - math.atan2(f.y, f.x))
+        r = kit['rotation']
+        rot = unreal.Rotator(roll=r.roll, pitch=r.pitch, yaw=r.yaw + dyaw)
+        x = spots[kit['where']]
+        body = spawn_mesh(kit['mesh'], kit['materials'], f'Hall_{kit["label"]}', rot, kit['scale'], x, wall_y, floor_z)
+        lo, hi = bounds(body)
+        body.set_actor_location(body.get_actor_location() + unreal.Vector(0.0, wall_y - 0.5 - hi.y, 0.0), False, True)
+        lo, hi = bounds(body)
+        center = (lo + hi) * 0.5
+        depth = hi.y - lo.y
+        bt = body.get_actor_transform()
+        for i, (sm, mats, rel, kind, name) in enumerate(kit['parts']):
+            tr = transform_mul(rel, bt)
+            p = actors_sub.spawn_actor_from_class(unreal.StaticMeshActor, tr.translation, tr.rotation.rotator())
+            p.set_actor_scale3d(tr.scale3d)
+            p.static_mesh_component.set_static_mesh(sm)
+            for k, m in enumerate(mats):
+                p.static_mesh_component.set_material(k, m)
+            p.set_folder_path('Hall')
+            make_articulated(p, center, unreal.Vector(0.0, -1.0, 0.0), kind, name, f'Hall_{kit["label"]}_Part{i + 1}',
+                             max_value=100.0 if kind == 'hinge' else round(depth * 0.7))
+        log(f'门厅：{kit["name"]}（Modern House {kit["mesh"].get_name()}）{fmt(lo)}..{fmt(hi)}，{len(kit["parts"])} 块能开合')
+        placed.append(body)
+    return placed
+
+
+def place_on_surface(world, path, label, x, y, yaw=0.0, folder_path='Decor', lift=0.05, top=170.0):
+    """把素材包里的一个网格放到 (x, y) 正下方第一个面上（材质用网格自带的）。网格不在就跳过。
+    从 top（离地）往下找：再高就先打到吊扇、吊灯了。"""
+    if not unreal.EditorAssetLibrary.does_asset_exist(path):
+        return None
+    _, hit = trace_first(world, unreal.Vector(x, y, top), unreal.Vector(x, y, -20.0), lambda a: True)
+    z = (hit.z if hit else 0.0) + lift
+    return spawn_mesh(unreal.load_asset(path), None, label, unreal.Rotator(roll=0.0, pitch=0.0, yaw=yaw), unreal.Vector(1, 1, 1), x, y, z, folder_path)
+
+
+def add_archviz_decor(world, to_world):
+    """样板间里加的素材包小东西（工作室坐标）：茶几上一盘国际象棋（Classic Office，棋子能一个个拿），窗下长柜上一副耳机和一卷胶带（Deko 的公寓包）。"""
+    co = f'{FAB}/Classic_Office/Meshes/DecorativeElements'
+    deko = f'{FAB}/Deko_MatrixDemo/Apartment/Meshes'
+    n = 0
+    p = to_world(-406.0, -70.0)
+    if place_on_surface(world, f'{co}/SM_Board', 'Decor_ChessBoard', p.x, p.y, 0.0):
+        n += 1
+        step = 43.0 / 8.0
+        for i in range(6):
+            for side, first, dy in ((0, 1, -1.5), (1, 7, 1.5)):
+                q = to_world(-406.0 + (i - 2.5) * step, -70.0 + dy * step)
+                if place_on_surface(world, f'{co}/SM_Chess_Piece_{first + i:02d}', f'Decor_Chess{first + i:02d}', q.x, q.y, 180.0 * side):
+                    n += 1
+    for path, lx, ly, yaw in ((f'{deko}/SM_Headset_A01_N1', 105.0, -229.0, 20.0), (f'{deko}/SM_OfficeTape_A01_N1', 132.0, -231.0, 0.0),
+                              (f'{MILRADIO}/SM_HandRadio', 74.0, -230.0, -15.0)):
+        q = to_world(lx, ly)
+        if place_on_surface(world, path, f'Decor_{path.rsplit("/", 1)[1]}', q.x, q.y, yaw):
+            n += 1
+    log(f'样板间：素材包的小东西加了 {n} 件')
+
+
+def add_hall_decor(world, ex, yl, yr):
+    """门厅：矮柜上一套茶具（Classic Office），小柜子上一匹马的摆件和笔筒（Office Pack），餐边柜上一只玻璃杯（Office Pack）。"""
+    co = f'{FAB}/Classic_Office/Meshes/DecorativeElements'
+    op = f'{FAB}/Office_Pack_Vol_1/Models'
+    right = ex + 67.0 + 85.0
+    left = ex - 115.0
+    items = ((f'{co}/SM_Kettle', right - 25.0, yr - 18.0, 200.0), (f'{co}/SM_Sugar_bowl', right + 2.0, yr - 16.0, 0.0),
+             (f'{co}/SM_Cup_01', right + 20.0, yr - 20.0, 30.0), (f'{co}/SM_Cup_02', right + 32.0, yr - 14.0, 110.0),
+             (f'{co}/SM_Horse', left - 6.0, yr - 22.0, 160.0), (f'{op}/SM_Pen_Holder_1', left + 14.0, yr - 16.0, 0.0),
+             (f'{op}/SM_glass_1', ex - 25.0, yl + 20.0, 0.0))
+    n = sum(1 for path, x, y, yaw in items if place_on_surface(world, path, f'Hall_{path.rsplit("/", 1)[1]}', x, y, yaw, 'Hall'))
+    log(f'门厅：素材包的小东西加了 {n} 件')
+
+
+UB = f'{FAB}/UnrealBucket/Library'
+MILRADIO = f'{FAB}/Military_Radio/StaticMesh'
+
+
+def place_ub_nightstand(world, x, wall_y, toward, floor_z):
+    """门厅侧墙边一个床头柜（Unreal Bucket 的 Nightstand_01：柜体、两个抽屉是分开的网格，水平原点相同，抽屉原点在抽屉底；
+    包里的 Showcase 关卡把上面的抽屉 A 放在柜体原点上 50cm、下面的 B 在 20cm），两个抽屉能拉开。
+    wall_y 是墙面，toward = +1 / -1 是墙在哪一边。返回柜体，没装这个包返回 None。"""
+    d = f'{UB}/ArchViz/Nightstand_01'
+    paths = [f'{d}/SM_Nightstand_01_Base', f'{d}/SM_Nightstand_01_Drawer_A', f'{d}/SM_Nightstand_01_Drawer_B']
+    if not all(unreal.EditorAssetLibrary.does_asset_exist(p) for p in paths):
+        log('没有 Unreal Bucket 的 Nightstand_01，门厅不放床头柜')
+        return None
+    base_sm, *drawer_sms = [unreal.load_asset(p) for p in paths]
+    # 网格坐标里正面朝哪：抽屉的包围盒中心相对柜体偏向的那个水平方向
+    bb, db = base_sm.get_bounding_box(), drawer_sms[0].get_bounding_box()
+    off = (db.min + db.max) * 0.5 - (bb.min + bb.max) * 0.5
+    local_yaw = math.degrees(math.atan2(off.y, off.x)) if abs(off.x) > abs(off.y) * 0.2 or abs(off.y) > abs(off.x) * 0.2 else 0.0
+    local_yaw = round(local_yaw / 90.0) * 90.0
+    front = unreal.Vector(0.0, -float(toward), 0.0)
+    yaw = math.degrees(math.atan2(front.y, front.x)) - local_yaw
+    rot = unreal.Rotator(roll=0.0, pitch=0.0, yaw=yaw)
+    body = spawn_mesh(base_sm, None, 'Hall_Nightstand', rot, unreal.Vector(1, 1, 1), x, wall_y, floor_z)
+    lo, hi = bounds(body)
+    face = hi.y if toward > 0 else lo.y
+    body.set_actor_location(body.get_actor_location() + unreal.Vector(0.0, wall_y - toward * 0.5 - face, 0.0), False, True)
+    lo, hi = bounds(body)
+    center = (lo + hi) * 0.5
+    depth = hi.y - lo.y
+    n = 0
+    for i, (sm, dz) in enumerate(zip(drawer_sms, (50.0, 20.0))):
+        p = actors_sub.spawn_actor_from_class(unreal.StaticMeshActor, body.get_actor_location() + unreal.Vector(0.0, 0.0, dz), body.get_actor_rotation())
+        p.static_mesh_component.set_static_mesh(sm)
+        p.set_folder_path('Hall')
+        plo, phi = bounds(p)
+        # 原点不同的话抽屉会飘在柜子外面：那就不放这个抽屉（柜体自己有抽屉面的话看起来也还是一个柜子）
+        if plo.x < lo.x - 5.0 or phi.x > hi.x + 5.0 or plo.z < lo.z - 5.0 or phi.z > hi.z + 5.0:
+            log(f'警告：{sm.get_name()} 和柜体原点对不上 {fmt(plo)}..{fmt(phi)}，不放')
+            actors_sub.destroy_actor(p)
+            continue
+        make_articulated(p, center, front, 'slide', f'床头柜{"上面" if i == 0 else "下面"}的抽屉', f'Hall_Nightstand_Drawer{i + 1}',
+                         max_value=round(depth * 0.65))
+        n += 1
+    log(f'门厅：床头柜（Unreal Bucket Nightstand_01）{fmt(lo)}..{fmt(hi)}，{n} 个抽屉能拉开')
+    return body
+
+
+def add_pack_smalls(world, items, folder_path):
+    """新素材包（Unreal Bucket、Military Radio）里的小东西放到台面上：items = (网格路径, x, y, yaw)，世界坐标。之后 auto_props 会把它们挑成能拿的。"""
+    n = sum(1 for path, x, y, yaw in items if place_on_surface(world, path, f'{folder_path}_{path.rsplit("/", 1)[1]}', x, y, yaw, folder_path))
+    log(f'{folder_path}：新素材包的小东西加了 {n} 件')
+
+
+# ---- 自动挑能拿起来的小东西 ----
+# 表里（PROPS / HOME_PROPS）挑剩下的：包围盒最长边不超过这么多（厘米），连同叠在上面的东西不超过 AUTO_PROP_MAX_STACK，
+# 底面离地不超过 AUTO_PROP_MAX_REACH（站着伸手够得到），底下 AUTO_PROP_SUPPORT_GAP 以内有朝上的台面（挂在墙上、钩子上的不算）
+AUTO_PROP_MAX_SIZE = 45.0
+AUTO_PROP_MAX_STACK = 60.0
+AUTO_PROP_MAX_REACH = 185.0
+AUTO_PROP_SUPPORT_GAP = 4.0
+# 网格名里带这些的不挑：开关插座、挂画、窗帘百叶、灯、钩子挂杆、家具的零件、绿植的叶子（叶子挂在花盆上一起走）、门厅的电梯和踢脚线
+AUTO_PROP_EXCLUDE = ('switch', 'socket', 'frame', 'picture', 'curtain', 'blind', 'lamp', 'light', 'bulb', 'hook', 'rail', 'panel', 'wire',
+                     'napkin', 'soil', 'dirt', 'handle', 'door', 'window', 'sill', 'shelf', 'shelves', 'cupboard', 'glassholder', 'control',
+                     'kitchen', 'tap', 'sink', 'radiator', 'fan', 'cradle', 'blackboard', 'clock', 'mirror', 'towel', 'glove', 'background',
+                     'scene', 'carpet', 'rug', 'floor', 'wall', 'ceiling', 'skirting', 'elevator', 'cube', 'cylinder', 'mobile', 'greenery',
+                     'aglaonema', 'amaryllis', 'dracaena', 'snakeplant', 'chlorophytum', 'var3', 'cherry', 'cornice', 'luster', 'tv',
+                     'monitor', 'printer', 'tower', 'stand', 'leaf', 'branch', 'ficus', 'puff', 'ottoman', 'chair', 'table', 'desk', 'board', 'cabinet')
+# 这些就算压在摆件底下 / 套在摆件上也不跟着走（餐巾、托盘、地毯留在原处）
+AUTO_RIDER_EXCLUDE = ('napkin', 'tray', 'carpet', 'rug', 'mat', 'cloth')
+# PropTest 跑出来不稳的（标签）：一醒就滑 / 歪、松手落不回原处、丢到地上穿下去的，下次生成不挑
+AUTO_PROP_SKIP = set(os.environ.get('ARCHVIZ_PROP_SKIP', '').split(',')) - {''}
+_skip_file = os.path.join(os.path.dirname(os.path.abspath(os.environ.get('ARCHVIZ_SCRIPT', __file__))), 'prop_skip.txt')
+if os.path.exists(_skip_file):
+    AUTO_PROP_SKIP |= {line.strip() for line in open(_skip_file, encoding='utf-8') if line.strip() and not line.startswith('#')}
+# 网格名 → 信息牌上的名字（先匹配到的算）
+AUTO_PROP_NAMES = (
+    ('wineglass', '酒杯'), ('glass', '玻璃杯'), ('cup', '杯子'), ('mug', '马克杯'), ('jug', '水壶'), ('kettle', '水壶'), ('bottle', '瓶子'),
+    ('jar', '罐子'), ('plate', '盘子'), ('dish', '碟子'), ('bowl', '碗'), ('bawl', '碗'), ('tray', '托盘'), ('candlestick', '烛台'),
+    ('candle', '蜡烛'), ('books', '一摞书'), ('book', '书'), ('notebook', '笔记本'), ('manuscript', '手稿'), ('newspaper', '报纸'),
+    ('vase', '花瓶'), ('pot', '花盆'), ('bucket', '小桶'), ('plant', '小盆栽'), ('flower', '插花'), ('box', '收纳盒'), ('basket', '篮子'),
+    ('apple', '苹果摆件'), ('torus', '圆环摆件'), ('hedra', '多面体摆件'), ('spring', '弹簧摆件'), ('top', '陀螺'), ('remote', '遥控器'),
+    ('knife', '刀'), ('fork', '叉子'), ('spoon', '勺子'), ('scapula', '锅铲'), ('pan', '锅'), ('colander', '沥水篮'), ('mixer', '打蛋器'),
+    ('cutting', '砧板'), ('pillow', '抱枕'), ('cushion', '靠垫'), ('puff', '皮墩'), ('globe', '地球仪'), ('chess', '棋子'),
+    ('horse', '马的摆件'), ('bird', '小鸟摆件'), ('bust', '半身像'), ('ballerina', '芭蕾舞者摆件'), ('gramophone', '留声机'),
+    ('pen', '笔'), ('phone', '电话'), ('keyboard', '键盘'), ('mouse', '鼠标'), ('headset', '耳机'), ('speaker', '音箱'),
+    ('tape', '胶带'), ('pliers', '钳子'), ('hammer', '锤子'), ('wrench', '扳手'), ('toolbox', '工具箱'), ('card', '电路板'),
+    ('parts', '电脑配件'), ('solution', '清洁剂'), ('lunchbox', '饭盒'), ('hardhat', '安全帽'), ('canister', '油桶'), ('decoration', '摆件'),
+    ('bag', '包'), ('jelly', '果冻'),
+)
+# 材料（UToyFeedback::ClassifyMaterial 认的字）：先看网格名，再看材质名；密度（g/cm³，按包围盒体积 × 0.3 估质量）
+AUTO_PROP_MATERIALS = (
+    (('wineglass', 'glass'), '玻璃', 1.0), (('cup', 'mug', 'plate', 'dish', 'bowl', 'bawl', 'jug', 'porcelain', 'ceramic'), '陶瓷', 0.9),
+    (('marble',), '大理石', 1.2), (('candle',), '蜡', 0.5), (('book', 'paper', 'page', 'manuscript', 'newspaper', 'notebook'), '纸', 0.7),
+    (('pan_', 'bucket', 'scapula', 'mixer', 'colander', 'knife', 'fork', 'spoon', 'pliers', 'hammer', 'wrench'), '不锈钢', 1.5),
+    (('plant',), '陶瓷花盆', 0.9),
+    (('chrome', 'steel', 'silver', 'metal', 'iron'), '不锈钢', 1.5),
+    (('brass', 'gold', 'bronze', 'copper'), '黄铜', 1.5),
+    (('cloth', 'fabric', 'velvet', 'pillow', 'cushion', 'leather', 'suede', 'cashmere', 'cell', 'denim'), '布', 0.15),
+    (('wood', 'oak', 'cutting'), '木', 0.5), (('rubber',), '橡胶', 0.9), (('plastic', 'keyboard', 'mouse', 'phone', 'tape', 'headset'), '塑料', 0.4),
+)
+
+
+def auto_material(mesh_lower, material_names):
+    for text in (mesh_lower, ' '.join(material_names).lower()):
+        for words, name, density in AUTO_PROP_MATERIALS:
+            if any(w in text for w in words):
+                return name, density
+    return '塑料', 0.5
+
+
+def auto_props(world, area, label_prefix, accept=lambda a: True, floor_z=None):
+    """把 area 里没在表里的小东西自动换成 AToyProp（凸包碰撞，叠在上面的东西挂上去一起走），返回换了几件。"""
+    studio = next((a for a in actors_sub.get_all_level_actors() if isinstance(a, unreal.ToyStudio)), None)
+    smas = [a for a in actors_sub.get_all_level_actors()
+            if isinstance(a, unreal.StaticMeshActor) and a.get_attach_parent_actor() is None and accept(a)]
+    info = {}
+    for a in smas:
+        sm = a.static_mesh_component.static_mesh
+        if not sm or a.static_mesh_component.get_editor_property('mobility') == unreal.ComponentMobility.MOVABLE:
+            continue
+        lo, hi = bounds(a)
+        info[a] = (sm.get_name().lower(), lo, hi)
+    # 地面高度：样板间是工作室站立点，Home / 门厅也一样平（地面对齐过）
+    if floor_z is None:
+        floor_z = studio.get_actor_location().z if studio else 0.0
+    candidates = []
+    for a, (name, lo, hi) in info.items():
+        size = max(hi.x - lo.x, hi.y - lo.y, hi.z - lo.z)
+        if size > AUTO_PROP_MAX_SIZE or size < 3.0 or lo.z - floor_z > AUTO_PROP_MAX_REACH or any(w in name for w in AUTO_PROP_EXCLUDE):
+            continue
+        candidates.append(a)
+    cand_set = set(candidates)
+    # 每件下面是什么：往下打一条短线，打到别的候选 = 叠在它上面（跟着它走）；打到朝上的台面 = 自己是一件；什么都没打到 = 挂着的，不要
+    support = {}
+    hanging = []
+    for a in candidates:
+        _, lo, hi = info[a]
+        c = (lo + hi) * 0.5
+        hit, point = trace_first(world, unreal.Vector(c.x, c.y, lo.z + 2.0), unreal.Vector(c.x, c.y, lo.z - AUTO_PROP_SUPPORT_GAP),
+                                 lambda o, me=a: o is not me)
+        if hit is None:
+            hanging.append(a)
+        else:
+            support[a] = hit
+    # 叶子、土、花这些（不是候选，但底面在候选的包围盒里、中心在它的脚底范围里）也挂上去
+    parent = {}
+    for a in candidates:
+        s = support.get(a)
+        if s in cand_set and s is not a and not any(w in info[s][0] for w in AUTO_RIDER_EXCLUDE):
+            parent[a] = s
+    for o, (name, lo, hi) in info.items():
+        if o in cand_set or any(w in name for w in AUTO_RIDER_EXCLUDE):
+            continue
+        c = (lo + hi) * 0.5
+        for a in candidates:
+            _, alo, ahi = info[a]
+            if alo.x <= c.x <= ahi.x and alo.y <= c.y <= ahi.y and alo.z - 1.0 <= lo.z <= ahi.z - 1.0 and max(hi.x - lo.x, hi.y - lo.y) < 150.0:
+                parent[o] = a
+                break
+
+    def root(a):
+        seen = set()
+        while a in parent and a not in seen:
+            seen.add(a)
+            a = parent[a]
+        return a
+
+    groups = {}
+    for a in candidates:
+        if a in hanging:
+            continue
+        groups.setdefault(root(a), []).append(a)
+    for o in parent:
+        if o not in cand_set:
+            r = root(o)
+            if r in groups:
+                groups[r].append(o)
+    made = 0
+    skipped = {'太大': 0, '挂着的': len(hanging), '表里排除': 0}
+    used_labels = set(a.get_actor_label() for a in actors_sub.get_all_level_actors())
+    changed_meshes = {}
+    for top in sorted(groups, key=lambda a: (folder(a), a.get_actor_label())):
+        if top not in cand_set or top in hanging:
+            continue
+        members = groups[top]
+        # 一叠里最下面那件当摆件本体（抓的是它），其他的挂上去
+        base = min((m for m in members if m in cand_set), key=lambda m: info[m][1].z)
+        lo = unreal.Vector(min(info[m][1].x for m in members), min(info[m][1].y for m in members), min(info[m][1].z for m in members))
+        hi = unreal.Vector(max(info[m][2].x for m in members), max(info[m][2].y for m in members), max(info[m][2].z for m in members))
+        if max(hi.x - lo.x, hi.y - lo.y, hi.z - lo.z) > AUTO_PROP_MAX_STACK:
+            skipped['太大'] += 1
+            continue
+        label = f'{label_prefix}_{(folder(base).replace("/", "-") + "-") if folder(base) and folder(base) != "None" else ""}{base.get_actor_label()}'.replace(' ', '')
+        if label in AUTO_PROP_SKIP:
+            skipped['表里排除'] += 1
+            continue
+        while label in used_labels:
+            label += '_'
+        used_labels.add(label)
+        comp = base.static_mesh_component
+        sm = comp.static_mesh
+        mesh_lower = sm.get_name().lower()
+        display = next((n for k, n in AUTO_PROP_NAMES if k in mesh_lower), '摆件')
+        mats = materials_of(comp)
+        material, density = auto_material(mesh_lower, [m.get_name() if m else '' for m in mats])
+        blo, bhi = info[base][1], info[base][2]
+        volume = (bhi.x - blo.x) * (bhi.y - blo.y) * (bhi.z - blo.z)
+        # 包围盒体积 × 密度 × 0.12（花瓶、杯子大多是空心的，书是实心但很薄），限制在 50g ~ 2.5kg
+        mass = min(2.5, max(0.05, volume * density * 0.12 / 1000.0))
+        # 网格用凸包（物理模拟不能用三角面）：以前被改成"三角面当简单碰撞"的改回来，没有简单碰撞的加一个整体凸包
+        body = sm.get_editor_property('body_setup')
+        if body and body.get_editor_property('collision_trace_flag') == unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE:
+            body.set_editor_property('collision_trace_flag', unreal.CollisionTraceFlag.CTF_USE_DEFAULT)
+            changed_meshes[sm.get_path_name()] = sm
+        how = unreal.ToyArchVizTools.ensure_prop_collision(sm, False)
+        if '加了' in how:
+            changed_meshes[sm.get_path_name()] = sm
+        prop = actors_sub.spawn_actor_from_class(unreal.ToyProp, base.get_actor_location(), base.get_actor_rotation())
+        prop.set_actor_scale3d(base.get_actor_scale3d())
+        pm = prop.get_editor_property('mesh')
+        pm.set_static_mesh(sm)
+        for slot, m in enumerate(mats):
+            pm.set_material(slot, m)
+        prop.set_editor_property('display_name', display)
+        prop.set_editor_property('material_text', material)
+        prop.set_editor_property('mass_kg', round(mass, 2))
+        prop.set_actor_label(label)
+        prop.set_folder_path('Props')
+        riders = []
+        for r in members:
+            if r is base:
+                continue
+            rc = r.static_mesh_component
+            rc.set_mobility(unreal.ComponentMobility.MOVABLE)
+            rc.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
+            r.attach_to_actor(prop, '', unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD, False)
+            riders.append(f'{r.get_actor_label()}[{mesh_name(r)}]')
+        actors_sub.destroy_actor(base)
+        made += 1
+        log(f'自动摆件 {label}：{display}（{material}，{mass:.2f}kg）[{sm.get_name()}] {bhi.x - blo.x:.0f}×{bhi.y - blo.y:.0f}×{bhi.z - blo.z:.0f}cm，'
+            f'底面离地 {blo.z - floor_z:.0f}cm' + (f'，带上 {"、".join(riders)}' if riders else ''))
+    for sm in changed_meshes.values():
+        unreal.EditorAssetLibrary.save_loaded_asset(sm, False)
+    log(f'{area}：自动挑了 {made} 件能拿起来的小东西（候选 {len(candidates)}，没挑：' + '，'.join(f'{k} {v}' for k, v in skipped.items()) + '）')
+    return made
 
 
 def make_props(props, to_local, with_folder=True, fix_supports=True, label_prefix='Prop'):

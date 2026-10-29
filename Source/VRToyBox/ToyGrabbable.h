@@ -50,6 +50,13 @@ class VRTOYBOX_API IToyGrabbable
 	GENERATED_BODY()
 
 public:
+	/**
+	 * 装在别的东西上、只能沿一个方向动的（柜门、抽屉，AToyArticulated）：手不把它挂到 GripPoint 上，
+	 * 而是拿着的每一帧把捏合点的世界位置交给 UpdateConstrainedGrab，由它自己决定转多少 / 拉多少。
+	 */
+	virtual bool IsConstrained() const { return false; }
+	virtual void UpdateConstrainedGrab(const FVector& HandLocation) {}
+
 	/** 现在能不能抓（比如电机爆炸动画进行中就不能抓）。 */
 	virtual bool CanGrab() const { return true; }
 

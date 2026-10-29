@@ -6,6 +6,7 @@
 #include "ToyStudio.generated.h"
 
 class AToyProp;
+class AToyArticulated;
 class AToyMenuPanel;
 class UChildActorComponent;
 class AToyExplodedModel;
@@ -240,6 +241,7 @@ private:
 
 	/** 开局时收集的摆件（样板间生成脚本放进关卡的 AToyProp）。 */
 	TArray<TWeakObjectPtr<AToyProp>> Props;
+	TArray<TWeakObjectPtr<AToyArticulated>> Articulated;
 
 	TOptional<EToyModelKind> MissingKind;
 };

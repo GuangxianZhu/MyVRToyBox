@@ -21,3 +21,17 @@ Saved/
 
 # Home Interior（Fab，Olga Chekunova）：只在本机用，不进公开仓库
 /Content/Home_Interior/
+
+# Fab / Marketplace 的免费素材包（Office Pack、Classic Office 这些）：只在本机用，不进公开仓库。
+# 从启动器拷进来以后用编辑器挪到 Content/FabPacks/<包名>/（引用跟着改好）；原来的位置也挡上，防止没挪就被提交
+/Content/FabPacks/
+/Content/Classic_Office/
+/Content/Deko_MatrixDemo/
+/Content/Office_Pack_Vol_1/
+/Content/Modern_House_V1/
+/Content/BeachScene/
+/Content/Military_Radio/
+/Content/Scene_Warehouse/
+/Content/__ExternalActors__/
+/Content/__ExternalObjects__/
+/Content/UnrealBucket/

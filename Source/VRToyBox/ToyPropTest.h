@@ -17,7 +17,8 @@ class AToyStudio;
  *   3. 全部从 1 米高丢到站立点身后的空地上：落地、没穿过地板
  *   4. 触屏「摆件复位」：全部回到原位
  *   5. 原位看 3 秒，记平均帧时间
- * 结果写日志（ToyBox: PropTest ...）和 Saved/ArchVizCheck/props_summary.csv；带 quit 跑完退出。
+ * 结果写日志（ToyBox: PropTest ...）和 Saved/ArchVizCheck/props_summary.csv，有问题的摆件（标签 + 原因）写 props_failures.tsv；带 quit 跑完退出。
+ * 其他参数当标签过滤：toy.PropTest quit Hall,Auto = 只测标签里带 Hall 或 Auto 的摆件。
  */
 UCLASS(NotPlaceable, Transient)
 class VRTOYBOX_API AToyPropTest : public AActor
@@ -27,7 +28,7 @@ class VRTOYBOX_API AToyPropTest : public AActor
 public:
 	AToyPropTest();
 
-	void Start(bool bInQuitWhenDone);
+	void Start(bool bInQuitWhenDone, const FString& InFilter);
 
 	virtual void Tick(float DeltaSeconds) override;
 
@@ -44,7 +45,10 @@ private:
 	FVector Center(const AToyProp* Prop) const;
 	/** 摆件正下方第一个面（不算摆件）的高度 */
 	float SupportZ(const AToyProp* Prop) const;
-	void Fail(const FString& What);
+	void Fail(const FString& What, const AToyProp* Prop = nullptr);
+	/** 日志里的摆件名：显示名 + 关卡里的标签（自动挑出来的摆件显示名会重复） */
+	FString Label(const AToyProp* Prop) const;
+	FString Label(int32 Index) const { return Label(Props[Index].Get()); }
 	void Finish();
 
 	struct FTimedStep
@@ -66,6 +70,9 @@ private:
 	FTransform CameraOriginal;
 	FString OutDir;
 	int32 Failures = 0;
+	/** 出问题的摆件：标签 → 原因 */
+	TArray<FString> FailureLines;
+	TArray<FString> Filters;
 	bool bQuitWhenDone = false;
 	bool bStarted = false;
 

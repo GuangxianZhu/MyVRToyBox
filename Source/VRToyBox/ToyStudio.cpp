@@ -1,6 +1,7 @@
 #include "ToyStudio.h"
 
 #include "ToyProp.h"
+#include "ToyArticulated.h"
 #include "ToyExplodedModel.h"
 #include "ToyMenuPanel.h"
 #include "ToyShapeComponent.h"
@@ -325,6 +326,10 @@ void AToyStudio::BeginPlay()
 	{
 		Props.Add(*It);
 	}
+	for (TActorIterator<AToyArticulated> It(GetWorld()); It; ++It)
+	{
+		Articulated.Add(*It);
+	}
 
 	// L_Studio 是在有 ModelAnchor 之前存的：关卡里的工作室把电机 / 阀门 / 无人机的支架存成挂在 Root 上（原点 = 地板），
 	// 构造函数里的 SetupAttachment 盖不过关卡里存的值。这里统一挂回 ModelAnchor，不然这三个模型摆在桌子前面的地上
@@ -375,6 +380,14 @@ void AToyStudio::ResetProps()
 	for (const TWeakObjectPtr<AToyProp>& Prop : Props)
 	{
 		if (AToyProp* Alive = Prop.Get())
+		{
+			Alive->ResetToHome();
+		}
+	}
+	// 打开的柜门、拉出来的抽屉也关上
+	for (const TWeakObjectPtr<AToyArticulated>& Part : Articulated)
+	{
+		if (AToyArticulated* Alive = Part.Get())
 		{
 			Alive->ResetToHome();
 		}
