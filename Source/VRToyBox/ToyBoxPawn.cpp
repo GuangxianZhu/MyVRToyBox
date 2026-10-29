@@ -79,6 +79,18 @@ namespace
 			Pawn->SetActorLocationAndRotation(Target, FRotator(0.f, StudioTransform.Rotator().Yaw, 0.f));
 		}));
 
+	FAutoConsoleCommandWithWorldAndArgs WalkTestCommand(TEXT("toy.WalkTest"),
+		TEXT("从工作室坐标 (X0, Y0) 用摇杆走路的碰撞走到 (X1, Y1)，再沿线检查每个点能不能传送，挡路的东西都写进日志：toy.WalkTest <X0> <Y0> <X1> <Y1>"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+		{
+			AToyBoxPawn* Pawn = World ? Cast<AToyBoxPawn>(UGameplayStatics::GetPlayerPawn(World, 0)) : nullptr;
+			if (Pawn && Args.Num() >= 4)
+			{
+				Pawn->RunWalkTest(FVector2D(FCString::Atof(*Args[0]), FCString::Atof(*Args[1])),
+					FVector2D(FCString::Atof(*Args[2]), FCString::Atof(*Args[3])));
+			}
+		}));
+
 	FAutoConsoleCommandWithWorldAndArgs AfterCommand(TEXT("toy.After"),
 		TEXT("过几秒再执行一条控制台命令：toy.After <秒> <命令...>。-ExecCmds 里的命令都在开局一起执行，测帧率要等着色器、动画稳定再测"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
@@ -641,35 +653,174 @@ void AToyBoxPawn::SmoothMove(FVector2D Input, float DeltaSeconds)
 	const FVector Delta = (Yaw.RotateVector(FVector::ForwardVector) * Input.Y + Yaw.RotateVector(FVector::RightVector) * Input.X)
 		* ToySettings::MoveSpeedCm() * DeltaSeconds;
 
+	MoveWithCollision(Delta);
+}
+
+bool AToyBoxPawn::MoveWithCollision(FVector Move, FHitResult* OutHit)
+{
 	// 胶囊体立在头的正下方，从现在的位置扫到目标位置；碰到墙 / 桌子就停在碰撞点前，再沿墙面滑一下
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyMove), false, this);
 	AddIgnoredForMove(Params);
 	const FCollisionShape Capsule = FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight);
-	FVector Move = Delta;
-	for (int32 Pass = 0; Pass < 2 && !Move.IsNearlyZero(); ++Pass)
+	// 碰到东西时停在碰撞点前这么远，不贴着。贴着停的话下一帧扫掠一开始就"嵌在里面"，以前那种情况只许往外退、不许沿墙滑，
+	// 走到门框边上就再也挪不动了（门口卡住就是这个）
+	constexpr float Skin = 0.5f;
+	const FVector Requested = Move;
+	const FVector Start = GetActorLocation();
+	bool bBlocked = false;
+	for (int32 Pass = 0; Pass < 3 && !Move.IsNearlyZero(); ++Pass)
 	{
 		const FVector Center = GetFeetLocation() + FVector(0.f, 0.f, CapsuleLift + CapsuleHalfHeight);
 		FHitResult Hit;
 		if (!GetWorld()->SweepSingleByChannel(Hit, Center, Center + Move, FQuat::Identity, ECC_Pawn, Capsule, Params))
 		{
 			AddActorWorldOffset(Move);
-			return;
+			Move = FVector::ZeroVector;
+			break;
 		}
+		if (OutHit && !bBlocked)
+		{
+			*OutHit = Hit;
+		}
+		bBlocked = true;
+		const FVector Normal = FVector(Hit.Normal.X, Hit.Normal.Y, 0.f).GetSafeNormal();
 		if (Hit.bStartPenetrating)
 		{
-			// 一开始就卡在东西里（比如真人走进了桌子）：只允许往外走，不让越陷越深
-			if (FVector::DotProduct(Move, Hit.Normal) > 0.f)
+			// 一开始就嵌在东西里（真人走进了桌子、或者上一帧贴着停）：先水平推出来，再把往里的那部分去掉、沿表面滑
+			if (!Normal.IsNearlyZero())
 			{
-				AddActorWorldOffset(Move);
+				AddActorWorldOffset(Normal * (FMath::Min(Hit.PenetrationDepth, 5.f) + Skin));
+				Move -= Normal * FMath::Min(0.f, FVector::DotProduct(Move, Normal));
 			}
-			return;
+			else
+			{
+				break;
+			}
+			continue;
 		}
-		AddActorWorldOffset(Move * Hit.Time);
+		const float MoveSize = Move.Size();
+		AddActorWorldOffset(Move * FMath::Max(0.f, Hit.Time - Skin / FMath::Max(MoveSize, KINDA_SMALL_NUMBER)));
 		// 剩下的位移沿墙面投影，贴着墙走
-		const FVector Normal = FVector(Hit.Normal.X, Hit.Normal.Y, 0.f).GetSafeNormal();
 		Move = Move * (1.f - Hit.Time);
 		Move -= Normal * FVector::DotProduct(Move, Normal);
 	}
+	// 门框角上：正对着角走，沿两个面滑都几乎不往前。往左右各偏 20°~70° 试一下，哪个方向能整步走过去就走哪个，
+	// 人往门口走、稍微偏一点也能被"引"进门洞
+	const FVector Progress = GetActorLocation() - Start;
+	if (bBlocked && FVector::DotProduct(Progress, Requested.GetSafeNormal()) < 0.3f * Requested.Size())
+	{
+		const FVector Center = GetFeetLocation() + FVector(0.f, 0.f, CapsuleLift + CapsuleHalfHeight);
+		for (const float Angle : { 20.f, -20.f, 40.f, -40.f, 70.f, -70.f })
+		{
+			const FVector Try = Requested.RotateAngleAxis(Angle, FVector::UpVector);
+			FHitResult Hit;
+			if (!GetWorld()->SweepSingleByChannel(Hit, Center, Center + Try, FQuat::Identity, ECC_Pawn, Capsule, Params))
+			{
+				AddActorWorldOffset(Try);
+				break;
+			}
+		}
+	}
+	return bBlocked;
+}
+
+void AToyBoxPawn::RunWalkTest(FVector2D From, FVector2D To)
+{
+	const AToyStudio* Studio = AToyStudio::Find(GetWorld());
+	if (!Studio)
+	{
+		return;
+	}
+	const FTransform StudioTransform = Studio->GetActorTransform();
+	auto World3 = [&](FVector2D P, float Z) { FVector V = StudioTransform.TransformPosition(FVector(P.X, P.Y, 0.f)); V.Z = Z; return V; };
+	// 头挪到起点正上方（桌面模式头在 VROrigin 上方，VR 里头可能偏开一点）
+	const FVector HeadOffset = Camera->GetComponentLocation() - GetActorLocation();
+	SetActorLocation(World3(From, GetActorLocation().Z) - FVector(HeadOffset.X, HeadOffset.Y, 0.f));
+	const FVector Goal = World3(To, GetActorLocation().Z);
+	auto Describe = [](const FHitResult& Hit)
+	{
+		const UPrimitiveComponent* C = Hit.GetComponent();
+		const UStaticMeshComponent* SM = Cast<UStaticMeshComponent>(C);
+		return FString::Printf(TEXT("%s.%s [%s] 碰撞点 (%.0f, %.0f, %.0f) 法线 (%.2f, %.2f, %.2f)%s"),
+			Hit.GetActor() ? *Hit.GetActor()->GetActorNameOrLabel() : TEXT("?"), C ? *C->GetName() : TEXT("?"),
+			SM && SM->GetStaticMesh() ? *SM->GetStaticMesh()->GetName() : TEXT("-"),
+			Hit.ImpactPoint.X, Hit.ImpactPoint.Y, Hit.ImpactPoint.Z, Hit.ImpactNormal.X, Hit.ImpactNormal.Y, Hit.ImpactNormal.Z,
+			Hit.bStartPenetrating ? TEXT("（一开始就嵌在里面）") : TEXT(""));
+	};
+	UE_LOG(LogTemp, Display, TEXT("WalkTest: (%.0f, %.0f) → (%.0f, %.0f)（工作室坐标）"), From.X, From.Y, To.X, To.Y);
+	// 摇杆走路：每步 3cm（90 帧 / 秒、走路速度的量级），走不动了就停
+	int32 Stuck = 0;
+	FString LastHit;
+	for (int32 Step = 0; Step < 2000 && Stuck < 10; ++Step)
+	{
+		FVector Feet = GetFeetLocation();
+		FVector ToGoal = Goal - Feet;
+		ToGoal.Z = 0.f;
+		if (ToGoal.Size() < 3.f)
+		{
+			break;
+		}
+		const FVector Before = Feet;
+		FHitResult Hit;
+		if (MoveWithCollision(ToGoal.GetClampedToMaxSize(3.f), &Hit))
+		{
+			const FString Text = Describe(Hit);
+			if (Text != LastHit)
+			{
+				const FVector L = StudioTransform.InverseTransformPosition(Before);
+				UE_LOG(LogTemp, Display, TEXT("WalkTest:   在 (%.0f, %.0f) 碰到 %s"), L.X, L.Y, *Text);
+				LastHit = Text;
+			}
+		}
+		Stuck = FVector::Dist2D(Before, GetFeetLocation()) < 0.5f ? Stuck + 1 : 0;
+	}
+	const FVector End = StudioTransform.InverseTransformPosition(GetFeetLocation());
+	const bool bArrived = FVector::Dist2D(GetFeetLocation(), Goal) < 5.f;
+	UE_LOG(LogTemp, Display, TEXT("WalkTest:   走路%s，停在 (%.0f, %.0f)"), bArrived ? TEXT("到了") : TEXT("卡住了"), End.X, End.Y);
+
+	// 传送：沿线每 10cm 从头顶往下打（和抛物线一样用 Visibility、简单碰撞），看落点能不能传送；再从眼睛高度平着打一条，看有没有挡住抛物线的
+	int32 Bad = 0;
+	FString LastBad;
+	const float Length = FVector2D::Distance(From, To);
+	for (float D = 0.f; D <= Length; D += 10.f)
+	{
+		const FVector2D P = From + (To - From) * (D / FMath::Max(Length, 1.f));
+		FHitResult Hit;
+		FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyWalkTest), false, this);
+		AddIgnoredForMove(Params);
+		const float Z = StudioTransform.GetLocation().Z;
+		FString Why;
+		if (!GetWorld()->LineTraceSingleByChannel(Hit, World3(P, Z + 240.f), World3(P, Z - 50.f), ECC_Visibility, Params))
+		{
+			Why = TEXT("往下什么都没打到");
+		}
+		else if (!Studio->IsFloorHit(Hit))
+		{
+			Why = FString::Printf(TEXT("打到的不算地板：%s"), *Describe(Hit));
+		}
+		else if (!IsTeleportTargetValid(Hit))
+		{
+			Why = FString::Printf(TEXT("站不下胶囊体（落在 %s）"), *Describe(Hit));
+		}
+		if (!Why.IsEmpty())
+		{
+			++Bad;
+			if (Why != LastBad)
+			{
+				UE_LOG(LogTemp, Display, TEXT("WalkTest:   传送 (%.0f, %.0f) 不行：%s"), P.X, P.Y, *Why);
+				LastBad = Why;
+			}
+		}
+	}
+	FHitResult Eye;
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyWalkTest), false, this);
+	AddIgnoredForMove(Params);
+	const float EyeZ = StudioTransform.GetLocation().Z + 150.f;
+	if (GetWorld()->LineTraceSingleByChannel(Eye, World3(From, EyeZ), World3(To, EyeZ), ECC_Visibility, Params))
+	{
+		UE_LOG(LogTemp, Display, TEXT("WalkTest:   眼睛高度平着看过去被挡：%s"), *Describe(Eye));
+	}
+	UE_LOG(LogTemp, Display, TEXT("WalkTest:   传送：沿线 %d 个点里 %d 个不行"), FMath::FloorToInt(Length / 10.f) + 1, Bad);
 }
 
 bool AToyBoxPawn::IsTeleportTargetValid(const FHitResult& Hit) const

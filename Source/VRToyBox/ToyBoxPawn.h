@@ -68,6 +68,9 @@ public:
 
 	AToyHand* GetRightHand() const { return RightHand; }
 
+	/** toy.WalkTest：从工作室坐标 From 用摇杆走路的那套碰撞一步步走到 To，沿途每个挡路的东西、传送不了的地方都写进日志。 */
+	void RunWalkTest(FVector2D From, FVector2D To);
+
 	/** 菜单的 CALIBRATE HANDS：进手部校准模式（和长按左摇杆一样）。不在 VR 里或已经在校准时返回 false。 */
 	bool EnterHandCalibMode();
 
@@ -148,6 +151,8 @@ private:
 
 	/** 平滑移动：Input.X = 右，Input.Y = 前（相对头的水平朝向），带死区，用胶囊体扫掠挡墙和桌子。 */
 	void SmoothMove(FVector2D Input, float DeltaSeconds);
+	/** 胶囊体从脚下扫到 Move，碰到东西就停在碰撞点前再沿墙面滑一下；OutHit 不为空时写第一个挡路的东西。返回是否被挡。 */
+	bool MoveWithCollision(FVector Move, FHitResult* OutHit = nullptr);
 	/** 从 Start 沿 Direction 打抛物线，更新抛物线和落点圈的显示；返回落点是否能传送。 */
 	bool UpdateTeleportAim(const FVector& Start, const FVector& Direction);
 	void HideTeleportAim();
