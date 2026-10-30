@@ -327,6 +327,27 @@ void AToyStudio::BeginPlay()
 	}
 	ApplyRoomVisibility();
 
+	// 样板间生成脚本在桌子的位置摆了一张工作台和一桌工具（标签 ToyWorkbench，小人国用）。要摆桌子（toy.Lilliput 0）就拿掉，不然和桌子叠在一起：
+	// 能拿的工具直接删，工作台、凳子是静态的，藏起来、关掉碰撞
+	if (!bBuildRoom && bWithDesk)
+	{
+		for (TActorIterator<AActor> It(GetWorld()); It; ++It)
+		{
+			if (It->ActorHasTag(TEXT("ToyWorkbench")))
+			{
+				if (It->IsA<AToyProp>())
+				{
+					It->Destroy();
+				}
+				else
+				{
+					It->SetActorHiddenInGame(true);
+					It->SetActorEnableCollision(false);
+				}
+			}
+		}
+	}
+
 	// 关卡里能拿起来的摆件（样板间生成脚本放的），触屏「摆件复位」用
 	for (TActorIterator<AToyProp> It(GetWorld()); It; ++It)
 	{

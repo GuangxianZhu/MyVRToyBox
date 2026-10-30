@@ -83,6 +83,30 @@ namespace
 			Pawn->SetActorLocationAndRotation(Target, FRotator(0.f, StudioTransform.Rotator().Yaw, 0.f));
 		}));
 
+	FAutoConsoleCommandWithWorldAndArgs FigurineCommand(TEXT("toy.Figurine"),
+		TEXT("小人国：把小人偶放到工作室坐标 (X, Y) 最高的台面上（茶几、餐桌、柜子顶），朝着 Yaw（度，默认面朝 -X）：toy.Figurine <X> <Y> [Yaw]。")
+		TEXT("截图测试用，比如 toy.Figurine -440 -40 再 toy.Shrink = 站在茶几上"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+		{
+			AToyFigurine* Figurine = AToyFigurine::Find(World);
+			AToyStudio* Studio = AToyStudio::Find(World);
+			if (!Figurine || !Studio || Args.Num() < 2 || Figurine->IsHidden())
+			{
+				return;
+			}
+			const FTransform StudioTransform = Studio->GetActorTransform();
+			const FVector Top = StudioTransform.TransformPosition(FVector(FCString::Atof(*Args[0]), FCString::Atof(*Args[1]), 250.f));
+			FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyFigurinePlace), false, Figurine);
+			Params.AddIgnoredActor(UGameplayStatics::GetPlayerPawn(World, 0));
+			FHitResult Hit;
+			if (World->LineTraceSingleByChannel(Hit, Top, Top - FVector(0.f, 0.f, 400.f), ECC_Visibility, Params))
+			{
+				const float Yaw = StudioTransform.Rotator().Yaw + (Args.Num() > 2 ? FCString::Atof(*Args[2]) : 180.f);
+				Figurine->StandAt(Hit.ImpactPoint + FVector(0.f, 0.f, 0.7f), Yaw);
+				UE_LOG(LogTemp, Log, TEXT("ToyBox 小人国：小人偶放到 %s（%s 上）"), *Hit.ImpactPoint.ToCompactString(), *GetNameSafe(Hit.GetActor()));
+			}
+		}));
+
 	FAutoConsoleCommandWithWorldAndArgs WalkTestCommand(TEXT("toy.WalkTest"),
 		TEXT("从工作室坐标 (X0, Y0) 用摇杆走路的碰撞走到 (X1, Y1)，再沿线检查每个点能不能传送，挡路的东西都写进日志：toy.WalkTest <X0> <Y0> <X1> <Y1>"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)

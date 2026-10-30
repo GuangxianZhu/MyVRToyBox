@@ -448,7 +448,9 @@ def build():
     # ---- 9. 摆件 ----
     make_props(PROPS, to_local)
     add_archviz_decor(world, to_world)
+    add_workbench(world, to_world, yaw)
     auto_props(world, '样板间', 'AutoA')
+    tag_workbench_props()
 
     level_sub.save_current_level()
     log(f'已保存 {TARGET_MAP}')
@@ -1250,6 +1252,77 @@ def add_archviz_decor(world, to_world):
     log(f'样板间：素材包的小东西加了 {n} 件')
 
 
+# 小人国模式不摆桌子：原来桌子的位置放一张旧木头工作台（Scene_Warehouse），台面上一桌工具（Deko 公寓包、Unreal Bucket 的木工工具），旁边一个铁凳子。
+# 工作台和凳子用三角面碰撞（小人爬得上去、站得住），小工具由 auto_props 挑成能拿的。全部带标签 ToyWorkbench：toy.Lilliput 0 要摆桌子时 AToyStudio 把它们拿掉。
+# 工作室坐标 (X 朝前, Y 朝右)；工具的 yaw 是相对工作室的（网格的长边大多沿自己的 Y，转 90 就是顺着 X 摆）。
+# 小人偶开局在站立点前方 45cm、偏右 25cm（落在台面靠前的地方），那一块空着
+WORKBENCH_MESH = f'{FAB}/Scene_Warehouse/Assets/MS/3D/Ind_War_Furniture_Table_Wood_Worn_01/SM_Ind_War_Furniture_Table_Wood_Worn_01_B'
+WORKBENCH_STOOL = f'{FAB}/Scene_Warehouse/Assets/MS/3D/Res_Fur_Stool_Metal_Worn_01/SM_Res_Fur_Stool_Metal_Worn_01'
+WORKBENCH_TOOLS = (
+    ('Deko', 'SM_Toolbox_A01_N1', 100.0, -45.0, 90.0),
+    ('Deko', 'SM_ScrewDriver_A01_N1', 55.0, -68.0, 90.0),
+    ('Deko', 'SM_ScrewDriver_B01_N1', 55.0, -62.0, 85.0),
+    ('Deko', 'SM_ScrewDriver_C01_N1', 53.0, -56.0, 95.0),
+    ('Deko', 'SM_Wrench_B01_N1', 60.0, -48.0, 90.0),
+    ('Deko', 'SM_Wrench_A01_N1', 56.0, -40.0, 80.0),
+    ('Deko', 'SM_Pliers_A01_N1', 52.0, -28.0, 70.0),
+    ('Deko', 'SM_IronHammer_A01_N1', 75.0, 0.0, 0.0),
+    ('Deko', 'SM_RubberMallet_A01_N1', 92.0, -2.0, 0.0),
+    ('Deko', 'SM_Pliers_B01_N1', 55.0, 40.0, 10.0),
+    ('Deko', 'SM_OfficeTape_D01_N1', 45.0, 62.0, 0.0),
+    ('UB', 'SM_Chisel_A', 75.0, 52.0, 90.0),
+    ('UB', 'SM_Chisel_B', 75.0, 58.0, 92.0),
+    ('UB', 'SM_File_A', 85.0, 66.0, 88.0),
+    ('UB', 'SM_WoodPlane', 97.0, 32.0, 0.0),
+    ('Deko', 'SM_AllenWrench_A01_N1', 108.0, 60.0, 0.0),
+)
+
+
+def add_workbench(world, to_world, studio_yaw):
+    if not unreal.EditorAssetLibrary.does_asset_exist(WORKBENCH_MESH):
+        log('没有 Scene_Warehouse 的旧木桌，桌子的位置空着')
+        return
+    changed = []
+    for path in (WORKBENCH_MESH, WORKBENCH_STOOL):
+        sm = unreal.load_asset(path) if unreal.EditorAssetLibrary.does_asset_exist(path) else None
+        if sm and sm.get_editor_property('body_setup').get_editor_property('collision_trace_flag') != unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE:
+            if unreal.ToyArchVizTools.use_complex_as_simple(sm):
+                changed.append(sm)
+    # 网格长边（152cm）沿自己的 X：转 90 度后顺着工作室的 Y，和原来的桌子一样横在面前
+    c = to_world(TABLE_X, 0.0)
+    bench = spawn_mesh(unreal.load_asset(WORKBENCH_MESH), None, 'Workbench_Table', unreal.Rotator(roll=0.0, pitch=0.0, yaw=studio_yaw + 90.0),
+                       unreal.Vector(1, 1, 1), c.x, c.y, origin.z, 'Workbench')
+    lo, hi = bounds(bench)
+    tagged = [bench]
+    if unreal.EditorAssetLibrary.does_asset_exist(WORKBENCH_STOOL):
+        q = to_world(TABLE_X - 5.0, -112.0)
+        tagged.append(spawn_mesh(unreal.load_asset(WORKBENCH_STOOL), None, 'Workbench_Stool', unreal.Rotator(roll=0.0, pitch=0.0, yaw=studio_yaw + 20.0),
+                                 unreal.Vector(1, 1, 1), q.x, q.y, origin.z, 'Workbench'))
+    packs = {'Deko': f'{FAB}/Deko_MatrixDemo/Apartment/Meshes', 'UB': f'{UB}/Tools/CarpenterTools'}
+    n = 0
+    for pack, name, lx, ly, yaw in WORKBENCH_TOOLS:
+        q = to_world(lx, ly)
+        a = place_on_surface(world, f'{packs[pack]}/{name}', f'Workbench_{name}', q.x, q.y, studio_yaw + yaw, 'Workbench', top=hi.z + 30.0)
+        if a:
+            tagged.append(a)
+            n += 1
+    for a in tagged:
+        a.tags = list(a.tags) + ['ToyWorkbench']
+    for sm in changed:
+        unreal.EditorAssetLibrary.save_loaded_asset(sm, False)
+    log(f'工作台：{fmt(lo)}..{fmt(hi)}，台面离地 {hi.z - origin.z:.0f}cm，工具 {n} 件，' + ('有凳子' if len(tagged) > n + 1 else '没有凳子'))
+
+
+def tag_workbench_props():
+    """auto_props 把台面上的工具换成了新的 AToyProp（标签丢了），按名字补回 ToyWorkbench 标签。"""
+    n = 0
+    for a in actors_sub.get_all_level_actors():
+        if isinstance(a, unreal.ToyProp) and 'Workbench' in a.get_actor_label():
+            a.tags = list(a.tags) + ['ToyWorkbench']
+            n += 1
+    log(f'工作台上能拿的工具 {n} 件')
+
+
 def add_hall_decor(world, ex, yl, yr):
     """门厅：矮柜上一套茶具（Classic Office），小柜子上一匹马的摆件和笔筒（Office Pack），餐边柜上一只玻璃杯（Office Pack）。"""
     co = f'{FAB}/Classic_Office/Meshes/DecorativeElements'
@@ -1349,7 +1422,8 @@ AUTO_PROP_NAMES = (
     ('cutting', '砧板'), ('pillow', '抱枕'), ('cushion', '靠垫'), ('puff', '皮墩'), ('globe', '地球仪'), ('chess', '棋子'),
     ('horse', '马的摆件'), ('bird', '小鸟摆件'), ('bust', '半身像'), ('ballerina', '芭蕾舞者摆件'), ('gramophone', '留声机'),
     ('pen', '笔'), ('phone', '电话'), ('keyboard', '键盘'), ('mouse', '鼠标'), ('headset', '耳机'), ('speaker', '音箱'),
-    ('tape', '胶带'), ('pliers', '钳子'), ('hammer', '锤子'), ('wrench', '扳手'), ('toolbox', '工具箱'), ('card', '电路板'),
+    ('tape', '胶带'), ('pliers', '钳子'), ('mallet', '橡胶锤'), ('hammer', '锤子'), ('allenwrench', '内六角扳手'), ('wrench', '扳手'),
+    ('screwdriver', '螺丝刀'), ('chisel', '凿子'), ('file_', '锉刀'), ('woodplane', '木工刨'), ('toolbox', '工具箱'), ('card', '电路板'),
     ('parts', '电脑配件'), ('solution', '清洁剂'), ('lunchbox', '饭盒'), ('hardhat', '安全帽'), ('canister', '油桶'), ('decoration', '摆件'),
     ('bag', '包'), ('jelly', '果冻'),
 )
@@ -1357,7 +1431,7 @@ AUTO_PROP_NAMES = (
 AUTO_PROP_MATERIALS = (
     (('wineglass', 'glass'), '玻璃', 1.0), (('cup', 'mug', 'plate', 'dish', 'bowl', 'bawl', 'jug', 'porcelain', 'ceramic'), '陶瓷', 0.9),
     (('marble',), '大理石', 1.2), (('candle',), '蜡', 0.5), (('book', 'paper', 'page', 'manuscript', 'newspaper', 'notebook'), '纸', 0.7),
-    (('pan_', 'bucket', 'scapula', 'mixer', 'colander', 'knife', 'fork', 'spoon', 'pliers', 'hammer', 'wrench'), '不锈钢', 1.5),
+    (('pan_', 'bucket', 'scapula', 'mixer', 'colander', 'knife', 'fork', 'spoon', 'pliers', 'hammer', 'wrench', 'screwdriver', 'chisel', 'file_'), '不锈钢', 1.5),
     (('plant',), '陶瓷花盆', 0.9),
     (('chrome', 'steel', 'silver', 'metal', 'iron'), '不锈钢', 1.5),
     (('brass', 'gold', 'bronze', 'copper'), '黄铜', 1.5),

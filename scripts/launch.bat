@@ -25,6 +25,18 @@ if not exist "%EDITOR%" (
   exit /b 1
 )
 
+rem 小人国的小人偶和大人像用引擎模板（Third Person）里的人体模特 Manny：从引擎目录拷到 Content\Characters\Mannequins（.gitignore 挡着，不进仓库）。
+rem 路径要和模板一样（/Game/Characters/Mannequins），网格才找得到自己的骨架和材质；没拷成也能玩，小人偶是橙色圆柱
+set "MANNY_SRC=%UE_ROOT%\Templates\TemplateResources\High\Characters\Content\Mannequins"
+set "MANNY_DST=%CD%\Content\Characters\Mannequins"
+if not exist "%MANNY_DST%\Meshes\SKM_Manny_Simple.uasset" if exist "%MANNY_SRC%\Meshes\SKM_Manny_Simple.uasset" (
+  echo [启动] 拷贝人体模特（小人偶、大人像用）...
+  robocopy "%MANNY_SRC%\Meshes" "%MANNY_DST%\Meshes" SKM_Manny_Simple.uasset SK_Mannequin.uasset /NJH /NJS /NFL /NDL >nul
+  robocopy "%MANNY_SRC%\Materials" "%MANNY_DST%\Materials" /E /NJH /NJS /NFL /NDL >nul
+  robocopy "%MANNY_SRC%\Textures" "%MANNY_DST%\Textures" /E /NJH /NJS /NFL /NDL >nul
+  robocopy "%MANNY_SRC%\Rigs" "%MANNY_DST%\Rigs" PA_Mannequin.uasset /NJH /NJS /NFL /NDL >nul
+)
+
 echo [启动] 编译 C++ 模块，第一次会比较久...
 call "%UE_ROOT%\Engine\Build\BatchFiles\Build.bat" VRToyBoxEditor Win64 Development -Project="%PROJECT%" -WaitMutex
 if errorlevel 1 (
