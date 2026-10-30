@@ -1262,19 +1262,20 @@ WORKBENCH_TOOLS = (
     ('Deko', 'SM_Toolbox_A01_N1', 100.0, -45.0, 90.0),
     ('Deko', 'SM_ScrewDriver_A01_N1', 55.0, -68.0, 90.0),
     ('Deko', 'SM_ScrewDriver_B01_N1', 55.0, -62.0, 85.0),
-    ('Deko', 'SM_ScrewDriver_C01_N1', 53.0, -56.0, 95.0),
+    ('Deko', 'SM_ScrewDriver_D01_N1', 53.0, -56.0, 95.0),
     ('Deko', 'SM_Wrench_B01_N1', 60.0, -48.0, 90.0),
     ('Deko', 'SM_Wrench_A01_N1', 56.0, -40.0, 80.0),
     ('Deko', 'SM_Pliers_A01_N1', 52.0, -28.0, 70.0),
     ('Deko', 'SM_IronHammer_A01_N1', 75.0, 0.0, 0.0),
-    ('Deko', 'SM_RubberMallet_A01_N1', 92.0, -2.0, 0.0),
+    # 橡胶锤、木工刨、凿子、锉刀之间都留 1.5cm 以上：凸包挨着的话一叫醒就互相顶开（PropTest 量过，挨着时滑出去 7~12cm）
+    ('Deko', 'SM_RubberMallet_A01_N1', 102.0, 5.0, 0.0),
     ('Deko', 'SM_Pliers_B01_N1', 55.0, 40.0, 10.0),
     ('Deko', 'SM_OfficeTape_D01_N1', 45.0, 62.0, 0.0),
-    ('UB', 'SM_Chisel_A', 75.0, 52.0, 90.0),
-    ('UB', 'SM_Chisel_B', 75.0, 58.0, 92.0),
-    ('UB', 'SM_File_A', 85.0, 66.0, 88.0),
-    ('UB', 'SM_WoodPlane', 97.0, 32.0, 0.0),
-    ('Deko', 'SM_AllenWrench_A01_N1', 108.0, 60.0, 0.0),
+    ('UB', 'SM_Chisel_A', 74.0, 48.0, 90.0),
+    ('UB', 'SM_Chisel_B', 74.0, 54.0, 90.0),
+    ('UB', 'SM_File_A', 74.0, 61.0, 90.0),
+    ('UB', 'SM_WoodPlane', 100.0, 45.0, 0.0),
+    ('Deko', 'SM_AllenWrench_A01_N1', 112.0, 66.0, 0.0),
 )
 
 
