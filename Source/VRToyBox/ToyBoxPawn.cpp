@@ -1685,8 +1685,9 @@ void AToyBoxPawn::SpawnLilliput()
 		{
 			Feet = Hit.ImpactPoint;
 		}
+		// 身体中心比脚高半个身高（5cm），再抬 1cm：地毯的可见性射线比它的物理碰撞面低半厘米左右，贴着放会嵌进去、一弹就倒
 		Figurine = GetWorld()->SpawnActor<AToyFigurine>(AToyFigurine::StaticClass(),
-			FTransform(FRotator(0.f, GetActorRotation().Yaw + 180.f, 0.f), Feet + FVector(0.f, 0.f, 5.3f)), Params);
+			FTransform(FRotator(0.f, GetActorRotation().Yaw + 180.f, 0.f), Feet + FVector(0.f, 0.f, 6.f)), Params);
 	}
 	GiantBody = GetWorld()->SpawnActor<AToyGiantBody>(AToyGiantBody::StaticClass(), GetActorTransform(), Params);
 	UE_LOG(LogTemp, Log, TEXT("ToyBox 小人国：小人偶 %s 在 %s"), *GetNameSafe(Figurine),
