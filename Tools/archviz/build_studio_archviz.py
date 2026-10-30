@@ -40,6 +40,7 @@ ARCHVIZ_STEP=home（在 bake 之前跑）：Fab 上 Olga Chekunova 的 Home Inte
 """
 import math
 import os
+import re
 import time
 
 import unreal
@@ -259,6 +260,129 @@ def bake(map_path):
     level_sub.save_current_level()
     unreal.EditorLoadingAndSavingUtils.save_dirty_packages(True, True)
     log(f'已保存 {map_path} 和 BuiltData')
+
+
+# GPU Lightmass 烘焙（ARCHVIZ_STEP=gpubake）：不能在命令行模式（-run=pythonscript）里跑——GPU Lightmass 是一帧一帧在渲染线程上烘的，
+# 命令行模式没有引擎循环、不出帧（以前就是在那里崩 / 卡住）。所以 .bat 用普通编辑器 + -ExecutePythonScript 跑这一段：
+# 打开关卡、Launch，然后每帧（Slate tick 回调）看进度，烘完存关卡和 BuiltData、写一个标记文件、退出编辑器。
+# 光线追踪只在这次启动里开（.bat 用 -ini: 覆盖 r.RayTracing），DefaultEngine.ini 不动：游戏里不开光追，VR 帧率不受影响
+GPU_BAKE_MARKER = os.path.join(unreal.Paths.project_saved_dir(), 'ArchVizGpuBake.txt')
+GPU_BAKE_WORKLOAD = int(os.environ.get('ARCHVIZ_GPU_WORKLOAD', '64'))
+GPU_BAKE_WARMUP = float(os.environ.get('ARCHVIZ_GPU_WARMUP_SEC', '60'))
+GPU_BAKE_TRIES = 6
+GPU_BAKE_TIMEOUT = float(os.environ.get('ARCHVIZ_GPU_TIMEOUT_MIN', '60')) * 60.0
+
+
+def gpu_bake(map_path):
+    if os.path.exists(GPU_BAKE_MARKER):
+        os.remove(GPU_BAKE_MARKER)
+    level_sub.load_level(map_path)
+    world = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_editor_world()
+    gpulm = unreal.ToyArchVizTools.get_gpu_lightmass_subsystem(world)
+    if gpulm is None:
+        raise RuntimeError('没有 GPULightmassSubsystem（GPULightmass 插件没开？）')
+    settings = gpulm.get_settings()
+    settings.set_editor_property('mode', unreal.GPULightmassMode.FULL_BAKE)
+    settings.set_editor_property('show_progress_bars', False)
+    # 默认每帧只烘 8 个 tile pass（让编辑器还能操作）；这里没人操作，开大让显卡跑满
+    settings.set_editor_property('tile_passes_in_full_speed_mode', GPU_BAKE_WORKLOAD)
+    gpulm.set_realtime(False)
+    log(f'{map_path}：GPU Lightmass 烘焙（GI Samples {settings.get_editor_property("gi_samples")}，每帧 {GPU_BAKE_WORKLOAD} 个 tile pass）...')
+    state = {'start': time.time(), 'last': -1, 'max': 0, 'launched': False, 'frames': 0, 'tries': 0, 'bricks': None, 'relaunch_at': None}
+    log_dir = unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_log_dir())
+
+    def current_log():
+        logs = [os.path.join(log_dir, f) for f in os.listdir(log_dir) if f.endswith('.log')]
+        return max(logs, key=os.path.getmtime) if logs else None
+
+    def read_bricks():
+        # GPU Lightmass 只在日志里写体积光照贴图有几个 brick（Python 拿不到）：从 Launch 时的位置往后读
+        path = state.get('log')
+        if not path:
+            return None
+        try:
+            with open(path, 'rb') as f:
+                f.seek(state['log_offset'])
+                text = f.read().decode('utf-8', 'ignore')
+        except OSError:
+            return None
+        found = re.findall(r'Volumetric lightmap NumTotalBricks = (\d+)', text)
+        return int(found[-1]) if found else None
+
+    def do_launch():
+        state['tries'] += 1
+        state['log'] = current_log()
+        state['log_offset'] = os.path.getsize(state['log']) if state['log'] else 0
+        state['bricks'] = None
+        state['launched'] = True
+        state['busy'] = True
+        gpulm.launch()
+        state['busy'] = False
+        state['start'] = time.time()
+        state['last'] = -1
+        state['max'] = 0
+        log(f'GPU Lightmass Launch（第 {state["tries"]} 次），is_running = {gpulm.is_running()}')
+
+    def finish(ok, why):
+        unreal.unregister_slate_post_tick_callback(state['handle'])
+        minutes = (time.time() - state['start']) / 60.0
+        if ok:
+            level_sub.save_current_level()
+            unreal.EditorLoadingAndSavingUtils.save_dirty_packages(True, True)
+            with open(GPU_BAKE_MARKER, 'w', encoding='utf-8') as f:
+                f.write(f'ok {minutes:.1f}')
+        log(f'GPU 烘焙{"完成" if ok else "失败"}（{why}），用时 {minutes:.1f} 分钟')
+        unreal.SystemLibrary.quit_editor()
+
+    def tick(dt):
+        state['frames'] += 1
+        if state.get('busy'):
+            return
+        # 编辑器刚起来、关卡里的网格和着色器还在编译，先等一会儿再 Launch（Slate 在加载时一帧会 tick 好多次，不能按次数等）
+        if not state['launched']:
+            if state['frames'] == 1:
+                log(f'编辑器开始出帧，{GPU_BAKE_WARMUP:.0f} 秒后开始 GPU 烘焙')
+            if time.time() - state['start'] >= GPU_BAKE_WARMUP:
+                do_launch()
+            return
+        if state['relaunch_at'] is not None:
+            if time.time() >= state['relaunch_at']:
+                state['relaunch_at'] = None
+                do_launch()
+            return
+        # 体积光照贴图（动的东西：摆件、小人偶靠它打光）是 Launch 时一次性体素化的；那时光追场景还没准备好（材质还在编译）
+        # 就会得到 0 个 brick，烘出来的摆件全黑。看到 0 就停下，等 30 秒再来一次
+        if state['bricks'] is None:
+            state['bricks'] = read_bricks()
+            if state['bricks'] is not None:
+                log(f'体积光照贴图 {state["bricks"]} 个 brick')
+                if state['bricks'] == 0:
+                    if state['tries'] >= GPU_BAKE_TRIES:
+                        state['busy'] = True
+                        gpulm.stop()
+                        state['busy'] = False
+                        finish(False, f'试了 {state["tries"]} 次体积光照贴图都是 0 个 brick')
+                    else:
+                        # Stop 里也会 tick Slate：先记上"等着重来"，不然套进来的那次 tick 看到停了就当成失败
+                        state['relaunch_at'] = time.time() + 30.0
+                        state['busy'] = True
+                        gpulm.stop()
+                        state['busy'] = False
+                    return
+        percent = gpulm.get_percentage()
+        if percent // 10 != state['last'] // 10:
+            log(f'GPU 烘焙进度 {percent}%（{(time.time() - state["start"]) / 60.0:.1f} 分钟）')
+        state['last'] = percent
+        state['max'] = max(state['max'], percent)
+        if not gpulm.is_running():
+            # 烘完以后 GPU Lightmass 自己停下、把光照贴图交给关卡；一开始就没跑起来（没开光追等）时进度一直是 0
+            ok = state['max'] >= 99 and bool(state['bricks'])
+            finish(ok, f'停下时进度 {percent}%，最高 {state["max"]}%，体积光照贴图 {state["bricks"]} 个 brick')
+        elif time.time() - state['start'] > GPU_BAKE_TIMEOUT:
+            gpulm.stop()
+            finish(False, '超时')
+
+    state['handle'] = unreal.register_slate_post_tick_callback(tick)
 
 
 def copy_map(source, target):
@@ -1666,6 +1790,13 @@ def make_props(props, to_local, with_folder=True, fix_supports=True, label_prefi
 STEP = os.environ.get('ARCHVIZ_STEP')
 if STEP == 'bake':
     bake(TARGET_MAP)
+elif STEP == 'gpubake':
+    # 普通编辑器里跑的：出错也要退出，不然 .bat 一直等着
+    try:
+        gpu_bake(TARGET_MAP)
+    except Exception as e:
+        log(f'GPU 烘焙失败：{e!r}')
+        unreal.SystemLibrary.quit_editor()
 elif STEP == 'home':
     build_wing()
 else:

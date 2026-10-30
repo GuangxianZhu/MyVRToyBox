@@ -1,6 +1,8 @@
 #include "ToyArchVizTools.h"
 
 #include "Engine/StaticMesh.h"
+#include "Engine/World.h"
+#include "Subsystems/WorldSubsystem.h"
 #include "StaticMeshResources.h"
 #include "PhysicsEngine/BodySetup.h"
 #if WITH_EDITOR
@@ -139,4 +141,11 @@ bool UToyArchVizTools::UseComplexAsSimple(UStaticMesh* Mesh)
 #else
 	return false;
 #endif
+}
+
+UWorldSubsystem* UToyArchVizTools::GetGPULightmassSubsystem(UObject* WorldContext)
+{
+	UWorld* World = WorldContext ? WorldContext->GetWorld() : nullptr;
+	UClass* Class = FindObject<UClass>(nullptr, TEXT("/Script/GPULightmass.GPULightmassSubsystem"));
+	return World && Class ? World->GetSubsystemBase(Class) : nullptr;
 }

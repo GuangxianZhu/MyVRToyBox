@@ -5,6 +5,7 @@
 #include "ToyArchVizTools.generated.h"
 
 class UStaticMesh;
+class UWorldSubsystem;
 
 /**
  * 样板间生成脚本（Tools/archviz/build_studio_archviz.py）用的编辑器小工具，只在编辑器里有用。
@@ -30,4 +31,11 @@ public:
 	/** 家具、墙：物理模拟直接用网格三角面当碰撞（"复杂碰撞当简单碰撞"），扔出去的摆件才不会穿过去。已经是了返回 false。 */
 	UFUNCTION(BlueprintCallable, Category = "ToyBox|ArchViz")
 	static bool UseComplexAsSimple(UStaticMesh* Mesh);
+
+	/**
+	 * 编辑器世界的 GPU Lightmass 子系统（UGPULightmassSubsystem：Launch / IsRunning / GetPercentage），没开插件就是空。
+	 * Python 里拿不到世界子系统（没有 SubsystemBlueprintLibrary），按类名找，工程也不用依赖 GPULightmass 模块。
+	 */
+	UFUNCTION(BlueprintCallable, Category = "ToyBox|ArchViz", meta = (WorldContext = "WorldContext"))
+	static UWorldSubsystem* GetGPULightmassSubsystem(UObject* WorldContext);
 };

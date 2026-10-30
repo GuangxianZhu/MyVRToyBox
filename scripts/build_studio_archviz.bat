@@ -58,6 +58,20 @@ if errorlevel 1 goto :fail
 if not exist "%CD%\Content\Home_Interior\Maps\L_StudioArchViz_Home.umap" goto :fail
 
 :bake
+rem 默认 CPU Lightmass（约 18 分钟）。set ARCHVIZ_BAKER=gpu 试 GPU Lightmass（实验性，光照贴图约 1 分钟）：UE 5.8 在这个工程里
+rem 体积光照贴图一直是 0 个 brick（试过前向 / 延迟渲染、开关 Nanite），摆件、小人偶、手会全黑；脚本发现 0 个 brick 就判失败、不存盘，接着用 CPU 烘
+if /i not "%ARCHVIZ_BAKER%"=="gpu" goto :bake_cpu
+echo [样板间] GPU Lightmass 烘焙（实验性，失败会自动改用 CPU）...
+set "ARCHVIZ_STEP=gpubake"
+del /q "%CD%\Saved\ArchVizGpuBake.txt" 2>nul
+rem 普通编辑器里跑（GPU Lightmass 要出帧，命令行模式不行）；-ExecutePythonScript 跑完脚本就会退出编辑器，所以用 -ExecCmds 调 py（路径不能带空格，拷到 TEMP）
+> "%TEMP%\archviz_gpubake.py" echo import os, runpy; runpy.run_path(os.environ['ARCHVIZ_SCRIPT'])
+rem 光追只在这次启动里开（-ini 覆盖，DefaultEngine.ini 不动），要 SM6；编辑器在后台时不降帧；-unattended 让"升级光照贴图 UV"之类的对话框自动选默认（否）
+start "" /wait "%UE_ROOT%\Engine\Binaries\Win64\UnrealEditor.exe" "%PROJECT%" -dx12 -sm6 -nohmd -nosplash -unattended "-ini:Engine:[/Script/Engine.RendererSettings]:r.RayTracing=True,[/Script/Engine.RendererSettings]:r.SkinCache.CompileShaders=True" "-ini:EditorPerProjectUserSettings:[/Script/UnrealEd.EditorPerformanceSettings]:bThrottleCPUWhenNotForeground=False" "-ExecCmds=py %TEMP%\archviz_gpubake.py"
+if exist "%CD%\Saved\ArchVizGpuBake.txt" goto :done
+echo [样板间] GPU 烘焙没成功，改用 CPU Lightmass
+
+:bake_cpu
 rem 烘焙要渲染（反射捕获、光照贴图编码），不能 -nullrhi
 set "ARCHVIZ_STEP=bake"
 "%UE_ROOT%\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%PROJECT%" -run=pythonscript -script=__import__('runpy').run_path(__import__('os').environ['ARCHVIZ_SCRIPT']) -unattended -nosplash -AllowCommandletRendering
