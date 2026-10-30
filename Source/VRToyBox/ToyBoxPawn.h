@@ -10,10 +10,10 @@
 class AToyHand;
 class AToyTouchScreen;
 class UCameraComponent;
-class UInstancedStaticMeshComponent;
 class UMaterialInstanceDynamic;
 class UMotionControllerComponent;
-class UStaticMeshComponent;
+class UProceduralMeshComponent;
+struct FPredictProjectilePathPointData;
 
 /**
  * 震动混合器里的一层：等 Delay 秒后开始，Attack 秒升到 Amplitude，保持 Hold 秒，Decay 秒线性降到 0。
@@ -70,6 +70,22 @@ public:
 
 	/** toy.WalkTest：从工作室坐标 From 用摇杆走路的那套碰撞一步步走到 To，沿途每个挡路的东西、传送不了的地方都写进日志。 */
 	void RunWalkTest(FVector2D From, FVector2D To);
+
+	/** toy.ReachMap：在所有能传送的范围（外扩 1.5m）里按 Cell 厘米一格，看每一格是不是地板、能不能传送、
+	 *  从开局站立点用摇杆走路（同一个胶囊体，相邻格子之间扫掠）走不走得到，挡路的是什么。写 Saved/ReachMap/<Name>.csv。 */
+	void RunReachMap(float Cell, const FString& Name);
+
+	/** toy.AimPreview：桌面模式下一直从右手朝 Angles（相对镜头）瞄准传送，截图用；关掉时收起抛物线。 */
+	void SetAimPreview(bool bEnabled, FRotator Angles)
+	{
+		bAimPreview = bEnabled;
+		AimPreviewAngles = Angles;
+		if (!bEnabled)
+		{
+			bTeleportAiming = false;
+			HideTeleportAim();
+		}
+	}
 
 	/** 菜单的 CALIBRATE HANDS：进手部校准模式（和长按左摇杆一样）。不在 VR 里或已经在校准时返回 false。 */
 	bool EnterHandCalibMode();
@@ -134,11 +150,13 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float TeleportFadeTime = 0.15f;
 
+	/** 传送抛物线：一根细管（芯）+ 外面一层很淡的粗管（光晕），挂在发出抛物线的那个组件（VR 里是右手）下面，跟着手柄的低延迟更新一起动。 */
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
-	TObjectPtr<UInstancedStaticMeshComponent> TeleportArc;
+	TObjectPtr<UProceduralMeshComponent> TeleportArc;
 
+	/** 落点圈：一圈两边虚的亮环 + 里面一层很淡的底，网格开局建一次。 */
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
-	TObjectPtr<UStaticMeshComponent> TeleportRing;
+	TObjectPtr<UProceduralMeshComponent> TeleportRing;
 
 protected:
 	virtual void BeginPlay() override;
@@ -154,8 +172,12 @@ private:
 	/** 胶囊体从脚下扫到 Move，碰到东西就停在碰撞点前再沿墙面滑一下；OutHit 不为空时写第一个挡路的东西。返回是否被挡。 */
 	bool MoveWithCollision(FVector Move, FHitResult* OutHit = nullptr);
 	/** 从 Start 沿 Direction 打抛物线，更新抛物线和落点圈的显示；返回落点是否能传送。 */
-	bool UpdateTeleportAim(const FVector& Start, const FVector& Direction);
+	bool UpdateTeleportAim(const FVector& Start, const FVector& Direction, USceneComponent* Source);
 	void HideTeleportAim();
+	/** 开局建好抛物线和落点圈的网格（三角形只建一次，之后每帧只改顶点位置和颜色）。 */
+	void BuildTeleportMeshes();
+	/** 把抛物线（世界坐标的路径点）重新采样成等距的一节节，更新管子的顶点；Space = 管子挂着的组件。 */
+	void UpdateArcMesh(const TArray<FPredictProjectilePathPointData>& Points, const USceneComponent* Space);
 	/** 黑屏淡出 → 把头挪到 Target 正上方（脚在 Target 的高度）→ 淡入。 */
 	void Teleport(const FVector& Target);
 	bool IsTeleportTargetValid(const FHitResult& Hit) const;
@@ -214,6 +236,17 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> TeleportMaterial;
+
+	// 抛物线网格每帧复用的数组（开局按固定节数分配好，之后不再分配）
+	TArray<FVector> ArcPath;
+	TArray<float> ArcPathLength;
+	TArray<FVector> ArcCoreVerts;
+	TArray<FVector> ArcHaloVerts;
+	TArray<FLinearColor> ArcCoreColors;
+	TArray<FLinearColor> ArcHaloColors;
+	int32 TeleportColorState = -1;
+	bool bAimPreview = false;
+	FRotator AimPreviewAngles = FRotator::ZeroRotator;
 
 	bool bVR = false;
 	bool bExternalControl = false;

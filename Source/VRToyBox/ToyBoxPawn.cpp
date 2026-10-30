@@ -8,13 +8,14 @@
 #include "ToyStudio.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/PlayerCameraManager.h"
-#include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/CollisionProfile.h"
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
+#include "Engine/OverlapResult.h"
 #include "Engine/StaticMesh.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "ProceduralMeshComponent.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
@@ -23,6 +24,8 @@
 #include "MotionControllerComponent.h"
 #include "TimerManager.h"
 #include "HAL/IConsoleManager.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 
 static TAutoConsoleVariable<int32> CVarHandPreview(
 	TEXT("toy.HandPreview"),
@@ -91,6 +94,31 @@ namespace
 			}
 		}));
 
+	FAutoConsoleCommandWithWorldAndArgs ReachMapCommand(TEXT("toy.ReachMap"),
+		TEXT("走得到 / 传送得到的地图：toy.ReachMap [格子厘米，默认 10] [文件名，默认 reach] [胶囊体半径，不写 = 不变]，写 Saved/ReachMap/<文件名>.csv（Tools/reach_map.py 画成图）"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+		{
+			if (AToyBoxPawn* Pawn = World ? Cast<AToyBoxPawn>(UGameplayStatics::GetPlayerPawn(World, 0)) : nullptr)
+			{
+				if (Args.Num() > 2)
+				{
+					Pawn->CapsuleRadius = FCString::Atof(*Args[2]);
+				}
+				Pawn->RunReachMap(Args.Num() > 0 ? FMath::Max(2.f, FCString::Atof(*Args[0])) : 10.f, Args.Num() > 1 ? Args[1] : TEXT("reach"));
+			}
+		}));
+
+	FAutoConsoleCommandWithWorldAndArgs AimPreviewCommand(TEXT("toy.AimPreview"),
+		TEXT("截图用（桌面模式）：右手摆到镜头右下方、朝 (Yaw, Pitch)（相对镜头，度）一直瞄准传送，不会真的传送：toy.AimPreview <Yaw> <Pitch>；toy.AimPreview off 关掉"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+		{
+			if (AToyBoxPawn* Pawn = World ? Cast<AToyBoxPawn>(UGameplayStatics::GetPlayerPawn(World, 0)) : nullptr)
+			{
+				const bool bOn = Args.Num() >= 2;
+				Pawn->SetAimPreview(bOn, bOn ? FRotator(FCString::Atof(*Args[1]), FCString::Atof(*Args[0]), 0.f) : FRotator::ZeroRotator);
+			}
+		}));
+
 	FAutoConsoleCommandWithWorldAndArgs HideHandsCommand(TEXT("toy.HideHands"),
 		TEXT("截图用：toy.HideHands 1 把两只手藏起来（桌面模式右手跟着鼠标，会挡在画面中间），0 = 显示"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
@@ -125,11 +153,22 @@ namespace
 			}), FCString::Atof(*Args[0]));
 		}));
 
-	const TCHAR* ArcMeshPath = TEXT("/Engine/BasicShapes/Sphere.Sphere");
-	const TCHAR* RingMeshPath = TEXT("/Engine/BasicShapes/Cylinder.Cylinder");
+	/** 传送抛物线和落点圈的材质：不受光照、半透明，颜色 = Color 参数 × 顶点颜色，不透明度 = Opacity × 顶点 alpha（没有就退回虚影材质）。 */
+	const TCHAR* ArcMaterialPath = TEXT("/Game/Materials/M_ToyArc.M_ToyArc");
 	const TCHAR* GlowMaterialPath = TEXT("/Game/Materials/M_ToyGhost.M_ToyGhost");
-	constexpr int32 ArcDots = 40;
 	constexpr float Glow = 12.f;
+	// 抛物线管子：沿路径等距 ArcRings 节，每节一圈 ArcSides 个顶点。芯的半径至少 ArcCoreRadius，离眼睛远了按距离加粗（保持 2~3 个像素宽，
+	// 太细了 MSAA 下会一闪一闪）；外面一层光晕粗 ArcHaloScale 倍、很淡
+	constexpr int32 ArcRings = 48;
+	constexpr int32 ArcSides = 8;
+	constexpr float ArcCoreRadius = 0.45f;
+	constexpr float ArcRadiusPerCm = 0.0016f;
+	constexpr float ArcHaloScale = 3.5f;
+	// 落点圈（厘米）：亮环中线半径、亮环宽度、里面那层淡底的不透明度
+	constexpr float RingRadius = 21.f;
+	constexpr float RingWidth = 6.f;
+	constexpr float RingFill = 0.16f;
+	constexpr int32 RingSegments = 64;
 
 	/** 把几个设备上的同一个摇杆轴取绝对值最大的（Quest / Index / WMR / Vive 的键名不同）。 */
 	TArray<FKey> Keys(std::initializer_list<const TCHAR*> Names)
@@ -204,28 +243,21 @@ AToyBoxPawn::AToyBoxPawn()
 	CalibPageKeys = Keys({ TEXT("OculusTouch_Right_A_Click"), TEXT("ValveIndex_Right_A_Click") });
 	CalibResetKeys = Keys({ TEXT("OculusTouch_Right_B_Click"), TEXT("ValveIndex_Right_B_Click") });
 
-	// 传送瞄准的显示：一串小球当抛物线，一个扁圆柱当落点圈。都只显示，不碰撞、不投影
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ArcMesh(ArcMeshPath);
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> RingMesh(RingMeshPath);
-	TeleportArc = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("TeleportArc"));
+	// 传送瞄准的显示：一根细管当抛物线，一个亮环当落点圈（网格在 BuildTeleportMeshes 里建）。都只显示，不碰撞、不投影
+	TeleportArc = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("TeleportArc"));
 	TeleportArc->SetupAttachment(VROrigin);
-	TeleportArc->SetUsingAbsoluteLocation(true);
-	TeleportArc->SetUsingAbsoluteRotation(true);
-	TeleportArc->SetUsingAbsoluteScale(true);
-	TeleportArc->SetStaticMesh(ArcMesh.Object);
-	TeleportArc->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
-	TeleportArc->SetCastShadow(false);
-	TeleportArc->SetHiddenInGame(true);
-	TeleportRing = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TeleportRing"));
+	TeleportRing = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("TeleportRing"));
 	TeleportRing->SetupAttachment(VROrigin);
 	TeleportRing->SetUsingAbsoluteLocation(true);
 	TeleportRing->SetUsingAbsoluteRotation(true);
 	TeleportRing->SetUsingAbsoluteScale(true);
-	TeleportRing->SetStaticMesh(RingMesh.Object);
-	TeleportRing->SetWorldScale3D(FVector(0.5f, 0.5f, 0.01f));
-	TeleportRing->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
-	TeleportRing->SetCastShadow(false);
-	TeleportRing->SetHiddenInGame(true);
+	for (UProceduralMeshComponent* Mesh : { TeleportArc.Get(), TeleportRing.Get() })
+	{
+		Mesh->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
+		Mesh->SetCastShadow(false);
+		Mesh->bUseAsyncCooking = false;
+		Mesh->SetHiddenInGame(true);
+	}
 }
 
 void AToyBoxPawn::BeginPlay()
@@ -236,13 +268,87 @@ void AToyBoxPawn::BeginPlay()
 	LeftHand = SpawnHand(EControllerHand::Left, LeftController);
 	RightHand = SpawnHand(EControllerHand::Right, RightController);
 	LogHandSelfCheck();
-	if (UMaterialInterface* Base = LoadObject<UMaterialInterface>(nullptr, GlowMaterialPath))
+	BuildTeleportMeshes();
+	UMaterialInterface* Base = LoadObject<UMaterialInterface>(nullptr, ArcMaterialPath);
+	if (!Base)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ToyBox: 没有 %s（跑一遍 Tools/create_toy_materials.py），传送抛物线先用虚影材质"), ArcMaterialPath);
+		Base = LoadObject<UMaterialInterface>(nullptr, GlowMaterialPath);
+	}
+	if (Base)
 	{
 		TeleportMaterial = UMaterialInstanceDynamic::Create(Base, this);
-		TeleportMaterial->SetScalarParameterValue(TEXT("Opacity"), 0.6f);
-		TeleportArc->SetMaterial(0, TeleportMaterial);
-		TeleportRing->SetMaterial(0, TeleportMaterial);
+		TeleportMaterial->SetScalarParameterValue(TEXT("Opacity"), 1.f);
+		for (int32 Section = 0; Section < 2; ++Section)
+		{
+			TeleportArc->SetMaterial(Section, TeleportMaterial);
+			TeleportRing->SetMaterial(Section, TeleportMaterial);
+		}
 	}
+}
+
+void AToyBoxPawn::BuildTeleportMeshes()
+{
+	// 抛物线：芯（段 0）和光晕（段 1）是同样拓扑的两根管子。三角形只建这一次，之后 UpdateMeshSection 只换顶点位置、颜色
+	const int32 NumVerts = ArcRings * ArcSides;
+	TArray<int32> Tris;
+	Tris.Reserve((ArcRings - 1) * ArcSides * 6);
+	for (int32 Ring = 0; Ring < ArcRings - 1; ++Ring)
+	{
+		for (int32 Side = 0; Side < ArcSides; ++Side)
+		{
+			const int32 A = Ring * ArcSides + Side;
+			const int32 B = Ring * ArcSides + (Side + 1) % ArcSides;
+			Tris.Append({ A, A + ArcSides, B, B, A + ArcSides, B + ArcSides });
+		}
+	}
+	ArcPath.SetNumZeroed(ArcRings);
+	ArcCoreVerts.SetNumZeroed(NumVerts);
+	ArcHaloVerts.SetNumZeroed(NumVerts);
+	ArcCoreColors.Init(FLinearColor::Transparent, NumVerts);
+	ArcHaloColors.Init(FLinearColor::Transparent, NumVerts);
+	const TArray<FVector> NoNormals;
+	const TArray<FVector2D> NoUV;
+	const TArray<FProcMeshTangent> NoTangents;
+	TeleportArc->CreateMeshSection_LinearColor(0, ArcCoreVerts, Tris, NoNormals, NoUV, ArcCoreColors, NoTangents, false);
+	TeleportArc->CreateMeshSection_LinearColor(1, ArcHaloVerts, Tris, NoNormals, NoUV, ArcHaloColors, NoTangents, false);
+
+	// 落点圈（段 0）：三圈顶点，中间那圈全亮、内外两圈透明，亮环两边是虚的；段 1：里面一层很淡的底，中心稍亮
+	TArray<FVector> Verts;
+	TArray<FLinearColor> Colors;
+	Tris.Reset();
+	const float Radii[3] = { RingRadius - RingWidth * 0.5f, RingRadius, RingRadius + RingWidth * 0.5f };
+	for (int32 Seg = 0; Seg < RingSegments; ++Seg)
+	{
+		const float Angle = 2.f * PI * Seg / RingSegments;
+		const FVector Dir(FMath::Cos(Angle), FMath::Sin(Angle), 0.f);
+		for (int32 Loop = 0; Loop < 3; ++Loop)
+		{
+			Verts.Add(Dir * Radii[Loop]);
+			Colors.Add(FLinearColor(1.f, 1.f, 1.f, Loop == 1 ? 1.f : 0.f));
+		}
+		const int32 Next = (Seg + 1) % RingSegments;
+		for (int32 Loop = 0; Loop < 2; ++Loop)
+		{
+			const int32 A = Seg * 3 + Loop;
+			const int32 B = Next * 3 + Loop;
+			Tris.Append({ A, B, A + 1, A + 1, B, B + 1 });
+		}
+	}
+	TeleportRing->CreateMeshSection_LinearColor(0, Verts, Tris, NoNormals, NoUV, Colors, NoTangents, false);
+	Verts.Reset();
+	Colors.Reset();
+	Tris.Reset();
+	Verts.Add(FVector::ZeroVector);
+	Colors.Add(FLinearColor(1.f, 1.f, 1.f, RingFill * 1.6f));
+	for (int32 Seg = 0; Seg < RingSegments; ++Seg)
+	{
+		const float Angle = 2.f * PI * Seg / RingSegments;
+		Verts.Add(FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.f) * Radii[0]);
+		Colors.Add(FLinearColor(1.f, 1.f, 1.f, RingFill));
+		Tris.Append({ 0, 1 + (Seg + 1) % RingSegments, 1 + Seg });
+	}
+	TeleportRing->CreateMeshSection_LinearColor(1, Verts, Tris, NoNormals, NoUV, Colors, NoTangents, false);
 }
 
 AToyHand* AToyBoxPawn::SpawnHand(EControllerHand HandSide, UMotionControllerComponent* MotionController)
@@ -426,7 +532,7 @@ void AToyBoxPawn::TickVR()
 		bTeleportAiming = true;
 		// 从右手的瞄准姿态（手柄实际指的方向）发出；握把姿态的 +X 沿着握把，比实际指向高约 60°
 		const FTransform Hand = (RightAim->IsTracked() ? RightAim : RightController)->GetComponentTransform();
-		bTeleportValid = UpdateTeleportAim(Hand.GetLocation(), Hand.GetUnitAxis(EAxis::X));
+		bTeleportValid = UpdateTeleportAim(Hand.GetLocation(), Hand.GetUnitAxis(EAxis::X), RightAim->IsTracked() ? RightAim : RightController);
 		return;
 	}
 	if (bTeleportAiming && Aim < 0.3f)
@@ -834,6 +940,153 @@ void AToyBoxPawn::RunWalkTest(FVector2D From, FVector2D To)
 	UE_LOG(LogTemp, Display, TEXT("WalkTest:   传送：沿线 %d 个点里 %d 个不行"), FMath::FloorToInt(Length / 10.f) + 1, Bad);
 }
 
+void AToyBoxPawn::RunReachMap(float Cell, const FString& Name)
+{
+	const AToyStudio* Studio = AToyStudio::Find(GetWorld());
+	if (!Studio)
+	{
+		return;
+	}
+	const double StartTime = FPlatformTime::Seconds();
+	const FTransform StudioTransform = Studio->GetActorTransform();
+	const float FloorZ = StudioTransform.GetLocation().Z;
+	const float FeetZ = GetActorLocation().Z;
+	FBox2D Bounds(FVector2D(Studio->WalkArea.Min), FVector2D(Studio->WalkArea.Max));
+	for (const FBox& Area : Studio->ExtraWalkAreas)
+	{
+		Bounds += FVector2D(Area.Min);
+		Bounds += FVector2D(Area.Max);
+	}
+	Bounds = Bounds.ExpandBy(150.f);
+	const int32 NX = FMath::CeilToInt((Bounds.Max.X - Bounds.Min.X) / Cell) + 1;
+	const int32 NY = FMath::CeilToInt((Bounds.Max.Y - Bounds.Min.Y) / Cell) + 1;
+	auto Local = [&](int32 IX, int32 IY) { return FVector2D(Bounds.Min.X + IX * Cell, Bounds.Min.Y + IY * Cell); };
+	auto World3 = [&](FVector2D P, float Z) { FVector V = StudioTransform.TransformPosition(FVector(P.X, P.Y, 0.f)); V.Z = Z; return V; };
+	auto Describe = [](const UPrimitiveComponent* C, const AActor* A)
+	{
+		const UStaticMeshComponent* SM = Cast<UStaticMeshComponent>(C);
+		FString Text = FString::Printf(TEXT("%s/%s"), A ? *A->GetActorNameOrLabel() : TEXT("?"),
+			SM && SM->GetStaticMesh() ? *SM->GetStaticMesh()->GetName() : (C ? *C->GetName() : TEXT("?")));
+		return Text.Replace(TEXT(","), TEXT(";"));
+	};
+
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyReachMap), false, this);
+	AddIgnoredForMove(Params);
+	const FCollisionShape Capsule = FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight);
+	const float CapsuleZ = FeetZ + CapsuleLift + CapsuleHalfHeight;
+
+	// 每一格：地板（1 = 从上往下第一下就打到站立高度的朝上表面，2 = 上面压着家具、底下才是地），能不能传送，胶囊体站不站得下
+	TArray<uint8> Floor, Tele, Free, Walk;
+	TArray<FString> TopText, BlockText;
+	const int32 N = NX * NY;
+	Floor.SetNumZeroed(N);
+	Tele.SetNumZeroed(N);
+	Free.SetNumZeroed(N);
+	Walk.SetNumZeroed(N);
+	TopText.SetNum(N);
+	BlockText.SetNum(N);
+	for (int32 IY = 0; IY < NY; ++IY)
+	{
+		for (int32 IX = 0; IX < NX; ++IX)
+		{
+			const int32 I = IY * NX + IX;
+			const FVector2D P = Local(IX, IY);
+			// 从 2m 高往下打：吊扇、吊饰在 2.2~2.4m，从更高处打会一开始就嵌在它们里面
+			FHitResult Hit;
+			if (GetWorld()->LineTraceSingleByChannel(Hit, World3(P, FloorZ + 200.f), World3(P, FloorZ - 50.f), ECC_Visibility, Params))
+			{
+				TopText[I] = FString::Printf(TEXT("%s@%.0f"), *Describe(Hit.GetComponent(), Hit.GetActor()), Hit.ImpactPoint.Z - FloorZ);
+				if (Hit.ImpactNormal.Z > 0.8f && FMath::Abs(Hit.ImpactPoint.Z - FloorZ) < 5.f)
+				{
+					Floor[I] = 1;
+				}
+				Tele[I] = IsTeleportTargetValid(Hit) ? 1 : 0;
+			}
+			FHitResult Low;
+			if (!Floor[I] && GetWorld()->LineTraceSingleByChannel(Low, World3(P, FloorZ + 12.f), World3(P, FloorZ - 20.f), ECC_Visibility, Params)
+				&& Low.ImpactNormal.Z > 0.8f)
+			{
+				Floor[I] = 2;
+			}
+			TArray<FOverlapResult> Overlaps;
+			if (GetWorld()->OverlapMultiByChannel(Overlaps, World3(P, CapsuleZ), FQuat::Identity, ECC_Pawn, Capsule, Params))
+			{
+				for (const FOverlapResult& O : Overlaps)
+				{
+					if (O.bBlockingHit)
+					{
+						BlockText[I] = Describe(O.GetComponent(), O.GetActor());
+						break;
+					}
+				}
+			}
+			Free[I] = BlockText[I].IsEmpty() ? 1 : 0;
+		}
+	}
+
+	// 从开局站立点（工作室原点）往四周一格一格扫掠，和摇杆走路用同一个胶囊体
+	const int32 SX = FMath::RoundToInt((0.f - Bounds.Min.X) / Cell);
+	const int32 SY = FMath::RoundToInt((0.f - Bounds.Min.Y) / Cell);
+	TArray<int32> Queue;
+	if (SX >= 0 && SX < NX && SY >= 0 && SY < NY && Free[SY * NX + SX])
+	{
+		Walk[SY * NX + SX] = 1;
+		Queue.Add(SY * NX + SX);
+	}
+	for (int32 Head = 0; Head < Queue.Num(); ++Head)
+	{
+		const int32 IX = Queue[Head] % NX;
+		const int32 IY = Queue[Head] / NX;
+		const FVector From = World3(Local(IX, IY), CapsuleZ);
+		for (const FIntPoint D : { FIntPoint(1, 0), FIntPoint(-1, 0), FIntPoint(0, 1), FIntPoint(0, -1) })
+		{
+			const int32 JX = IX + D.X;
+			const int32 JY = IY + D.Y;
+			if (JX < 0 || JX >= NX || JY < 0 || JY >= NY)
+			{
+				continue;
+			}
+			const int32 J = JY * NX + JX;
+			if (Walk[J] || !Free[J])
+			{
+				continue;
+			}
+			FHitResult Hit;
+			if (!GetWorld()->SweepSingleByChannel(Hit, From, World3(Local(JX, JY), CapsuleZ), FQuat::Identity, ECC_Pawn, Capsule, Params))
+			{
+				Walk[J] = 1;
+				Queue.Add(J);
+			}
+		}
+	}
+
+	TArray<FString> Rows;
+	Rows.Add(FString::Printf(TEXT("# cell %.1f radius %.1f halfheight %.1f lift %.1f floorz %.1f feetz %.1f"),
+		Cell, CapsuleRadius, CapsuleHalfHeight, CapsuleLift, FloorZ, FeetZ));
+	Rows.Add(FString::Printf(TEXT("# area walk %.0f %.0f %.0f %.0f"), Studio->WalkArea.Min.X, Studio->WalkArea.Min.Y, Studio->WalkArea.Max.X, Studio->WalkArea.Max.Y));
+	for (const FBox& Area : Studio->ExtraWalkAreas)
+	{
+		Rows.Add(FString::Printf(TEXT("# area extra %.0f %.0f %.0f %.0f"), Area.Min.X, Area.Min.Y, Area.Max.X, Area.Max.Y));
+	}
+	Rows.Add(TEXT("ix,iy,x,y,floor,tele,free,walk,top,blocker"));
+	int32 Counts[4] = { 0, 0, 0, 0 };
+	for (int32 I = 0; I < N; ++I)
+	{
+		const FVector2D P = Local(I % NX, I / NX);
+		Rows.Add(FString::Printf(TEXT("%d,%d,%.0f,%.0f,%d,%d,%d,%d,%s,%s"), I % NX, I / NX, P.X, P.Y,
+			Floor[I], Tele[I], Free[I], Walk[I], *TopText[I], *BlockText[I]));
+		if (Floor[I] == 1)
+		{
+			++Counts[(Walk[I] ? 1 : 0) + (Tele[I] ? 2 : 0)];
+		}
+	}
+	const FString Path = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir() / TEXT("ReachMap") / (Name + TEXT(".csv")));
+	FFileHelper::SaveStringToFile(FString::Join(Rows, TEXT("\n")) + TEXT("\n"), *Path, FFileHelper::EEncodingOptions::ForceUTF8);
+	UE_LOG(LogTemp, Display, TEXT("ReachMap: %d×%d 格（%.0fcm），胶囊体半径 %.0f 半高 %.0f 离地 %.0f；露出来的地板里 走+传 %d、只能传 %d、只能走 %d、都不行 %d；用时 %.1fs → %s"),
+		NX, NY, Cell, CapsuleRadius, CapsuleHalfHeight, CapsuleLift, Counts[3], Counts[2], Counts[1], Counts[0],
+		FPlatformTime::Seconds() - StartTime, *Path);
+}
+
 bool AToyBoxPawn::IsTeleportTargetValid(const FHitResult& Hit) const
 {
 	// 只能落在工作室的地板上（地毯也算地板；套用样板间时是样板间的地面），房间以内，脚下那块地方站得下一个胶囊体（不在桌子底下、不贴墙）
@@ -849,7 +1102,7 @@ bool AToyBoxPawn::IsTeleportTargetValid(const FHitResult& Hit) const
 		FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight), Params);
 }
 
-bool AToyBoxPawn::UpdateTeleportAim(const FVector& Start, const FVector& Direction)
+bool AToyBoxPawn::UpdateTeleportAim(const FVector& Start, const FVector& Direction, USceneComponent* Source)
 {
 	FPredictProjectilePathParams Path(1.f, Start, Direction.GetSafeNormal() * TeleportLaunchSpeed, 2.f, ECC_Visibility, this);
 	Path.bTraceWithCollision = true;
@@ -862,25 +1115,24 @@ bool AToyBoxPawn::UpdateTeleportAim(const FVector& Start, const FVector& Directi
 	const bool bHit = UGameplayStatics::PredictProjectilePath(GetWorld(), Path, Result);
 	const bool bValid = bHit && IsTeleportTargetValid(Result.HitResult);
 
-	// 抛物线：沿路径均匀摆 ArcDots 个小球
-	TeleportArc->ClearInstances();
-	const TArray<FPredictProjectilePathPointData>& Points = Result.PathData;
-	if (Points.Num() >= 2)
+	// 抛物线：管子挂在发出抛物线的组件下面（VR 里是右手柄），渲染前手柄的低延迟更新会带着它一起动，起点贴着手柄不抖
+	if (Source && TeleportArc->GetAttachParent() != Source)
 	{
-		for (int32 Index = 0; Index < ArcDots; ++Index)
-		{
-			const float T = static_cast<float>(Index) / (ArcDots - 1) * (Points.Num() - 1);
-			const int32 I0 = FMath::Min(FMath::FloorToInt(T), Points.Num() - 2);
-			const FVector Location = FMath::Lerp(Points[I0].Location, Points[I0 + 1].Location, T - I0);
-			TeleportArc->AddInstance(FTransform(FQuat::Identity, Location, FVector(0.025f)), true);
-		}
+		TeleportArc->AttachToComponent(Source, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	}
-	if (TeleportMaterial)
+	UpdateArcMesh(Result.PathData, TeleportArc->GetAttachParent());
+	if (TeleportMaterial && TeleportColorState != (bValid ? 1 : 0))
 	{
-		const FLinearColor Color = bValid ? FLinearColor(0.2f, 0.85f, 1.f) : FLinearColor(1.f, 0.15f, 0.1f);
-		TeleportMaterial->SetVectorParameterValue(TEXT("Color"), Color * Glow);
+		TeleportColorState = bValid ? 1 : 0;
+		const FLinearColor Color = bValid ? FLinearColor(0.2f, 0.85f, 1.f) : FLinearColor(1.f, 0.18f, 0.12f);
+		// 和触屏、信息牌一样跟着场景的曝光提亮（样板间是固定曝光再减 1.5 档，不提亮的话抛物线是暗青色）
+		const AToyStudio* Studio = AToyStudio::Find(GetWorld());
+		TeleportMaterial->SetVectorParameterValue(TEXT("Color"), Color * (Glow * (Studio ? Studio->UiBrightnessScale : 1.f)));
 	}
-	TeleportArc->SetHiddenInGame(false);
+	TeleportArc->SetHiddenInGame(Result.PathData.Num() < 2);
+	// 落点圈轻轻地"呼吸"（±4%）
+	const float Breath = 1.f + 0.04f * FMath::Sin(GetWorld()->GetRealTimeSeconds() * 5.f);
+	TeleportRing->SetWorldScale3D(FVector(Breath, Breath, 1.f));
 	if (bValid)
 	{
 		TeleportRing->SetHiddenInGame(false);
@@ -896,10 +1148,11 @@ bool AToyBoxPawn::UpdateTeleportAim(const FVector& Start, const FVector& Directi
 		FCollisionQueryParams FloorParams(SCENE_QUERY_STAT(ToyTeleportFloor), false, this);
 		AddIgnoredForMove(FloorParams);
 		const FVector From = Result.HitResult.ImpactPoint + FVector(0.f, 0.f, 1.f);
-		// 套用样板间时，样板间的地面也算地
+		// 套用样板间时，样板间的地面也算地（只认站立高度的，不然红圈会停在衣帽架的挂钩、柜子顶上）
 		const AToyStudio* Studio = AToyStudio::Find(GetWorld());
 		if (GetWorld()->LineTraceSingleByChannel(Floor, From, From - FVector(0.f, 0.f, 500.f), ECC_Visibility, FloorParams)
-			&& Floor.ImpactNormal.Z > 0.8f && (Cast<AToyStudio>(Floor.GetActor()) || (Studio && !Studio->bBuildRoom)))
+			&& Floor.ImpactNormal.Z > 0.8f && (Cast<AToyStudio>(Floor.GetActor())
+				|| (Studio && !Studio->bBuildRoom && FMath::Abs(Floor.ImpactPoint.Z - Studio->GetActorLocation().Z) < 5.f)))
 		{
 			TeleportRing->SetWorldLocation(Floor.ImpactPoint + FVector(0.f, 0.f, 0.6f));
 			bRingOnFloor = true;
@@ -909,9 +1162,79 @@ bool AToyBoxPawn::UpdateTeleportAim(const FVector& Start, const FVector& Directi
 	return false;
 }
 
+void AToyBoxPawn::UpdateArcMesh(const TArray<FPredictProjectilePathPointData>& Points, const USceneComponent* Space)
+{
+	if (Points.Num() < 2 || !Space)
+	{
+		return;
+	}
+	// 按弧长等距重新采样成 ArcRings 个点（路径点是按模拟时间等间隔的，越往下越稀）
+	ArcPathLength.SetNum(Points.Num(), EAllowShrinking::No);
+	ArcPathLength[0] = 0.f;
+	for (int32 I = 1; I < Points.Num(); ++I)
+	{
+		ArcPathLength[I] = ArcPathLength[I - 1] + FVector::Dist(Points[I - 1].Location, Points[I].Location);
+	}
+	const float Total = FMath::Max(ArcPathLength.Last(), 1.f);
+	int32 Seg = 0;
+	for (int32 Ring = 0; Ring < ArcRings; ++Ring)
+	{
+		const float L = Total * Ring / (ArcRings - 1);
+		while (Seg < Points.Num() - 2 && ArcPathLength[Seg + 1] < L)
+		{
+			++Seg;
+		}
+		const float SegLength = FMath::Max(ArcPathLength[Seg + 1] - ArcPathLength[Seg], KINDA_SMALL_NUMBER);
+		ArcPath[Ring] = FMath::Lerp(Points[Seg].Location, Points[Seg + 1].Location, FMath::Clamp((L - ArcPathLength[Seg]) / SegLength, 0.f, 1.f));
+	}
+
+	// 每节一圈顶点：截面方向沿路径平行移动（不会在抛物线顶点附近突然翻转），顶点算到管子挂着的组件的局部坐标
+	const FTransform ToLocal = Space->GetComponentTransform();
+	const FVector Eye = Camera->GetComponentLocation();
+	const float Time = GetWorld()->GetRealTimeSeconds();
+	FVector Normal = FVector::ZeroVector;
+	for (int32 Ring = 0; Ring < ArcRings; ++Ring)
+	{
+		const FVector Tangent = (ArcPath[FMath::Min(Ring + 1, ArcRings - 1)] - ArcPath[FMath::Max(Ring - 1, 0)]).GetSafeNormal();
+		if (Ring == 0)
+		{
+			Normal = FVector::CrossProduct(Tangent, FVector::UpVector);
+			if (Normal.SizeSquared() < 0.01f)
+			{
+				Normal = FVector::CrossProduct(Tangent, FVector::ForwardVector);
+			}
+		}
+		Normal = (Normal - Tangent * FVector::DotProduct(Normal, Tangent)).GetSafeNormal();
+		const FVector Binormal = FVector::CrossProduct(Tangent, Normal);
+
+		// S = 0（手）→ 1（落点）。手边细、淡，往前慢慢变亮，到落点最亮；一串很淡的亮纹顺着往落点流
+		const float S = static_cast<float>(Ring) / (ArcRings - 1);
+		const float FadeIn = FMath::SmoothStep(0.f, 0.14f, S);
+		const float Radius = FMath::Max(ArcCoreRadius, ArcRadiusPerCm * FVector::Dist(Eye, ArcPath[Ring])) * FMath::Lerp(0.4f, 1.f, FadeIn);
+		const float Flow = 0.88f + 0.12f * FMath::Sin(2.f * PI * (S * 7.f - Time * 1.6f));
+		const float Bright = FMath::Lerp(0.45f, 1.f, S * S) * Flow;
+		const FLinearColor Core(Bright, Bright, Bright, 0.9f * FadeIn);
+		const FLinearColor Halo(Bright, Bright, Bright, 0.13f * FadeIn);
+		for (int32 Side = 0; Side < ArcSides; ++Side)
+		{
+			const float Angle = 2.f * PI * Side / ArcSides;
+			const FVector Offset = Normal * FMath::Cos(Angle) + Binormal * FMath::Sin(Angle);
+			const int32 V = Ring * ArcSides + Side;
+			ArcCoreVerts[V] = ToLocal.InverseTransformPosition(ArcPath[Ring] + Offset * Radius);
+			ArcHaloVerts[V] = ToLocal.InverseTransformPosition(ArcPath[Ring] + Offset * (Radius * ArcHaloScale));
+			ArcCoreColors[V] = Core;
+			ArcHaloColors[V] = Halo;
+		}
+	}
+	const TArray<FVector> NoNormals;
+	const TArray<FVector2D> NoUV;
+	const TArray<FProcMeshTangent> NoTangents;
+	TeleportArc->UpdateMeshSection_LinearColor(0, ArcCoreVerts, NoNormals, NoUV, ArcCoreColors, NoTangents, false);
+	TeleportArc->UpdateMeshSection_LinearColor(1, ArcHaloVerts, NoNormals, NoUV, ArcHaloColors, NoTangents, false);
+}
+
 void AToyBoxPawn::HideTeleportAim()
 {
-	TeleportArc->ClearInstances();
 	TeleportArc->SetHiddenInGame(true);
 	TeleportRing->SetHiddenInGame(true);
 }
@@ -975,6 +1298,22 @@ void AToyBoxPawn::TickDesktop()
 		DesktopHoldDistance -= 5.f;
 	}
 	DesktopHoldDistance = FMath::Clamp(DesktopHoldDistance, 25.f, 200.f);
+
+	// toy.AimPreview：右手像拿着手柄一样摆在镜头右下方，从手里一直打传送抛物线（截图看效果用，不传送）。
+	// 放在读鼠标前面：-game 截图时窗口没有焦点、拿不到鼠标位置
+	if (bAimPreview)
+	{
+		const FRotator CameraRotation = Camera->GetComponentRotation();
+		const FVector Aim = (CameraRotation + AimPreviewAngles).Vector();
+		const FRotationMatrix View(CameraRotation);
+		const FVector HandLocation = Camera->GetComponentLocation() + View.GetUnitAxis(EAxis::X) * 55.f
+			+ View.GetUnitAxis(EAxis::Y) * 24.f - View.GetUnitAxis(EAxis::Z) * 28.f;
+		RightHand->SetDesktopPose(HandLocation, FRotator(Aim.Rotation().Pitch, Aim.Rotation().Yaw, -90.f));
+		RightHand->SetInputs(0.f, 0.f);
+		bTeleportAiming = true;
+		bTeleportValid = UpdateTeleportAim(HandLocation + Aim * 10.f, Aim, VROrigin);
+		return;
+	}
 
 	FVector Origin;
 	FVector Direction;
@@ -1052,7 +1391,7 @@ void AToyBoxPawn::TickDesktop()
 	if (PC->IsInputKeyDown(EKeys::T) && ToySettings::Get().bTeleport)
 	{
 		bTeleportAiming = true;
-		bTeleportValid = UpdateTeleportAim(Origin + Direction * 30.f, (Direction + FVector(0.f, 0.f, 0.25f)).GetSafeNormal());
+		bTeleportValid = UpdateTeleportAim(Origin + Direction * 30.f, (Direction + FVector(0.f, 0.f, 0.25f)).GetSafeNormal(), VROrigin);
 	}
 	else if (bTeleportAiming)
 	{

@@ -58,7 +58,10 @@ DELETE_MESH_PREFIXES = ('SM_DiningTable', 'SM_DiningChair')
 # 地面、地毯、墙、天花板这些不算"挡路的家具"
 STRUCTURE_LABELS = ('SM_Floor', 'SM_Ceiling', 'SM_Wall', 'DiningRoom-Rug', 'LivingRoom-Rug')
 STANDING_CLEARANCE = 60.0
-WALK_MARGIN = 30.0
+# 能传送的范围比内墙往里缩多少：只是挡住墙外的地面，贴墙那一圈站不站得下由传送时的胶囊体检查管（toy.ReachMap 量过：缩 30cm 时墙边 10cm 宽的一圈走得到、传送不了）
+WALK_MARGIN = 10.0
+# 挂在天花板上的骨骼网格（吊扇、吊饰）
+CEILING_HANGERS = ('SK_FanBlades', 'SK_Mobile')
 EXPOSURE_BIAS = float(os.environ.get('ARCHVIZ_EXPOSURE', '-1.5'))
 # 触屏、信息牌这些不受光照的界面跟着曝光走：样板间是固定曝光再减 1.5 档，比自己房间的自动曝光暗，整体再提亮这么多倍
 # 7 是量出来的：站位看触屏，屏幕区域平均亮度 34.8（L_Studio 里 33.7），4 只有 23.1。头显里还嫌暗 / 亮，游戏里 toy.UiBrightness <倍数> 现场试
@@ -111,7 +114,7 @@ HOME_CORRIDOR_END_X = -1722.0      # 尽头墙面，生成时沿走廊打线再�
 HOME_FLOOR_Z = 10.0
 # Home 的客厅中间（原来单独一张图时的站立点）和能传送的范围（以它为原点）
 HOME_ORIGIN = (-1250.0, 1700.0)
-HOME_WALK = ((-480.0, -315.0), (480.0, 530.0))
+HOME_WALK = ((-500.0, -335.0), (500.0, 550.0))
 # 两个门洞之间的门厅（厘米）：长度 = 样板间前墙外皮到 Home 外墙皮，宽度差不多一个房间，层高和样板间一样（生成时往上打线量）
 HALL_LENGTH = float(os.environ.get('ARCHVIZ_HALL_LENGTH', '500'))
 HALL_WIDTH = float(os.environ.get('ARCHVIZ_HALL_WIDTH', '350'))
@@ -169,6 +172,12 @@ def pawn_ignore_fixtures():
             a.static_mesh_component.set_collision_response_to_channel(unreal.CollisionChannel.ECC_PAWN, unreal.CollisionResponseType.ECR_IGNORE)
             n += 1
     log(f'墙上的开关 / 插座 {n} 个不挡走路')
+    # 吊扇、吊饰是骨骼网格，物理资产的碰撞体是一大团（吊扇往下到 1.78m、宽 1.7m，吊饰到 1.4m），看不见却挡住传送抛物线
+    # （toy.ReachMap 查出来的）。不挡射线（传送、手指），扔过去的摆件照样撞得到
+    for a in actors_sub.get_all_level_actors():
+        if isinstance(a, unreal.SkeletalMeshActor) and a.skeletal_mesh_component.skeletal_mesh_asset                 and a.skeletal_mesh_component.skeletal_mesh_asset.get_name() in CEILING_HANGERS:
+            a.skeletal_mesh_component.set_collision_response_to_channel(unreal.CollisionChannel.ECC_VISIBILITY, unreal.CollisionResponseType.ECR_IGNORE)
+            log(f'{a.get_actor_label()} 不挡传送抛物线')
 
 actors_sub = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 level_sub = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
@@ -345,7 +354,7 @@ def build():
 
     # ---- 6. 房间内墙 → WalkArea ----
     # 在家具以上、天花板以下（Z 260）往前后左右打线，只认墙；左右两面墙不一定是直的，所以沿着房间多打几条取最窄的
-    def wall_distance(along, offset, sign):
+    def wall_distance(along, offset, sign, quiet=False):
         best = None
         for o in offset:
             start_xy = (o, 0.0) if along == 'y' else (0.0, o)
@@ -357,7 +366,8 @@ def build():
                 continue
             lx, ly = to_local(point)
             value = ly if along == 'y' else lx
-            log(f'  墙线 {along}{"+" if sign > 0 else "-"} 偏移 {o:.0f} → {actor.get_actor_label()} {value:.0f}')
+            if not quiet:
+                log(f'  墙线 {along}{"+" if sign > 0 else "-"} 偏移 {o:.0f} → {actor.get_actor_label()} {value:.0f}')
             best = value if best is None else (min(best, value) if sign > 0 else max(best, value))
         return best
 
@@ -372,6 +382,37 @@ def build():
                       max=unreal.Vector(front - WALK_MARGIN, right_wall - WALK_MARGIN, 50.0))
     log(f'内墙（工作室坐标）前 {front:.0f} 后 {back:.0f} 左 {left_wall:.0f} 右 {right_wall:.0f} → WalkArea X {walk.min.x:.0f}..{walk.max.x:.0f} Y {walk.min.y:.0f}..{walk.max.y:.0f}')
 
+    # 左右墙不一定是直的：右边那面墙前半段（X > -120）往外多出 90cm，WalkArea 按最窄处算就把那条 90cm 宽的地方漏掉了（走得到、传送不了）。
+    # 沿 X 每 20cm 再量一次，比最窄处宽出 10cm 以上（最多 150cm，防止从门洞穿到别的房间）的那几段各加一个能传送的范围
+    def wall_steps(sign, narrowest):
+        runs, run = [], None
+        x = back + WALK_MARGIN
+        while x <= front - WALK_MARGIN:
+            d = wall_distance('y', (x,), sign, quiet=True)
+            wider = d is not None and 10.0 < (d - narrowest) * sign < 150.0
+            # 墙面又往里 / 往外错了一下就另起一段
+            if run and (not wider or abs(d - run[2]) > 10.0):
+                runs.append(run)
+                run = None
+            if wider:
+                if run is None:
+                    run = [x, x, d]
+                else:
+                    run[1] = x
+                    run[2] = min(run[2], d) if sign > 0 else max(run[2], d)
+            x += 20.0
+        if run:
+            runs.append(run)
+        boxes = []
+        for x0, x1, d in runs:
+            y0, y1 = (narrowest - WALK_MARGIN, d - WALK_MARGIN) if sign > 0 else (d + WALK_MARGIN, narrowest + WALK_MARGIN)
+            boxes.append(unreal.Box(min=unreal.Vector(max(x0 - 20.0, walk.min.x), y0, -50.0), max=unreal.Vector(min(x1 + 20.0, walk.max.x), y1, 50.0)))
+        return boxes
+
+    wall_jogs = wall_steps(1, right_wall) + wall_steps(-1, left_wall)
+    for b in wall_jogs:
+        log(f'墙往外凸的一段，加一个能传送的范围 X {b.min.x:.0f}..{b.max.x:.0f} Y {b.min.y:.0f}..{b.max.y:.0f}')
+
     # 窗户应该在左右两侧
     for actor in actors_sub.get_all_level_actors():
         if mesh_name(actor) == 'SM_Windowframe':
@@ -384,6 +425,7 @@ def build():
     studio.set_actor_label('ToyStudio')
     studio.set_editor_property('build_room', False)
     studio.set_editor_property('walk_area', walk)
+    studio.set_editor_property('extra_walk_areas', wall_jogs)
     studio.set_editor_property('ui_brightness_scale', UI_BRIGHTNESS)
     log(f'放置 AToyStudio 于 {fmt(origin)} yaw {yaw:.0f}，bBuildRoom = False')
 
@@ -650,11 +692,14 @@ def build_wing():
     # 两个门洞（各往两边多伸一点，和屋里、门厅的范围接上）、门厅里面（离墙 25cm）、Home 里面
     door_half = hole_width * 0.5 - 15.0
     areas = [('样板间前门', box_local(lining_center.x - 60.0, door_y - door_half, outer_x + 40.0, door_y + door_half)),
-             ('门厅', box_local(hall['lo'].x + 25.0, hall['lo'].y + 25.0, hall['hi'].x - 25.0, hall['hi'].y - 25.0)),
+             ('门厅', box_local(hall['lo'].x + WALK_MARGIN, hall['lo'].y + WALK_MARGIN, hall['hi'].x - WALK_MARGIN, hall['hi'].y - WALK_MARGIN)),
              ('Home 入户门', box_local(hall_end - 40.0, door_y - door_half, hall_end + 80.0, door_y + door_half)),
              ('Home', box_local(HOME_ORIGIN[0] + HOME_WALK[0][0] + shift.x, HOME_ORIGIN[1] + HOME_WALK[0][1] + shift.y,
                                 HOME_ORIGIN[0] + HOME_WALK[1][0] + shift.x, HOME_ORIGIN[1] + HOME_WALK[1][1] + shift.y))]
-    studio.set_editor_property('extra_walk_areas', [box for _, box in areas])
+    # 生成样板间时加的（墙往外凸的那几段，都在样板间里）留着，以前这一步加的去掉再加
+    walk = studio.get_editor_property('walk_area')
+    keep = [b for b in studio.get_editor_property('extra_walk_areas') if b.max.x <= walk.max.x + 1.0]
+    studio.set_editor_property('extra_walk_areas', keep + [box for _, box in areas])
     log('能传送的范围加上 ' + '、'.join(f'{name} X {b.min.x:.0f}..{b.max.x:.0f} Y {b.min.y:.0f}..{b.max.y:.0f}' for name, b in areas) + '（工作室坐标）')
     streaming = unreal.EditorLevelUtils.add_level_to_world(world, HOME_WING, unreal.LevelStreamingAlwaysLoaded)
     if not streaming:
