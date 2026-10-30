@@ -6,7 +6,7 @@
 #include "ToyLilliput.generated.h"
 
 class UToyShapeComponent;
-class USkeletalMeshComponent;
+class UPoseableMeshComponent;
 
 /**
  * 小人国模式（design/小人国模式方案.md）：玩家有两具身体，大的（正常身高）和小的（1/12，眼睛离地约 13cm）。
@@ -36,7 +36,7 @@ namespace ToyLilliput
 
 /**
  * 小人偶：大身体时摆在场景里的"小身体"。和其他摆件一样能捏起来、松手有物理；按 Y 时小身体出现在它脚下。
- * 看得见的是一个 14cm 高的人体模特（引擎模板的 SKM_Manny，launch.bat 从引擎拷到本机 Content/Characters，不进仓库）；
+ * 看得见的是一个 14cm 高的人体模特（本机有 Fab 的女性角色就用她，没有用引擎模板的 SKM_Manny；都在本机 Content/Characters，不进仓库，toy.LilliModel 切换）；
  * 物理和碰撞还是那根 5cm 粗、10cm 高的圆柱（藏起来）。没有模特就显示圆柱 + 4cm 的球头，总高约 14cm（小身体眼睛离地 13cm）。
  */
 UCLASS()
@@ -62,7 +62,7 @@ public:
 
 	/** 人体模特（只看，不碰撞）。 */
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
-	TObjectPtr<USkeletalMeshComponent> Figure;
+	TObjectPtr<UPoseableMeshComponent> Figure;
 
 	virtual void AddHover() override;
 	virtual void RemoveHover() override;
@@ -100,5 +100,5 @@ public:
 	TObjectPtr<UToyShapeComponent> Nose;
 
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
-	TObjectPtr<USkeletalMeshComponent> Figure;
+	TObjectPtr<UPoseableMeshComponent> Figure;
 };

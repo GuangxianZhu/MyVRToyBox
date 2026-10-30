@@ -27,6 +27,8 @@
 #include "HAL/IConsoleManager.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Containers/Ticker.h"
+#include "RHI.h"
 
 static TAutoConsoleVariable<int32> CVarHandPreview(
 	TEXT("toy.HandPreview"),
@@ -163,6 +165,30 @@ namespace
 			{
 				It->SetActorHiddenInGame(bHide);
 			}
+		}));
+
+	FAutoConsoleCommand GpuTimeCommand(TEXT("toy.GpuTime"),
+		TEXT("量几秒钟的平均帧时间（GPU 和整帧，毫秒）写进日志：toy.GpuTime [秒，默认 3] [标签]。比较开关某个东西的开销用，桌面模式 stat unit 截不进截图"),
+		FConsoleCommandWithArgsDelegate::CreateLambda([](const TArray<FString>& Args)
+		{
+			const double Seconds = Args.Num() > 0 ? FMath::Max(0.5, FCString::Atod(*Args[0])) : 3.0;
+			const FString Tag = Args.Num() > 1 ? Args[1] : FString();
+			struct FSample { double End; double Gpu = 0.0; double Frame = 0.0; int32 Count = 0; };
+			TSharedRef<FSample> Sample = MakeShared<FSample>();
+			Sample->End = FPlatformTime::Seconds() + Seconds;
+			FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([Sample, Tag](float DeltaTime)
+			{
+				Sample->Gpu += FPlatformTime::ToMilliseconds64(RHIGetGPUFrameCycles(0));
+				Sample->Frame += DeltaTime * 1000.0;
+				Sample->Count++;
+				if (FPlatformTime::Seconds() < Sample->End)
+				{
+					return true;
+				}
+				UE_LOG(LogTemp, Log, TEXT("ToyBox 帧时间 %s：GPU %.2f ms，整帧 %.2f ms（%d 帧）"), *Tag,
+					Sample->Gpu / FMath::Max(1, Sample->Count), Sample->Frame / FMath::Max(1, Sample->Count), Sample->Count);
+				return false;
+			}));
 		}));
 
 	FAutoConsoleCommandWithWorldAndArgs AfterCommand(TEXT("toy.After"),
