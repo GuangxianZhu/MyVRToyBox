@@ -15,7 +15,7 @@ ArchViz Interior 是 Epic 的免费示例，只装在本机的 Content/ArchViz �
      家具、墙这些只有三角面碰撞的网格改成"复杂碰撞当简单碰撞"，摆件才放得住、扔不穿（改的是本机 Content/ArchViz 里的网格）
   8. 存关卡
 
-环境变量 ARCHVIZ_STEP=bake 时不做上面这些，只打开 L_StudioArchViz 用 CPU Lightmass（Production）烘焙光照、存关卡和 BuiltData。
+环境变量 ARCHVIZ_STEP=bake 时不做上面这些，只打开 L_StudioArchViz 用 CPU Lightmass（默认 Medium，ARCHVIZ_BAKE_QUALITY 可改）烘焙光照、存关卡和 BuiltData。
 烘焙要渲染（反射捕获、光照贴图编码），所以这一步不能带 -nullrhi，要带 -AllowCommandletRendering。
 GPU Lightmass 在这台机器上会崩，所以烘焙走 CPU Lightmass。
 
@@ -249,9 +249,10 @@ def trace_first(world, start, end, accept):
 
 def bake(map_path):
     level_sub.load_level(map_path)
-    # 调灯的时候 ARCHVIZ_BAKE_QUALITY=PREVIEW 先快速看个大概（几分钟），定下来再 Production
-    quality = os.environ.get('ARCHVIZ_BAKE_QUALITY', 'PRODUCTION').upper()
-    log(f'{map_path}（连同一直加载的子关卡）：CPU Lightmass（{quality}）烘焙光照，要几十分钟 ...')
+    # 默认 Medium：同样六个视角截图和 Production 比，平均每像素只差 1~2（满分 255），灯旁边墙上的光斑、摆件和小人偶的光照都看不出区别，
+    # 时间 4.2 分钟（High 8.6 分钟，Production 18.1 分钟，9800X3D）。要最细的 ARCHVIZ_BAKE_QUALITY=PRODUCTION；调灯时 PREVIEW 更快
+    quality = os.environ.get('ARCHVIZ_BAKE_QUALITY', 'MEDIUM').upper()
+    log(f'{map_path}（连同一直加载的子关卡）：CPU Lightmass（{quality}）烘焙光照 ...')
     start = time.time()
     ok = level_sub.build_light_maps(getattr(unreal.LightingBuildQuality, f'QUALITY_{quality}'), True)
     log(f'烘焙{"完成" if ok else "失败"}，用时 {(time.time() - start) / 60.0:.1f} 分钟')

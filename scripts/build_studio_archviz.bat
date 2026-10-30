@@ -2,7 +2,7 @@
 chcp 65001 >nul
 setlocal EnableExtensions
 rem ArchViz 样板间工作室：把 Epic 的 ArchViz Interior 示例（本机 Content\ArchViz，不进仓库）改成 L_StudioArchViz，
-rem 餐桌换成我们的桌子和触屏，再用 CPU Lightmass 烘焙光照（GPU Lightmass 会崩）。烘焙要几十分钟
+rem 餐桌换成我们的桌子和触屏，再用 CPU Lightmass 烘焙光照。烘焙默认 Medium 质量，约 4 分钟（set ARCHVIZ_BAKE_QUALITY=PRODUCTION 最细，约 18 分钟）
 rem 生成之后 一键启动.bat 会自动进这个样板间；想回原来的方块房间，先 set TOY_CLASSIC=1
 rem 装了 Home Interior（Content\Home_Interior）的话，它接在样板间前门外（子关卡 L_StudioArchViz_Home），穿过门厅走过去就到，两边一起烘焙
 cd /d "%~dp0.."
@@ -30,7 +30,7 @@ echo [样板间] 编译 C++ 模块 ...
 call "%UE_ROOT%\Engine\Build\BatchFiles\Build.bat" VRToyBoxEditor Win64 Development -Project="%PROJECT%" -WaitMutex
 if errorlevel 1 goto :fail
 
-echo [样板间] 生成 L_StudioArchViz 并烘焙光照（CPU Lightmass Production，要几十分钟）...
+echo [样板间] 生成 L_StudioArchViz 并烘焙光照（CPU Lightmass，默认 Medium 约 4 分钟）...
 rem 上次生成的 Home 子关卡、开了门洞的房子网格先删文件：编辑器里删它们有时会被拒绝（"An asset already exists"）。
 rem L_HomeStudio 是以前"穿门换关卡"那一版生成的，现在不用了
 del /q "%CD%\Content\Home_Interior\Maps\L_StudioArchViz_Home.umap" "%CD%\Content\Home_Interior\Maps\L_StudioArchViz_Home_BuiltData.uasset" 2>nul
@@ -58,7 +58,7 @@ if errorlevel 1 goto :fail
 if not exist "%CD%\Content\Home_Interior\Maps\L_StudioArchViz_Home.umap" goto :fail
 
 :bake
-rem 默认 CPU Lightmass（约 18 分钟）。set ARCHVIZ_BAKER=gpu 试 GPU Lightmass（实验性，光照贴图约 1 分钟）：UE 5.8 在这个工程里
+rem 默认 CPU Lightmass（Medium 约 4 分钟，Production 约 18 分钟）。set ARCHVIZ_BAKER=gpu 试 GPU Lightmass（实验性，光照贴图约 1 分钟）：UE 5.8 在这个工程里
 rem 体积光照贴图一直是 0 个 brick（试过前向 / 延迟渲染、开关 Nanite），摆件、小人偶、手会全黑；脚本发现 0 个 brick 就判失败、不存盘，接着用 CPU 烘
 if /i not "%ARCHVIZ_BAKER%"=="gpu" goto :bake_cpu
 echo [样板间] GPU Lightmass 烘焙（实验性，失败会自动改用 CPU）...
