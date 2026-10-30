@@ -2,6 +2,7 @@
 
 #include "ToyCube.h"
 #include "ToyHand.h"
+#include "ToyLilliput.h"
 #include "ToyMenuPanel.h"
 #include "ToySettings.h"
 #include "ToyTouchScreen.h"
@@ -116,6 +117,16 @@ namespace
 			{
 				const bool bOn = Args.Num() >= 2;
 				Pawn->SetAimPreview(bOn, bOn ? FRotator(FCString::Atof(*Args[1]), FCString::Atof(*Args[0]), 0.f) : FRotator::ZeroRotator);
+			}
+		}));
+
+	FAutoConsoleCommandWithWorldAndArgs ShrinkCommand(TEXT("toy.Shrink"),
+		TEXT("小人国：在大身体和小人偶之间切换一次（和左手柄 Y、桌面模式 G 一样）"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+		{
+			if (AToyBoxPawn* Pawn = World ? Cast<AToyBoxPawn>(UGameplayStatics::GetPlayerPawn(World, 0)) : nullptr)
+			{
+				Pawn->ToggleBody();
 			}
 		}));
 
@@ -242,6 +253,9 @@ AToyBoxPawn::AToyBoxPawn()
 		TEXT("MixedReality_Left_Thumbstick_Click") });
 	CalibPageKeys = Keys({ TEXT("OculusTouch_Right_A_Click"), TEXT("ValveIndex_Right_A_Click") });
 	CalibResetKeys = Keys({ TEXT("OculusTouch_Right_B_Click"), TEXT("ValveIndex_Right_B_Click") });
+	// 小人国：左手 Y = 变小 / 变大，左手 X = 叫出 / 收起主菜单（没有桌上的触屏了，菜单靠它叫出来）
+	SizeSwitchKeys = Keys({ TEXT("OculusTouch_Left_Y_Click"), TEXT("ValveIndex_Left_B_Click") });
+	MenuKeys = Keys({ TEXT("OculusTouch_Left_X_Click"), TEXT("ValveIndex_Left_A_Click") });
 
 	// 传送瞄准的显示：一根细管当抛物线，一个亮环当落点圈（网格在 BuildTeleportMeshes 里建）。都只显示，不碰撞、不投影
 	TeleportArc = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("TeleportArc"));
@@ -265,8 +279,11 @@ void AToyBoxPawn::BeginPlay()
 	Super::BeginPlay();
 	ToyHandCalib::Load();
 	ToySettings::Load();
+	// 上一次 PIE 可能是在小身体时结束的：比例是全局的，开局先恢复成大身体
+	ToyLilliput::SetScale(GetWorld(), 1.f);
 	LeftHand = SpawnHand(EControllerHand::Left, LeftController);
 	RightHand = SpawnHand(EControllerHand::Right, RightController);
+	SpawnLilliput();
 	LogHandSelfCheck();
 	BuildTeleportMeshes();
 	UMaterialInterface* Base = LoadObject<UMaterialInterface>(nullptr, ArcMaterialPath);
@@ -369,6 +386,8 @@ AToyHand* AToyBoxPawn::SpawnHand(EControllerHand HandSide, UMotionControllerComp
 
 void AToyBoxPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	// 编辑器里停止 PIE 后视口也用 WorldToMeters 和近裁剪面，恢复成正常比例
+	ToyLilliput::SetScale(GetWorld(), 1.f);
 	if (LeftHand)
 	{
 		LeftHand->Destroy();
@@ -422,6 +441,10 @@ void AToyBoxPawn::Tick(float DeltaSeconds)
 	{
 		TickDesktop();
 	}
+	if (bTiny)
+	{
+		TickTinyGround(DeltaSeconds);
+	}
 	TickHaptics();
 }
 
@@ -450,7 +473,7 @@ void AToyBoxPawn::ApplyMode(bool bNewVR)
 	}
 	else
 	{
-		Camera->SetRelativeLocationAndRotation(FVector(0.f, 0.f, DesktopEyeHeight), FRotator(-40.f, 0.f, 0.f));
+		Camera->SetRelativeLocationAndRotation(FVector(0.f, 0.f, DesktopEyeHeight * ToyLilliput::GetScale()), FRotator(-40.f, 0.f, 0.f));
 		LeftHand->ReleaseHeld(false);
 		LeftHand->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		LeftHand->SetActorHiddenInGame(true);
@@ -458,6 +481,7 @@ void AToyBoxPawn::ApplyMode(bool bNewVR)
 		RightHand->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		// 桌面模式下手跟着鼠标走，靠鼠标点击来按按钮，避免手划过屏幕时误触
 		RightHand->SetPokeEnabled(false);
+		RightHand->SetActorScale3D(FVector(ToyLilliput::GetScale()));
 	}
 }
 
@@ -491,7 +515,7 @@ void AToyBoxPawn::TickVR()
 	RightHand->SetInputs(ReadAxis(GripRightKeys), ReadAxis(TriggerRightKeys));
 
 	// 手部校准参数变了（校准模式、控制台 toy.HandPitch 等）就重新套
-	if (!bCalibApplied || !(ToyHandCalib::Get() == AppliedCalib))
+	if (!bCalibApplied || !(ToyHandCalib::Get() == AppliedCalib) || AppliedHandScale != ToyLilliput::GetScale())
 	{
 		ApplyHandCalib();
 	}
@@ -519,6 +543,24 @@ void AToyBoxPawn::TickVR()
 		TickHandCalibMode(DeltaSeconds);
 		return;
 	}
+
+	// 小人国：左手 Y 换身体，左手 X 叫出 / 收起菜单（按下那一下算一次）
+	const bool bSizeDown = ReadAxis(SizeSwitchKeys) > 0.5f;
+	if (bSizeDown && !bSizeSwitchWasDown && ToyLilliput::IsEnabled())
+	{
+		ToggleBody();
+	}
+	bSizeSwitchWasDown = bSizeDown;
+	const bool bMenuDown = ReadAxis(MenuKeys) > 0.5f;
+	if (bMenuDown && !bMenuWasDown)
+	{
+		for (TActorIterator<AToyMenuPanel> It(GetWorld()); It; ++It)
+		{
+			It->Toggle();
+			break;
+		}
+	}
+	bMenuWasDown = bMenuDown;
 
 	// 左摇杆：平滑移动
 	SmoothMove(FVector2D(ReadAxis(MoveXKeys), ReadAxis(MoveYKeys)), GetWorld()->GetDeltaSeconds());
@@ -602,13 +644,20 @@ void AToyBoxPawn::AddIgnoredForMove(FCollisionQueryParams& Params) const
 void AToyBoxPawn::ApplyHandCalib()
 {
 	AppliedCalib = ToyHandCalib::Get();
+	AppliedHandScale = ToyLilliput::GetScale();
 	bCalibApplied = true;
 	if (!bVR)
 	{
 		return;   // 桌面模式手不挂在控制器上，姿态由 TickDesktop 摆，不受校准影响
 	}
-	LeftHand->SetActorRelativeTransform(ToyHandCalib::HandTransform(EControllerHand::Left, AppliedCalib));
-	RightHand->SetActorRelativeTransform(ToyHandCalib::HandTransform(EControllerHand::Right, AppliedCalib));
+	// 小身体：手跟着缩小，校准的位置偏移（厘米）也一起缩
+	for (AToyHand* Hand : { LeftHand.Get(), RightHand.Get() })
+	{
+		FTransform Relative = ToyHandCalib::HandTransform(Hand == LeftHand.Get() ? EControllerHand::Left : EControllerHand::Right, AppliedCalib);
+		Relative.ScaleTranslation(AppliedHandScale);
+		Relative.SetScale3D(Relative.GetScale3D() * AppliedHandScale);
+		Hand->SetActorRelativeTransform(Relative);
+	}
 }
 
 void AToyBoxPawn::LogHandSelfCheck() const
@@ -768,7 +817,7 @@ void AToyBoxPawn::SmoothMove(FVector2D Input, float DeltaSeconds)
 	Input *= FMath::Min(1.f, (Size - MoveDeadZone) / (1.f - MoveDeadZone)) / Size;
 	const FRotator Yaw(0.f, Camera->GetComponentRotation().Yaw, 0.f);
 	const FVector Delta = (Yaw.RotateVector(FVector::ForwardVector) * Input.Y + Yaw.RotateVector(FVector::RightVector) * Input.X)
-		* ToySettings::MoveSpeedCm() * DeltaSeconds;
+		* ToySettings::MoveSpeedCm() * ToyLilliput::GetScale() * DeltaSeconds;
 
 	MoveWithCollision(Delta);
 }
@@ -778,16 +827,20 @@ bool AToyBoxPawn::MoveWithCollision(FVector Move, FHitResult* OutHit)
 	// 胶囊体立在头的正下方，从现在的位置扫到目标位置；碰到墙 / 桌子就停在碰撞点前，再沿墙面滑一下
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyMove), false, this);
 	AddIgnoredForMove(Params);
-	const FCollisionShape Capsule = FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight);
+	// 小身体：胶囊体、离地高度、贴墙距离都按比例缩
+	const float Scale = ToyLilliput::GetScale();
+	const float Lift = CapsuleLift * Scale;
+	const float HalfHeight = CapsuleHalfHeight * Scale;
+	const FCollisionShape Capsule = FCollisionShape::MakeCapsule(CapsuleRadius * Scale, HalfHeight);
 	// 碰到东西时停在碰撞点前这么远，不贴着。贴着停的话下一帧扫掠一开始就"嵌在里面"，以前那种情况只许往外退、不许沿墙滑，
 	// 走到门框边上就再也挪不动了（门口卡住就是这个）
-	constexpr float Skin = 0.5f;
+	const float Skin = 0.5f * Scale;
 	const FVector Requested = Move;
 	const FVector Start = GetActorLocation();
 	bool bBlocked = false;
 	for (int32 Pass = 0; Pass < 3 && !Move.IsNearlyZero(); ++Pass)
 	{
-		const FVector Center = GetFeetLocation() + FVector(0.f, 0.f, CapsuleLift + CapsuleHalfHeight);
+		const FVector Center = GetFeetLocation() + FVector(0.f, 0.f, Lift + HalfHeight);
 		FHitResult Hit;
 		if (!GetWorld()->SweepSingleByChannel(Hit, Center, Center + Move, FQuat::Identity, ECC_Pawn, Capsule, Params))
 		{
@@ -806,7 +859,7 @@ bool AToyBoxPawn::MoveWithCollision(FVector Move, FHitResult* OutHit)
 			// 一开始就嵌在东西里（真人走进了桌子、或者上一帧贴着停）：先水平推出来，再把往里的那部分去掉、沿表面滑
 			if (!Normal.IsNearlyZero())
 			{
-				AddActorWorldOffset(Normal * (FMath::Min(Hit.PenetrationDepth, 5.f) + Skin));
+				AddActorWorldOffset(Normal * (FMath::Min(Hit.PenetrationDepth, 5.f * Scale) + Skin));
 				Move -= Normal * FMath::Min(0.f, FVector::DotProduct(Move, Normal));
 			}
 			else
@@ -826,7 +879,7 @@ bool AToyBoxPawn::MoveWithCollision(FVector Move, FHitResult* OutHit)
 	const FVector Progress = GetActorLocation() - Start;
 	if (bBlocked && FVector::DotProduct(Progress, Requested.GetSafeNormal()) < 0.3f * Requested.Size())
 	{
-		const FVector Center = GetFeetLocation() + FVector(0.f, 0.f, CapsuleLift + CapsuleHalfHeight);
+		const FVector Center = GetFeetLocation() + FVector(0.f, 0.f, Lift + HalfHeight);
 		for (const float Angle : { 20.f, -20.f, 40.f, -40.f, 70.f, -70.f })
 		{
 			const FVector Try = Requested.RotateAngleAxis(Angle, FVector::UpVector);
@@ -1090,21 +1143,26 @@ void AToyBoxPawn::RunReachMap(float Cell, const FString& Name)
 bool AToyBoxPawn::IsTeleportTargetValid(const FHitResult& Hit) const
 {
 	// 只能落在工作室的地板上（地毯也算地板；套用样板间时是样板间的地面），房间以内，脚下那块地方站得下一个胶囊体（不在桌子底下、不贴墙）
+	// 小身体：桌面、书顶、沙发垫，任何朝上、站得下的表面都能去（不限地板）
 	const AToyStudio* Studio = AToyStudio::Find(GetWorld());
-	if (!Studio || !Studio->IsFloorHit(Hit))
+	if (bTiny ? Hit.ImpactNormal.Z < 0.7f : (!Studio || !Studio->IsFloorHit(Hit)))
 	{
 		return false;
 	}
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyTeleport), false, this);
 	AddIgnoredForMove(Params);
-	const FVector Center = Hit.ImpactPoint + FVector(0.f, 0.f, CapsuleLift + CapsuleHalfHeight);
+	const float Scale = ToyLilliput::GetScale();
+	const FVector Center = Hit.ImpactPoint + FVector(0.f, 0.f, (CapsuleLift + CapsuleHalfHeight) * Scale);
 	return !GetWorld()->OverlapAnyTestByChannel(Center, FQuat::Identity, ECC_Pawn,
-		FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight), Params);
+		FCollisionShape::MakeCapsule(CapsuleRadius * Scale, CapsuleHalfHeight * Scale), Params);
 }
 
 bool AToyBoxPawn::UpdateTeleportAim(const FVector& Start, const FVector& Direction, USceneComponent* Source)
 {
-	FPredictProjectilePathParams Path(1.f, Start, Direction.GetSafeNormal() * TeleportLaunchSpeed, 2.f, ECC_Visibility, this);
+	// 小身体：出射速度和重力都乘比例，抛物线形状不变、整体缩小
+	const float Scale = ToyLilliput::GetScale();
+	FPredictProjectilePathParams Path(1.f * Scale, Start, Direction.GetSafeNormal() * TeleportLaunchSpeed * Scale, 2.f, ECC_Visibility, this);
+	Path.OverrideGravityZ = GetWorld()->GetGravityZ() * Scale;
 	Path.bTraceWithCollision = true;
 	Path.bTraceComplex = false;
 	Path.SimFrequency = 20.f;
@@ -1132,11 +1190,11 @@ bool AToyBoxPawn::UpdateTeleportAim(const FVector& Start, const FVector& Directi
 	TeleportArc->SetHiddenInGame(Result.PathData.Num() < 2);
 	// 落点圈轻轻地"呼吸"（±4%）
 	const float Breath = 1.f + 0.04f * FMath::Sin(GetWorld()->GetRealTimeSeconds() * 5.f);
-	TeleportRing->SetWorldScale3D(FVector(Breath, Breath, 1.f));
+	TeleportRing->SetWorldScale3D(FVector(Breath * Scale, Breath * Scale, Scale));
 	if (bValid)
 	{
 		TeleportRing->SetHiddenInGame(false);
-		TeleportRing->SetWorldLocation(Result.HitResult.ImpactPoint + FVector(0.f, 0.f, 0.6f));
+		TeleportRing->SetWorldLocation(Result.HitResult.ImpactPoint + FVector(0.f, 0.f, 0.6f * Scale));
 		TeleportTarget = Result.HitResult.ImpactPoint;
 		return true;
 	}
@@ -1154,7 +1212,7 @@ bool AToyBoxPawn::UpdateTeleportAim(const FVector& Start, const FVector& Directi
 			&& Floor.ImpactNormal.Z > 0.8f && (Cast<AToyStudio>(Floor.GetActor())
 				|| (Studio && !Studio->bBuildRoom && FMath::Abs(Floor.ImpactPoint.Z - Studio->GetActorLocation().Z) < 5.f)))
 		{
-			TeleportRing->SetWorldLocation(Floor.ImpactPoint + FVector(0.f, 0.f, 0.6f));
+			TeleportRing->SetWorldLocation(Floor.ImpactPoint + FVector(0.f, 0.f, 0.6f * Scale));
 			bRingOnFloor = true;
 		}
 	}
@@ -1210,7 +1268,7 @@ void AToyBoxPawn::UpdateArcMesh(const TArray<FPredictProjectilePathPointData>& P
 		// S = 0（手）→ 1（落点）。手边细、淡，往前慢慢变亮，到落点最亮；一串很淡的亮纹顺着往落点流
 		const float S = static_cast<float>(Ring) / (ArcRings - 1);
 		const float FadeIn = FMath::SmoothStep(0.f, 0.14f, S);
-		const float Radius = FMath::Max(ArcCoreRadius, ArcRadiusPerCm * FVector::Dist(Eye, ArcPath[Ring])) * FMath::Lerp(0.4f, 1.f, FadeIn);
+		const float Radius = FMath::Max(ArcCoreRadius * ToyLilliput::GetScale(), ArcRadiusPerCm * FVector::Dist(Eye, ArcPath[Ring])) * FMath::Lerp(0.4f, 1.f, FadeIn);
 		const float Flow = 0.88f + 0.12f * FMath::Sin(2.f * PI * (S * 7.f - Time * 1.6f));
 		const float Bright = FMath::Lerp(0.45f, 1.f, S * S) * Flow;
 		const FLinearColor Core(Bright, Bright, Bright, 0.9f * FadeIn);
@@ -1257,6 +1315,7 @@ void AToyBoxPawn::Teleport(const FVector& Target)
 	{
 		// 让头落在落点正上方：VROrigin 平移 = 落点 - 现在脚下的点
 		AddActorWorldOffset(Target - GetFeetLocation());
+		FallVelocity = 0.f;
 		UE_LOG(LogTemp, Log, TEXT("ToyBox: 传送到 %s"), *Target.ToCompactString());
 		if (APlayerCameraManager* Manager = WeakCamera.Get())
 		{
@@ -1297,7 +1356,7 @@ void AToyBoxPawn::TickDesktop()
 	{
 		DesktopHoldDistance -= 5.f;
 	}
-	DesktopHoldDistance = FMath::Clamp(DesktopHoldDistance, 25.f, 200.f);
+	DesktopHoldDistance = FMath::Clamp(DesktopHoldDistance, 25.f * ToyLilliput::GetScale(), 200.f);
 
 	// toy.AimPreview：右手像拿着手柄一样摆在镜头右下方，从手里一直打传送抛物线（截图看效果用，不传送）。
 	// 放在读鼠标前面：-game 截图时窗口没有焦点、拿不到鼠标位置
@@ -1365,7 +1424,7 @@ void AToyBoxPawn::TickDesktop()
 	if (!RightHand->IsHolding() && bHit && Hit.Distance < 250.f)
 	{
 		GripTarget = Hit.ImpactPoint;
-		DesktopHoldDistance = FMath::Clamp(Hit.Distance, 25.f, 200.f);
+		DesktopHoldDistance = FMath::Clamp(Hit.Distance, 25.f * ToyLilliput::GetScale(), 200.f);
 	}
 	// 鼠标点中的零件优先：它的检测盒可能和旁边零件的盒子重叠
 	RightHand->SetPreferredTarget(bHit ? Hit.GetActor() : nullptr);
@@ -1375,6 +1434,12 @@ void AToyBoxPawn::TickDesktop()
 	RightHand->SetInputs(0.f, bLeftDown && !bDesktopClickIsPoke ? 1.f : 0.f);
 
 	// M = 叫出 / 收起主菜单（VR 里戳触屏右上角的 MENU）
+	// G = 小人国换身体（VR 里左手柄 Y）
+	if (PC->WasInputKeyJustPressed(EKeys::G) && ToyLilliput::IsEnabled())
+	{
+		ToggleBody();
+	}
+
 	if (PC->WasInputKeyJustPressed(EKeys::M))
 	{
 		for (TActorIterator<AToyMenuPanel> It(GetWorld()); It; ++It)
@@ -1391,7 +1456,7 @@ void AToyBoxPawn::TickDesktop()
 	if (PC->IsInputKeyDown(EKeys::T) && ToySettings::Get().bTeleport)
 	{
 		bTeleportAiming = true;
-		bTeleportValid = UpdateTeleportAim(Origin + Direction * 30.f, (Direction + FVector(0.f, 0.f, 0.25f)).GetSafeNormal(), VROrigin);
+		bTeleportValid = UpdateTeleportAim(Origin + Direction * 30.f * ToyLilliput::GetScale(), (Direction + FVector(0.f, 0.f, 0.25f)).GetSafeNormal(), VROrigin);
 	}
 	else if (bTeleportAiming)
 	{
@@ -1596,4 +1661,206 @@ void AToyBoxPawn::StartHapticTest(int32 Mode)
 		return;
 	}
 	UE_LOG(LogTemp, Log, TEXT("ToyBox: 震动测试 %d 开始，共 %d 步%s"), Mode, HapticTestSteps.Num(), bVR ? TEXT("") : TEXT("（桌面模式没有震动，只显示步骤）"));
+}
+
+void AToyBoxPawn::SpawnLilliput()
+{
+	if (!ToyLilliput::IsEnabled())
+	{
+		return;
+	}
+	FActorSpawnParameters Params;
+	Params.Owner = this;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	// 小人偶：开局站在站立点前方 45cm、偏右 25cm 的地上，面朝玩家（找不到地就放在脚的高度）
+	Figurine = AToyFigurine::Find(GetWorld());
+	if (!Figurine)
+	{
+		const FVector Ahead = GetActorLocation() + GetActorRotation().RotateVector(FVector(45.f, 25.f, 0.f));
+		FCollisionQueryParams Query(SCENE_QUERY_STAT(ToyFigurineSpawn), false, this);
+		AddIgnoredForMove(Query);
+		FHitResult Hit;
+		FVector Feet = Ahead;
+		if (GetWorld()->LineTraceSingleByChannel(Hit, Ahead + FVector(0.f, 0.f, 100.f), Ahead - FVector(0.f, 0.f, 50.f), ECC_Visibility, Query))
+		{
+			Feet = Hit.ImpactPoint;
+		}
+		Figurine = GetWorld()->SpawnActor<AToyFigurine>(AToyFigurine::StaticClass(),
+			FTransform(FRotator(0.f, GetActorRotation().Yaw + 180.f, 0.f), Feet + FVector(0.f, 0.f, 5.3f)), Params);
+	}
+	GiantBody = GetWorld()->SpawnActor<AToyGiantBody>(AToyGiantBody::StaticClass(), GetActorTransform(), Params);
+	UE_LOG(LogTemp, Log, TEXT("ToyBox 小人国：小人偶 %s 在 %s"), *GetNameSafe(Figurine),
+		Figurine ? *Figurine->GetActorLocation().ToCompactString() : TEXT("-"));
+}
+
+void AToyBoxPawn::ToggleBody()
+{
+	if (bSwitchingBody || bTeleporting || bCalibMode)
+	{
+		return;
+	}
+	if (!Figurine || !GiantBody)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ToyBox 小人国：没有小人偶（toy.Lilliput 是 0？），不能换身体"));
+		return;
+	}
+	bSwitchingBody = true;
+	bTeleportAiming = false;
+	HideTeleportAim();
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	APlayerCameraManager* CameraManager = PC ? PC->PlayerCameraManager.Get() : nullptr;
+	// 换身体时黑一下：连续缩放的过程本身容易晕（视野在变、身体没动），淡出淡入最稳
+	const float Fade = TeleportFadeTime * 2.f;
+	if (CameraManager)
+	{
+		CameraManager->StartCameraFade(0.f, 1.f, Fade, FLinearColor::Black, false, true);
+	}
+	TWeakObjectPtr<APlayerCameraManager> WeakCamera(CameraManager);
+	FTimerHandle Handle;
+	GetWorldTimerManager().SetTimer(Handle, FTimerDelegate::CreateWeakLambda(this, [this, WeakCamera, Fade]()
+	{
+		LeftHand->ReleaseHeld(false);
+		RightHand->ReleaseHeld(false);
+		const float OldScale = ToyLilliput::GetScale();
+		if (!bTiny)
+		{
+			// 大 → 小：大身体留在原地变成人像，自己出现在小人偶脚下，朝向不变
+			BigFeet = GetFeetLocation();
+			BigRotation = GetActorRotation();
+			BigEyeHeight = Camera->GetComponentLocation().Z - GetActorLocation().Z;
+			const FVector Target = Figurine->GetFeetLocation();
+			Figurine->Hide();
+			GiantBody->ShowAt(BigFeet, Camera->GetComponentRotation().Yaw, BigEyeHeight);
+			bTiny = true;
+			ApplyPlayerScale(ToyLilliput::TinyScale);
+			PlaceFeetAt(Target, BigRotation, ToyLilliput::TinyScale / OldScale);
+			LastGroundFeet = Target;
+			FallVelocity = 0.f;
+			ShowToast(TEXT("小人国 · 1/12"), TEXT("左手 Y：变回大身体\n左手 X：菜单"));
+			UE_LOG(LogTemp, Log, TEXT("ToyBox 小人国：变小，站在 %s；大身体留在 %s"), *Target.ToCompactString(), *BigFeet.ToCompactString());
+		}
+		else
+		{
+			// 小 → 大：回到大身体原来的位置和朝向，小人偶留在小身体最后站的地方
+			const FVector TinyFeet = GetFeetLocation();
+			const float TinyYaw = Camera->GetComponentRotation().Yaw;
+			GiantBody->Hide();
+			bTiny = false;
+			ApplyPlayerScale(1.f);
+			PlaceFeetAt(BigFeet, BigRotation, 1.f / OldScale);
+			FallVelocity = 0.f;
+			Figurine->StandAt(TinyFeet, TinyYaw);
+			ShowToast(TEXT("大身体"), TEXT("把小人偶捏起来放到想去的地方，\n再按左手 Y 变成它"));
+			UE_LOG(LogTemp, Log, TEXT("ToyBox 小人国：变大，小人偶留在 %s"), *TinyFeet.ToCompactString());
+		}
+		if (APlayerCameraManager* Manager = WeakCamera.Get())
+		{
+			Manager->StartCameraFade(1.f, 0.f, Fade, FLinearColor::Black, false, false);
+		}
+		bSwitchingBody = false;
+	}), FMath::Max(0.01f, Fade), false);
+}
+
+void AToyBoxPawn::ApplyPlayerScale(float Scale)
+{
+	ToyLilliput::SetScale(GetWorld(), Scale);
+	if (bVR)
+	{
+		ApplyHandCalib();
+	}
+	else
+	{
+		Camera->SetRelativeLocation(FVector(0.f, 0.f, DesktopEyeHeight * Scale));
+		LeftHand->SetActorScale3D(FVector(Scale));
+		RightHand->SetActorScale3D(FVector(Scale));
+		DesktopHoldDistance = FMath::Clamp(DesktopHoldDistance * Scale / FMath::Max(AppliedHandScale, KINDA_SMALL_NUMBER), 25.f * Scale, 200.f);
+		AppliedHandScale = Scale;
+	}
+	// 开着的菜单是按原来的大小摆的：收起来，再叫出来时按新比例摆
+	for (TActorIterator<AToyMenuPanel> It(GetWorld()); It; ++It)
+	{
+		if (It->IsOpen())
+		{
+			It->Close();
+		}
+	}
+}
+
+void AToyBoxPawn::PlaceFeetAt(const FVector& Target, const FRotator& Rotation, float HeadRatio)
+{
+	SetActorRotation(FRotator(0.f, Rotation.Yaw, 0.f));
+	// 头相对 VROrigin 的水平偏移（VR 里人可能站在游玩区域的边上）；桌面模式头就在 VROrigin 正上方
+	FVector Head = bVR ? Camera->GetRelativeLocation() * HeadRatio : FVector::ZeroVector;
+	Head.Z = 0.f;
+	SetActorLocation(Target - GetActorRotation().RotateVector(Head));
+}
+
+void AToyBoxPawn::TickTinyGround(float DeltaSeconds)
+{
+	if (bTeleporting || bSwitchingBody)
+	{
+		return;
+	}
+	// 缩小后的重力：小人眼里世界放大了 12 倍，用真实重力的话自己从桌上掉下来像从 9 米高极速坠落；乘比例后在小人眼里是正常的下落
+	const float Scale = ToyLilliput::GetScale();
+	const float Gravity = -GetWorld()->GetGravityZ() * Scale;
+	const float MaxFallSpeed = 1500.f * Scale;
+	const float StepUp = CapsuleLift * Scale;
+	const float Radius = CapsuleRadius * Scale * 0.5f;
+	const float NextVelocity = FMath::Max(FallVelocity - Gravity * DeltaSeconds, -MaxFallSpeed);
+	const float Drop = FMath::Max(2.f * Scale, -NextVelocity * DeltaSeconds);
+
+	// 一个小球从脚上方一个台阶高的地方往下扫到这一帧会掉到的地方：扫到朝上的面就站上去（台阶以内的高低差直接跨）
+	const FVector Feet = GetFeetLocation();
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyTinyGround), false, this);
+	AddIgnoredForMove(Params);
+	FHitResult Hit;
+	const FVector From = Feet + FVector(0.f, 0.f, StepUp + Radius);
+	const FVector To = Feet + FVector(0.f, 0.f, Radius - Drop);
+	if (GetWorld()->SweepSingleByChannel(Hit, From, To, FQuat::Identity, ECC_Pawn, FCollisionShape::MakeSphere(Radius), Params))
+	{
+		if (Hit.bStartPenetrating)
+		{
+			FallVelocity = 0.f;   // 脚上方就嵌在东西里（钻到家具底下）：不动，等走出来
+			return;
+		}
+		if (Hit.ImpactNormal.Z > 0.5f)
+		{
+			const float GroundZ = Hit.Location.Z - Radius;
+			if (FallVelocity < -300.f * Scale)
+			{
+				PlayHaptic(EControllerHand::Left, 0.5f, 0.06f);
+				PlayHaptic(EControllerHand::Right, 0.5f, 0.06f);
+			}
+			AddActorWorldOffset(FVector(0.f, 0.f, GroundZ - Feet.Z));
+			FallVelocity = 0.f;
+			LastGroundFeet = FVector(Feet.X, Feet.Y, GroundZ);
+			return;
+		}
+	}
+	FallVelocity = NextVelocity;
+	AddActorWorldOffset(FVector(0.f, 0.f, FallVelocity * DeltaSeconds));
+	// 掉出了世界（从缝里漏下去）：回到上次站稳的地方
+	if (GetFeetLocation().Z < LastGroundFeet.Z - 500.f)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ToyBox 小人国：掉出世界了，回到 %s"), *LastGroundFeet.ToCompactString());
+		PlaceFeetAt(LastGroundFeet, GetActorRotation(), 1.f);
+		FallVelocity = 0.f;
+	}
+}
+
+void AToyBoxPawn::ShowToast(const FString& Title, const FString& Body, float Seconds)
+{
+	if (!RightHand || bCalibMode)
+	{
+		return;
+	}
+	RightHand->ShowCustomInfo(FText::FromString(Title), FText::FromString(Body));
+	GetWorldTimerManager().SetTimer(ToastTimer, FTimerDelegate::CreateWeakLambda(this, [this]()
+	{
+		if (RightHand && !bCalibMode)
+		{
+			RightHand->HideCustomInfo();
+		}
+	}), Seconds, false);
 }

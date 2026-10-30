@@ -7,6 +7,7 @@
 #include "ToyHandCalib.h"
 #include "ToyLightGroupComponent.h"
 #include "ToyMenuPanel.h"
+#include "ToyLilliput.h"
 #include "ToySettings.h"
 #include "ToyClawToolRig.h"
 #include "ToyFeedback.h"
@@ -916,7 +917,8 @@ void AToyHand::Tick(float DeltaSeconds)
 	}
 
 	// 抓取范围跟着设置走（SMALL / MEDIUM / LARGE），范围小球的大小也跟着变
-	GrabRadius = ToySettings::GrabRadiusCm();
+	// 小人国：小身体时手缩小了，抓取范围跟着缩
+	GrabRadius = ToySettings::GrabRadiusCm() * ToyLilliput::GetScale();
 	UpdateHover();
 	TickHeld(DeltaSeconds);
 	TickCurls(DeltaSeconds);
@@ -1017,6 +1019,8 @@ void AToyHand::Grab(AActor* Target)
 		SnapFrom = Target->GetRootComponent()->GetRelativeTransform();
 		SnapTo = Hold;
 		SnapTo.SetScale3D(SnapFrom.GetScale3D());
+		// Hold 是在不带缩放的 GripPoint 坐标系里算的；小人国小身体时手缩小了，挂上去的相对位置要按手的缩放换回来
+		SnapTo.SetTranslation(Hold.GetTranslation() / FMath::Max(static_cast<double>(GripPoint->GetComponentScale().X), UE_KINDA_SMALL_NUMBER));
 		SnapAlpha = SnapTime > 0.f ? 0.f : 1.f;
 		if (SnapAlpha >= 1.f)
 		{
@@ -1238,7 +1242,7 @@ float AToyHand::FindContactCurl(uint8 Group, float MaxCurl, int32 TipBone, int32
 
 	// 指尖从张开弯到 MaxCurl 的路径切成几小段，把指尖当成小球沿每段扫过去，第一次碰到物体的那一段里按命中比例插出弯曲度
 	constexpr int32 Steps = 16;
-	const FCollisionShape Ball = FCollisionShape::MakeSphere(FingerTipRadius);
+	const FCollisionShape Ball = FCollisionShape::MakeSphere(FingerTipRadius * ToyLilliput::GetScale());
 	FVector From = FingerTipAtCurl(Group, 0.f, TipBone, PrevBone);
 	for (int32 Step = 1; Step <= Steps; ++Step)
 	{
@@ -1318,7 +1322,7 @@ void AToyHand::TickPoke()
 	TArray<FOverlapResult> Overlaps;
 	const FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyHandPoke), false, this);
 	GetWorld()->OverlapMultiByObjectType(Overlaps, PokeTip->GetComponentLocation(), FQuat::Identity,
-		FCollisionObjectQueryParams(ECC_WorldDynamic), FCollisionShape::MakeSphere(1.f), Params);
+		FCollisionObjectQueryParams(ECC_WorldDynamic), FCollisionShape::MakeSphere(1.f * ToyLilliput::GetScale()), Params);
 
 	// 触屏（GUI）：指尖在它的感应区里就每帧交给它，由它按离屏幕的距离判断悬停 / 按下 / 松开。
 	// 主菜单面板（3D 按钮）：只在"刚碰到"按钮触发盒的那一帧触发，手指停在按钮里不会连发

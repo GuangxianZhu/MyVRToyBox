@@ -1,4 +1,5 @@
 #include "ToyStudio.h"
+#include "ToyLilliput.h"
 
 #include "ToyProp.h"
 #include "ToyArticulated.h"
@@ -319,6 +320,11 @@ void AToyStudio::ApplyRoomVisibility()
 void AToyStudio::BeginPlay()
 {
 	Super::BeginPlay();
+	// 小人国模式：样板间里不要桌子、触屏和爆炸图模型（自己建房间的 L_Studio 不动，桌子是房间的一部分）
+	if (ToyLilliput::IsEnabled() && !bBuildRoom)
+	{
+		bWithDesk = false;
+	}
 	ApplyRoomVisibility();
 
 	// 关卡里能拿起来的摆件（样板间生成脚本放的），触屏「摆件复位」用

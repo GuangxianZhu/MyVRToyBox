@@ -7,6 +7,8 @@
 #include "ToyHandCalib.h"
 #include "ToyBoxPawn.generated.h"
 
+class AToyFigurine;
+class AToyGiantBody;
 class AToyHand;
 class AToyTouchScreen;
 class UCameraComponent;
@@ -95,6 +97,10 @@ public:
 
 	/** 绕头顶转身（VR 里摇杆转身用；toy.Look 在 VR 里也用它）。 */
 	void SnapTurn(float Degrees);
+
+	/** 小人国：在大身体和小人偶之间切换（黑屏淡出 → 换身体 → 淡入）。左手柄 Y / 桌面 G / toy.Shrink。 */
+	void ToggleBody();
+	bool IsTiny() const { return bTiny; }
 
 	UPROPERTY(VisibleAnywhere, Category = "ToyBox")
 	TObjectPtr<USceneComponent> VROrigin;
@@ -196,6 +202,17 @@ private:
 	AToyHand* SpawnHand(EControllerHand HandSide, UMotionControllerComponent* MotionController);
 	void TickHaptics();
 
+	/** 小人国：开局在脚边放小人偶、准备好大人像。 */
+	void SpawnLilliput();
+	/** 换比例：WorldToMeters、近裁剪面、手、菜单、桌面模式的眼睛高度一起换。 */
+	void ApplyPlayerScale(float Scale);
+	/** 让脚落在 Target、身体朝 Rotation。HeadRatio = 新比例 / 旧比例：换比例那一帧头显的相对位置还是按旧比例算的。 */
+	void PlaceFeetAt(const FVector& Target, const FRotator& Rotation, float HeadRatio);
+	/** 小身体每帧贴地：脚下一个台阶（CapsuleLift × 比例）以内有东西就站上去，没有就按缩小后的重力往下掉。 */
+	void TickTinyGround(float DeltaSeconds);
+	/** 右手边信息牌显示几秒提示。 */
+	void ShowToast(const FString& Title, const FString& Body, float Seconds = 4.f);
+
 	UPROPERTY(Transient)
 	TObjectPtr<AToyHand> LeftHand;
 
@@ -214,6 +231,29 @@ private:
 	TArray<FKey> CalibToggleKeys;
 	TArray<FKey> CalibPageKeys;
 	TArray<FKey> CalibResetKeys;
+	TArray<FKey> SizeSwitchKeys;
+	TArray<FKey> MenuKeys;
+	bool bSizeSwitchWasDown = false;
+	bool bMenuWasDown = false;
+
+	// 小人国：两具身体
+	bool bTiny = false;
+	bool bSwitchingBody = false;
+	/** 变小前大身体脚下的点、朝向、眼睛离脚多高（厘米）。 */
+	FVector BigFeet = FVector::ZeroVector;
+	FRotator BigRotation = FRotator::ZeroRotator;
+	float BigEyeHeight = 165.f;
+	/** 小身体往下掉的速度（厘米 / 秒，负数朝下）和上次站稳的点（掉出世界时回到这里）。 */
+	float FallVelocity = 0.f;
+	FVector LastGroundFeet = FVector::ZeroVector;
+	float AppliedHandScale = 1.f;
+	FTimerHandle ToastTimer;
+
+	UPROPERTY(Transient)
+	TObjectPtr<AToyFigurine> Figurine;
+
+	UPROPERTY(Transient)
+	TObjectPtr<AToyGiantBody> GiantBody;
 
 	ToyHandCalib::FParams AppliedCalib;
 	bool bCalibApplied = false;

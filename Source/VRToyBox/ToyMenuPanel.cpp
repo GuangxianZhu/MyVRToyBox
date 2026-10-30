@@ -2,6 +2,7 @@
 
 #include "ToyBoxPawn.h"
 #include "ToyFeedback.h"
+#include "ToyLilliput.h"
 #include "ToySettings.h"
 #include "ToyShapeComponent.h"
 #include "Camera/PlayerCameraManager.h"
@@ -251,9 +252,12 @@ void AToyMenuPanel::PlaceInFrontOfPlayer()
 	// 只用头的水平朝向：低着头叫出菜单，菜单也不会钻到地板下面
 	const FVector Eye = CameraManager->GetCameraLocation();
 	const FRotator Yaw(0.f, CameraManager->GetCameraRotation().Yaw, 0.f);
-	const FVector Location = Eye + Yaw.Vector() * Distance - FVector(0.f, 0.f, BelowEyes);
+	// 小人国：小身体时面板整个缩小，离头的距离也一起缩
+	const float Scale = ToyLilliput::GetScale();
+	const FVector Location = Eye + Yaw.Vector() * Distance * Scale - FVector(0.f, 0.f, BelowEyes * Scale);
 	// 面板的 +X 是正面，转 180° 朝着玩家
 	SetActorLocationAndRotation(Location, FRotator(0.f, Yaw.Yaw + 180.f, 0.f));
+	SetActorScale3D(FVector(Scale));
 }
 
 void AToyMenuPanel::ShowPage(EToyMenuPage Page)
@@ -270,7 +274,7 @@ void AToyMenuPanel::ShowPage(EToyMenuPage Page)
 	Title->SetText(FText::FromString(Page == EToyMenuPage::Main ? TEXT("TOY BOX") : TEXT("SETTINGS")));
 	Title->SetWorldSize(Page == EToyMenuPage::Main ? 2.6f : 2.f);
 	Hint->SetText(FText::FromString(Page == EToyMenuPage::Main
-		? TEXT("POKE A BUTTON WITH YOUR FINGER")
+		? (ToyLilliput::IsEnabled() ? TEXT("POKE A BUTTON - LEFT Y: SHRINK / GROW - LEFT X: MENU") : TEXT("POKE A BUTTON WITH YOUR FINGER"))
 		: TEXT("EACH PRESS CYCLES THE OPTION - SAVED AUTOMATICALLY")));
 	RefreshLabels();
 }
