@@ -3,6 +3,7 @@
 #include "ToyBoxPawn.h"
 #include "ToyFeedback.h"
 #include "ToyLilliput.h"
+#include "ToyStudio.h"
 #include "ToySettings.h"
 #include "ToyShapeComponent.h"
 #include "Camera/PlayerCameraManager.h"
@@ -45,6 +46,7 @@ namespace
 			{ TEXT("ball"), EToyMenuAction::PinchBall }, { TEXT("grab"), EToyMenuAction::GrabSize },
 			{ TEXT("res"), EToyMenuAction::Resolution }, { TEXT("calib"), EToyMenuAction::CalibrateHands },
 			{ TEXT("sound"), EToyMenuAction::Sound }, { TEXT("haptics"), EToyMenuAction::Haptics },
+			{ TEXT("props"), EToyMenuAction::ResetProps },
 		};
 		AToyMenuPanel* Menu = nullptr;
 		for (TActorIterator<AToyMenuPanel> It(World); It && !Menu; ++It)
@@ -109,12 +111,14 @@ AToyMenuPanel::AToyMenuPanel()
 	Title = MakeText(TEXT("Title"), FVector(1.5f, 0.f, 10.8f), TEXT("TOY BOX"), 2.6f, FColor::White);
 	Hint = MakeText(TEXT("Hint"), FVector(1.5f, 0.f, -12.3f), TEXT(""), 0.9f, FColor(150, 200, 255));
 
-	// 主页：大大的 START，下面 SETTINGS，最下面小一点的 QUIT
+	// 主页：大大的 START，下面 SETTINGS，最下面一排小一点的 RESET PROPS（摆件复位，原来在桌上的触屏上）和 QUIT
 	MakeButton(TEXT("Start"), EToyMenuPage::Main, EToyMenuAction::Start, 0.f, 3.5f, 24.f, 6.f,
 		TEXT("START"), TEXT(""), FLinearColor(0.1f, 0.7f, 0.25f), 2.2f);
 	MakeButton(TEXT("Settings"), EToyMenuPage::Main, EToyMenuAction::OpenSettings, 0.f, -3.6f, 24.f, 4.6f,
 		TEXT("SETTINGS"), TEXT(""), FLinearColor(0.15f, 0.35f, 0.85f), 1.7f);
-	MakeButton(TEXT("Quit"), EToyMenuPage::Main, EToyMenuAction::Quit, 0.f, -9.f, 12.f, 3.4f,
+	MakeButton(TEXT("ResetProps"), EToyMenuPage::Main, EToyMenuAction::ResetProps, 6.2f, -9.f, 11.6f, 3.4f,
+		TEXT("RESET PROPS"), TEXT(""), FLinearColor(0.85f, 0.55f, 0.1f), 1.1f);
+	MakeButton(TEXT("Quit"), EToyMenuPage::Main, EToyMenuAction::Quit, -6.2f, -9.f, 11.6f, 3.4f,
 		TEXT("QUIT"), TEXT(""), FLinearColor(0.8f, 0.15f, 0.12f), 1.3f);
 
 	// 设置页：第一行字是设置名，第二行是现在的档位（RefreshLabels 填）
@@ -340,6 +344,19 @@ void AToyMenuPanel::RunAction(EToyMenuAction Action)
 		return;
 	case EToyMenuAction::OpenSettings: ShowPage(EToyMenuPage::Settings); return;
 	case EToyMenuAction::Back:         ShowPage(EToyMenuPage::Main); return;
+	case EToyMenuAction::ResetProps:
+	{
+		// 样板间里所有摆件放回开局的位置；小人偶也放回去（变小时它就是你自己，不动）
+		if (AToyStudio* Studio = AToyStudio::Find(GetWorld()))
+		{
+			Studio->ResetProps();
+		}
+		if (AToyFigurine* Figurine = AToyFigurine::Find(GetWorld()); Figurine && !Figurine->IsHidden())
+		{
+			Figurine->ResetToHome();
+		}
+		return;
+	}
 	case EToyMenuAction::Quit:
 		UKismetSystemLibrary::QuitGame(this, UGameplayStatics::GetPlayerController(this, 0), EQuitPreference::Quit, false);
 		return;

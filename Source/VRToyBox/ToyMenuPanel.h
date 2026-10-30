@@ -25,6 +25,7 @@ enum class EToyMenuAction : uint8
 	CalibrateHands,
 	Sound,
 	Haptics,
+	ResetProps,
 	Back
 };
 
