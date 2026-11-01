@@ -11,6 +11,7 @@ class AToyFigurine;
 class AToyGiantBody;
 class AToyHand;
 class AToyTouchScreen;
+class AToyZipline;
 class UCameraComponent;
 class UMaterialInstanceDynamic;
 class UMotionControllerComponent;
@@ -54,6 +55,27 @@ class VRTOYBOX_API AToyBoxPawn : public APawn
 public:
 	/** 测试用（toy.Walk）：接下来 Seconds 秒一直往前走（和摇杆推满一样），每半秒把脚的位置写进日志。 */
 	void StartTestWalk(float Seconds);
+
+	/**
+	 * 小人国滑索：小身体吊在把手上往低的那头滑（AToyZipPulley 被捏住时调）。Hand 为空 = 桌面测试（toy.Zip ride），
+	 * 不用手，直接挂到把手下面并把路径写进日志。大身体时不滑。
+	 */
+	void StartZipRide(AToyZipline* Line, AToyHand* Hand);
+	/** 停下：bReachedEnd = 滑到底（放到底下的台面上）；否则是半路松手，带着当时的速度掉下去。 */
+	void StopZipRide(bool bReachedEnd);
+	/** 正在滑这根（Line 为空 = 随便哪根）。 */
+	bool IsZipRiding(const AToyZipline* Line = nullptr) const;
+	/** 右手边的提示牌（线轴钉点、拉不成的原因用）。 */
+	void ShowPlayerToast(const FString& Title, const FString& Body) { ShowToast(Title, Body); }
+
+	/** 滑索：沿绳子方向的重力分量加速、和速度成正比的阻力、最高速度（小人眼里的厘米 / 秒，乘比例换成世界厘米）。 */
+	UPROPERTY(EditAnywhere, Category = "ToyBox|Zipline")
+	float ZipDrag = 0.6f;
+	UPROPERTY(EditAnywhere, Category = "ToyBox|Zipline")
+	float ZipMaxSpeed = 400.f;
+	/** 快到底时的减速度（小人眼里的厘米 / 秒²）：按这个刹车，到底时差不多停住。 */
+	UPROPERTY(EditAnywhere, Category = "ToyBox|Zipline")
+	float ZipBrakeDecel = 500.f;
 
 	AToyBoxPawn();
 
@@ -222,6 +244,7 @@ private:
 	void PlaceFeetAt(const FVector& Target, const FRotator& Rotation, float HeadRatio);
 	/** 小身体每帧贴地：脚下一个台阶（CapsuleLift × 比例）以内有东西就站上去，没有就按缩小后的重力往下掉。 */
 	void TickTinyGround(float DeltaSeconds);
+	void TickZipRide(float DeltaSeconds);
 	/** 右手边信息牌显示几秒提示。 */
 	void ShowToast(const FString& Title, const FString& Body, float Seconds = 4.f);
 
@@ -258,6 +281,16 @@ private:
 	/** 小身体往下掉的速度（厘米 / 秒，负数朝下）和上次站稳的点（掉出世界时回到这里）。 */
 	float FallVelocity = 0.f;
 	float TestWalkRemaining = 0.f;
+	// 滑索：在滑哪根、哪只手捏着（测试时为空）、离高的那头多远、速度、镜头相对把手的偏移；半路松手后水平方向带着走的速度
+	TWeakObjectPtr<AToyZipline> RideLine;
+	TWeakObjectPtr<AToyHand> RideHand;
+	bool bZipRiding = false;
+	float RideDistance = 0.f;
+	float RideSpeed = 0.f;
+	float RideVignette = 0.f;
+	float RideLogTimer = 0.f;
+	FVector RideOffset = FVector::ZeroVector;
+	FVector CarryVelocity = FVector::ZeroVector;
 	float TestWalkLogTimer = 0.f;
 	FVector LastGroundFeet = FVector::ZeroVector;
 	float AppliedHandScale = 1.f;

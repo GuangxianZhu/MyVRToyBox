@@ -7,6 +7,7 @@
 #include "ToySettings.h"
 #include "ToyTouchScreen.h"
 #include "ToyStudio.h"
+#include "ToyZipline.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Engine/CollisionProfile.h"
@@ -517,7 +518,11 @@ void AToyBoxPawn::Tick(float DeltaSeconds)
 				bUnder ? *GetNameSafe(Under.GetActor()) : TEXT("-"), bUnder ? Under.ImpactPoint.Z : 0.f);
 		}
 	}
-	if (bTiny)
+	if (bZipRiding)
+	{
+		TickZipRide(DeltaSeconds);
+	}
+	else if (bTiny)
 	{
 		TickTinyGround(DeltaSeconds);
 	}
@@ -705,6 +710,142 @@ void AToyBoxPawn::StartTestWalk(float Seconds)
 {
 	TestWalkRemaining = Seconds;
 	TestWalkLogTimer = 0.f;
+}
+
+void AToyBoxPawn::StartZipRide(AToyZipline* Line, AToyHand* Hand)
+{
+	AToyZipPulley* Pulley = Line ? Line->GetPulley() : nullptr;
+	if (!bTiny || !Pulley || bZipRiding || bSwitchingBody)
+	{
+		return;
+	}
+	RideLine = Line;
+	RideHand = Hand;
+	RideDistance = Pulley->GetDistance();
+	RideSpeed = 0.f;
+	RideLogTimer = 0.f;
+	FallVelocity = 0.f;
+	CarryVelocity = FVector::ZeroVector;
+	if (Hand)
+	{
+		// 手捏住把手的那一刻：镜头相对捏合点的位置记下来，之后人跟着把手走，手一直在把手上
+		RideOffset = Camera->GetComponentLocation() - Hand->GetPinchLocation();
+	}
+	else
+	{
+		// 桌面测试：镜头挂在把手下面 4cm（小人眼里差不多两臂举过头顶）
+		const float Hang = 4.f;
+		RideOffset = FVector(0.f, 0.f, -Hang);
+		AddActorWorldOffset(Pulley->GetGripLocation() + RideOffset - Camera->GetComponentLocation());
+	}
+	bZipRiding = true;
+	UE_LOG(LogTemp, Log, TEXT("ToyBox 滑索：开始滑，%s，绳长 %.0fcm"), Hand ? TEXT("手捏着把手") : TEXT("测试（不用手）"), Line->GetLength());
+}
+
+bool AToyBoxPawn::IsZipRiding(const AToyZipline* Line) const
+{
+	return bZipRiding && (!Line || RideLine.Get() == Line);
+}
+
+void AToyBoxPawn::TickZipRide(float DeltaSeconds)
+{
+	AToyZipline* Line = RideLine.Get();
+	AToyZipPulley* Pulley = Line ? Line->GetPulley() : nullptr;
+	if (!Pulley)
+	{
+		StopZipRide(false);
+		return;
+	}
+	// 小人眼里的物理：重力、速度上限、刹车都乘比例。沿绳子的加速度 = 重力 × 坡度的正弦 − 阻力 × 速度
+	const float Scale = ToyLilliput::GetScale();
+	const float Slope = FMath::Max(0.f, static_cast<float>(-Line->GetDirection().Z));
+	const float Accel = -GetWorld()->GetGravityZ() * Scale * Slope - ZipDrag * RideSpeed;
+	RideSpeed = FMath::Clamp(RideSpeed + Accel * DeltaSeconds, 0.f, ZipMaxSpeed * Scale);
+	// 快到底时按 ZipBrakeDecel 刹车，最后以很慢的速度靠上去
+	const float Remaining = Line->GetLength() - RideDistance;
+	RideSpeed = FMath::Min(RideSpeed, FMath::Sqrt(2.f * ZipBrakeDecel * Scale * FMath::Max(0.f, Remaining)));
+	RideSpeed = FMath::Max(RideSpeed, 10.f * Scale);
+	RideDistance = FMath::Min(RideDistance + RideSpeed * DeltaSeconds, Line->GetLength());
+	Pulley->SetDistance(RideDistance);
+	AddActorWorldOffset(Pulley->GetGripLocation() + RideOffset - Camera->GetComponentLocation());
+
+	// 防晕：滑的时候视野四周压暗（暗角），开头 0.3 秒渐入；转身照样由玩家控制
+	RideVignette = FMath::Min(1.f, RideVignette + DeltaSeconds / 0.3f);
+	Camera->PostProcessSettings.bOverride_VignetteIntensity = true;
+	Camera->PostProcessSettings.VignetteIntensity = 0.4f + 0.9f * RideVignette;
+
+	if (!RideHand.IsValid())
+	{
+		RideLogTimer -= DeltaSeconds;
+		if (RideLogTimer <= 0.f)
+		{
+			RideLogTimer = 0.25f;
+			UE_LOG(LogTemp, Log, TEXT("ToyBox 滑索：%.0f / %.0fcm，速度 %.1fcm/s（小人眼里 %.1f m/s），镜头 %s"), RideDistance, Line->GetLength(),
+				RideSpeed, RideSpeed / Scale / 100.f, *Camera->GetComponentLocation().ToCompactString());
+		}
+	}
+	if (RideDistance >= Line->GetLength() - 0.05f)
+	{
+		StopZipRide(true);
+	}
+}
+
+void AToyBoxPawn::StopZipRide(bool bReachedEnd)
+{
+	if (!bZipRiding)
+	{
+		return;
+	}
+	bZipRiding = false;
+	AToyZipline* Line = RideLine.Get();
+	AToyZipPulley* Pulley = Line ? Line->GetPulley() : nullptr;
+	const FVector Velocity = Line ? Line->GetDirection() * RideSpeed : FVector::ZeroVector;
+	Camera->PostProcessSettings.bOverride_VignetteIntensity = false;
+	RideVignette = 0.f;
+	if (bReachedEnd && Line)
+	{
+		// 滑到底：放到低的那头底下的台面上（柱子 / 桩旁边一点），黑一下再亮，免得"啪"一下落地
+		FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyZipLand), false, this);
+		AddIgnoredForMove(Params);
+		Params.AddIgnoredActor(Line);
+		if (Pulley)
+		{
+			Params.AddIgnoredActor(Pulley);
+		}
+		const FVector From = Line->GetBottom() - Line->GetDirection() * 3.f;
+		FHitResult Hit;
+		if (GetWorld()->LineTraceSingleByChannel(Hit, From, From - FVector(0.f, 0.f, 100.f), ECC_Pawn, Params))
+		{
+			PlaceFeetAt(Hit.ImpactPoint, GetActorRotation(), 1.f);
+			LastGroundFeet = Hit.ImpactPoint;
+		}
+		FallVelocity = 0.f;
+		CarryVelocity = FVector::ZeroVector;
+		if (APlayerController* PC = Cast<APlayerController>(GetController()); PC && PC->PlayerCameraManager)
+		{
+			PC->PlayerCameraManager->StartCameraFade(0.7f, 0.f, 0.35f, FLinearColor::Black, false, false);
+		}
+		PlayHaptic(EControllerHand::Left, 0.4f, 0.08f);
+		PlayHaptic(EControllerHand::Right, 0.4f, 0.08f);
+	}
+	else
+	{
+		// 半路松手：竖直方向交给贴地 / 下落，水平方向带着走
+		FallVelocity = static_cast<float>(Velocity.Z);
+		CarryVelocity = FVector(Velocity.X, Velocity.Y, 0.f);
+	}
+	UE_LOG(LogTemp, Log, TEXT("ToyBox 滑索：%s，脚在 %s"), bReachedEnd ? TEXT("滑到底") : TEXT("半路松手"), *GetFeetLocation().ToCompactString());
+	// 手还捏着把手就松开（会回调 OnReleased → 这里，已经不在滑了，直接返回）；把手回到上面
+	if (AToyHand* Hand = RideHand.Get(); Hand && Pulley && Hand->GetHeldActor() == Pulley)
+	{
+		Hand->ReleaseHeld(false);
+	}
+	if (Pulley)
+	{
+		Pulley->SetDistance(0.f);
+	}
+	RideHand.Reset();
+	RideLine.Reset();
 }
 
 float AToyBoxPawn::GetStepHeight() const
@@ -896,6 +1037,10 @@ FVector AToyBoxPawn::GetFeetLocation() const
 
 void AToyBoxPawn::SmoothMove(FVector2D Input, float DeltaSeconds)
 {
+	if (bZipRiding)
+	{
+		return;   // 吊在滑索上不能走
+	}
 	const float Size = Input.Size();
 	if (Size < MoveDeadZone || bTeleporting)
 	{
@@ -1794,6 +1939,9 @@ void AToyBoxPawn::SpawnLilliput()
 			FTransform(FRotator(0.f, GetActorRotation().Yaw + 180.f, 0.f), Feet + FVector(0.f, 0.f, 6.f)), Params);
 	}
 	GiantBody = GetWorld()->SpawnActor<AToyGiantBody>(AToyGiantBody::StaticClass(), GetActorTransform(), Params);
+	// 滑索：开局一根预设的（工作台面 → 地上，进去就能试），工作台上摆一个线轴（自己拉）
+	AToyZipline::CreatePreset(GetWorld());
+	AToyZipSpool::SpawnOnWorkbench(GetWorld());
 	UE_LOG(LogTemp, Log, TEXT("ToyBox 小人国：小人偶 %s 在 %s"), *GetNameSafe(Figurine),
 		Figurine ? *Figurine->GetActorLocation().ToCompactString() : TEXT("-"));
 }
@@ -1950,12 +2098,18 @@ void AToyBoxPawn::TickTinyGround(float DeltaSeconds)
 			}
 			AddActorWorldOffset(FVector(0.f, 0.f, GroundZ - Feet.Z));
 			FallVelocity = 0.f;
+			CarryVelocity = FVector::ZeroVector;
 			LastGroundFeet = FVector(Feet.X, Feet.Y, GroundZ);
 			return;
 		}
 	}
 	FallVelocity = NextVelocity;
 	AddActorWorldOffset(FVector(0.f, 0.f, FallVelocity * DeltaSeconds));
+	// 从滑索上半路松手：水平方向带着滑的速度飞出去一点（挡墙照常），落地清零
+	if (!CarryVelocity.IsNearlyZero())
+	{
+		MoveWithCollision(CarryVelocity * DeltaSeconds);
+	}
 	// 掉出了世界（从缝里漏下去）：回到上次站稳的地方
 	if (GetFeetLocation().Z < LastGroundFeet.Z - 500.f)
 	{

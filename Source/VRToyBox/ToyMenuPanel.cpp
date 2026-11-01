@@ -7,6 +7,7 @@
 #include "ToySettings.h"
 #include "ToyShapeComponent.h"
 #include "ToySpawnedProp.h"
+#include "ToyZipline.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Components/BoxComponent.h"
 #include "Components/TextRenderComponent.h"
@@ -52,6 +53,7 @@ namespace
 			{ TEXT("plank"), EToyMenuAction::SpawnPlank }, { TEXT("box"), EToyMenuAction::SpawnBox },
 			{ TEXT("cup"), EToyMenuAction::SpawnCup }, { TEXT("tile"), EToyMenuAction::SpawnTile },
 			{ TEXT("coaster"), EToyMenuAction::SpawnCoaster }, { TEXT("clear"), EToyMenuAction::ClearObjects },
+			{ TEXT("spool"), EToyMenuAction::SpawnSpool },
 		};
 		AToyMenuPanel* Menu = nullptr;
 		for (TActorIterator<AToyMenuPanel> It(World); It && !Menu; ++It)
@@ -173,6 +175,8 @@ AToyMenuPanel::AToyMenuPanel()
 		TEXT("COASTER"), TEXT("1 CM STEP"), Step, 1.25f);
 	MakeButton(TEXT("ClearObjects"), EToyMenuPage::Objects, EToyMenuAction::ClearObjects, SetCol[1], SetRow[3], SetWidth, SetHeight,
 		TEXT("CLEAR ALL"), TEXT(""), FLinearColor(0.8f, 0.15f, 0.12f), 1.25f);
+	MakeButton(TEXT("Spool"), EToyMenuPage::Objects, EToyMenuAction::SpawnSpool, SetCol[0], SetRow[4], SetWidth, SetHeight,
+		TEXT("ZIPLINE SPOOL"), TEXT("PIN 2 ENDS"), FLinearColor(0.75f, 0.15f, 0.12f), 1.15f);
 	MakeButton(TEXT("ObjectsBack"), EToyMenuPage::Objects, EToyMenuAction::Back, SetCol[1], SetRow[4], SetWidth, SetHeight,
 		TEXT("BACK"), TEXT(""), FLinearColor(0.45f, 0.45f, 0.5f), 1.5f);
 }
@@ -381,9 +385,24 @@ void AToyMenuPanel::RunAction(EToyMenuAction Action)
 	case EToyMenuAction::SpawnCup:     SpawnObject(EToySpawnItem::Cup); return;
 	case EToyMenuAction::SpawnTile:    SpawnObject(EToySpawnItem::Tile); return;
 	case EToyMenuAction::SpawnCoaster: SpawnObject(EToySpawnItem::Coaster); return;
-	case EToyMenuAction::ClearObjects:
-		Hint->SetText(FText::FromString(FString::Printf(TEXT("REMOVED %d OBJECTS"), AToySpawnedProp::ClearAll(GetWorld()))));
+	case EToyMenuAction::SpawnSpool:
+		if (ToyLilliput::GetScale() < 1.f)
+		{
+			Hint->SetText(FText::FromString(TEXT("GROW BIG TO PLACE OBJECTS (LEFT Y)")));
+		}
+		else if (AToyZipSpool::SpawnInFrontOfPlayer(GetWorld()))
+		{
+			Hint->SetText(FText::FromString(TEXT("RELEASE THE SPOOL ON A SURFACE, THEN ON ANOTHER ONE")));
+		}
 		return;
+	case EToyMenuAction::ClearObjects:
+	{
+		// 摆的东西和滑索一起清（开局那根预设的也清掉，toy.Zip preset 或重新开局再有）
+		const int32 Objects = AToySpawnedProp::ClearAll(GetWorld());
+		const int32 Lines = AToyZipline::ClearAll(GetWorld());
+		Hint->SetText(FText::FromString(FString::Printf(TEXT("REMOVED %d OBJECTS AND %d ZIPLINES"), Objects, Lines)));
+		return;
+	}
 	case EToyMenuAction::Back:         ShowPage(EToyMenuPage::Main); return;
 	case EToyMenuAction::ResetProps:
 	{

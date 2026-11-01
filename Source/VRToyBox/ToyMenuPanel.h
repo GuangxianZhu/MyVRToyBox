@@ -35,6 +35,7 @@ enum class EToyMenuAction : uint8
 	SpawnCup,
 	SpawnTile,
 	SpawnCoaster,
+	SpawnSpool,
 	ClearObjects,
 	Back
 };
