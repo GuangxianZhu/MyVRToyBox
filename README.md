@@ -150,7 +150,8 @@ UE 5.8 + OpenXR 的 C++ 小工程。第一个场景：
 - 再按一次 Y 就变回大身体，回到原来的位置。小人偶会留在你变小后最后站的地方。
 - **左手柄 X** 叫出或收起主菜单（原来要戳桌上触屏的 MENU）。主菜单最下面的 **RESET PROPS** 把摆件、工具和小人偶放回开局的位置。
 - 变小时自动关掉景深：样板间的后期对焦在约 2.9 米，小人眼前几厘米的东西会被当成焦外糊掉。贴图和光照贴图是按 1–2 米的距离做的，放大 12 倍看还是会有点软，这个代码改不了。
-- 调试：`toy.Figurine X Y` 把小人偶放到那个位置的表面上；`toy.GpuTime` 测 GPU 帧时间。
+- **摆东西（主菜单 OBJECTS）**：BOOK（书，2cm 厚）、BLOCK（10cm 积木）、PLANK（60cm 木板，当斜坡）、BOX（21cm 盒子）、CUP（杯子）、TILE（20×20×2cm 瓷砖）、COASTER（1cm 杯垫），按一下就悬在面前右侧（不受重力、一直发亮），捏起来以后就是普通的物理摆件。最多 40 个，再摆会拿掉最早的；CLEAR ALL 全部删掉，RESET PROPS 不管它们。只在大身体时能摆（小身体时提示 GROW BIG）。书、瓷砖、杯垫用的是本机素材包的网格（没有就用基础形状），都挡小身体：小身体一步能跨上 2.5cm（在小人眼里是 30cm 的台阶），书和瓷砖错开叠起来就是楼梯，木板一头搭在盒子上就是斜坡（试过 21° 能走上去）。
+- 调试：`toy.Figurine X Y` 把小人偶放到那个位置的表面上；`toy.Spawn book|block|plank|box|cup|tile|coaster [X Y [Yaw [Pitch [Z]]]]` 摆东西（不写坐标 = 和菜单一样悬在面前，`toy.Spawn clear` 全删）；`toy.Walk <秒>` 往前走几秒并把脚的高度写进日志；`toy.GpuTime` 测 GPU 帧时间。
 
 样板间的光照烘焙默认用 CPU Lightmass 的 Medium 质量（约 4 分钟，和 Production 的 18 分钟在 6 个视角截图对比看不出差别）；要最精细的先 `set ARCHVIZ_BAKE_QUALITY=PRODUCTION`。GPU Lightmass 在 UE 5.8 上烘不出体积光照贴图（会动的东西全黑，5.7 上也有人报告同样的问题），所以默认不用；路径留着，`set ARCHVIZ_BAKER=gpu` 可以试，失败会自动退回 CPU。
 

@@ -52,6 +52,9 @@ class VRTOYBOX_API AToyBoxPawn : public APawn
 	GENERATED_BODY()
 
 public:
+	/** 测试用（toy.Walk）：接下来 Seconds 秒一直往前走（和摇杆推满一样），每半秒把脚的位置写进日志。 */
+	void StartTestWalk(float Seconds);
+
 	AToyBoxPawn();
 
 	virtual void Tick(float DeltaSeconds) override;
@@ -148,6 +151,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float CapsuleLift = 15.f;
 
+	/** 小身体一步能跨上去的高度（厘米，世界尺度）。按比例缩 CapsuleLift 只有 1.25cm，2cm 厚的书都是一堵墙；2.5cm 在小人眼里是 30cm 的台阶，
+	 * 书、瓷砖、杯垫叠起来就能当楼梯走上去，30° 以内的木板斜坡也走得上去。 */
+	UPROPERTY(EditAnywhere, Category = "ToyBox")
+	float TinyStepHeight = 2.5f;
+
 	/** 传送抛物线的出射速度（厘米 / 秒），越大越远。 */
 	UPROPERTY(EditAnywhere, Category = "ToyBox")
 	float TeleportLaunchSpeed = 650.f;
@@ -175,8 +183,12 @@ private:
 
 	/** 平滑移动：Input.X = 右，Input.Y = 前（相对头的水平朝向），带死区，用胶囊体扫掠挡墙和桌子。 */
 	void SmoothMove(FVector2D Input, float DeltaSeconds);
+
 	/** 胶囊体从脚下扫到 Move，碰到东西就停在碰撞点前再沿墙面滑一下；OutHit 不为空时写第一个挡路的东西。返回是否被挡。 */
 	bool MoveWithCollision(FVector Move, FHitResult* OutHit = nullptr);
+
+	/** 一步能跨上去的高度（厘米）：大身体 CapsuleLift，小身体至少 TinyStepHeight。走路的胶囊体离地这么高，贴地时也往上找这么高。 */
+	float GetStepHeight() const;
 	/** 从 Start 沿 Direction 打抛物线，更新抛物线和落点圈的显示；返回落点是否能传送。 */
 	bool UpdateTeleportAim(const FVector& Start, const FVector& Direction, USceneComponent* Source);
 	void HideTeleportAim();
@@ -245,6 +257,8 @@ private:
 	float BigEyeHeight = 165.f;
 	/** 小身体往下掉的速度（厘米 / 秒，负数朝下）和上次站稳的点（掉出世界时回到这里）。 */
 	float FallVelocity = 0.f;
+	float TestWalkRemaining = 0.f;
+	float TestWalkLogTimer = 0.f;
 	FVector LastGroundFeet = FVector::ZeroVector;
 	float AppliedHandScale = 1.f;
 	FTimerHandle ToastTimer;

@@ -6,6 +6,7 @@
 #include "ToyStudio.h"
 #include "ToySettings.h"
 #include "ToyShapeComponent.h"
+#include "ToySpawnedProp.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Components/BoxComponent.h"
 #include "Components/TextRenderComponent.h"
@@ -46,7 +47,11 @@ namespace
 			{ TEXT("ball"), EToyMenuAction::PinchBall }, { TEXT("grab"), EToyMenuAction::GrabSize },
 			{ TEXT("res"), EToyMenuAction::Resolution }, { TEXT("calib"), EToyMenuAction::CalibrateHands },
 			{ TEXT("sound"), EToyMenuAction::Sound }, { TEXT("haptics"), EToyMenuAction::Haptics },
-			{ TEXT("props"), EToyMenuAction::ResetProps },
+			{ TEXT("props"), EToyMenuAction::ResetProps }, { TEXT("objects"), EToyMenuAction::OpenObjects },
+			{ TEXT("book"), EToyMenuAction::SpawnBook }, { TEXT("block"), EToyMenuAction::SpawnBlock },
+			{ TEXT("plank"), EToyMenuAction::SpawnPlank }, { TEXT("box"), EToyMenuAction::SpawnBox },
+			{ TEXT("cup"), EToyMenuAction::SpawnCup }, { TEXT("tile"), EToyMenuAction::SpawnTile },
+			{ TEXT("coaster"), EToyMenuAction::SpawnCoaster }, { TEXT("clear"), EToyMenuAction::ClearObjects },
 		};
 		AToyMenuPanel* Menu = nullptr;
 		for (TActorIterator<AToyMenuPanel> It(World); It && !Menu; ++It)
@@ -111,11 +116,13 @@ AToyMenuPanel::AToyMenuPanel()
 	Title = MakeText(TEXT("Title"), FVector(1.5f, 0.f, 10.8f), TEXT("TOY BOX"), 2.6f, FColor::White);
 	Hint = MakeText(TEXT("Hint"), FVector(1.5f, 0.f, -12.3f), TEXT(""), 0.9f, FColor(150, 200, 255));
 
-	// 主页：大大的 START，下面 SETTINGS，最下面一排小一点的 RESET PROPS（摆件复位，原来在桌上的触屏上）和 QUIT
-	MakeButton(TEXT("Start"), EToyMenuPage::Main, EToyMenuAction::Start, 0.f, 3.5f, 24.f, 6.f,
+	// 主页：大大的 START，下面并排 SETTINGS 和 OBJECTS（摆东西），最下面一排小一点的 RESET PROPS（摆件复位，原来在桌上的触屏上）和 QUIT
+	MakeButton(TEXT("Start"), EToyMenuPage::Main, EToyMenuAction::Start, 0.f, 4.f, 24.f, 5.6f,
 		TEXT("START"), TEXT(""), FLinearColor(0.1f, 0.7f, 0.25f), 2.2f);
-	MakeButton(TEXT("Settings"), EToyMenuPage::Main, EToyMenuAction::OpenSettings, 0.f, -3.6f, 24.f, 4.6f,
-		TEXT("SETTINGS"), TEXT(""), FLinearColor(0.15f, 0.35f, 0.85f), 1.7f);
+	MakeButton(TEXT("Settings"), EToyMenuPage::Main, EToyMenuAction::OpenSettings, 7.6f, -2.8f, 14.4f, 4.4f,
+		TEXT("SETTINGS"), TEXT(""), FLinearColor(0.15f, 0.35f, 0.85f), 1.5f);
+	MakeButton(TEXT("Objects"), EToyMenuPage::Main, EToyMenuAction::OpenObjects, -7.6f, -2.8f, 14.4f, 4.4f,
+		TEXT("OBJECTS"), TEXT(""), FLinearColor(0.55f, 0.35f, 0.15f), 1.5f);
 	MakeButton(TEXT("ResetProps"), EToyMenuPage::Main, EToyMenuAction::ResetProps, 6.2f, -9.f, 11.6f, 3.4f,
 		TEXT("RESET PROPS"), TEXT(""), FLinearColor(0.85f, 0.55f, 0.1f), 1.1f);
 	MakeButton(TEXT("Quit"), EToyMenuPage::Main, EToyMenuAction::Quit, -6.2f, -9.f, 11.6f, 3.4f,
@@ -145,6 +152,28 @@ AToyMenuPanel::AToyMenuPanel()
 	MakeButton(TEXT("Haptics"), EToyMenuPage::Settings, EToyMenuAction::Haptics, SetCol[0], SetRow[4], SetWidth, SetHeight,
 		TEXT("HAPTICS"), TEXT(""), FeelColor, 1.25f);
 	MakeButton(TEXT("Back"), EToyMenuPage::Settings, EToyMenuAction::Back, SetCol[1], SetRow[4], SetWidth, SetHeight,
+		TEXT("BACK"), TEXT(""), FLinearColor(0.45f, 0.45f, 0.5f), 1.5f);
+
+	// 摆东西页：按一下在面前摆一件（悬着，捏起来以后才有重力）。第二行写尺寸：小人国搭台阶时一眼看出哪个跨得上去
+	const FLinearColor Wood(0.55f, 0.36f, 0.16f);
+	const FLinearColor Step(0.25f, 0.45f, 0.6f);
+	MakeButton(TEXT("Book"), EToyMenuPage::Objects, EToyMenuAction::SpawnBook, SetCol[0], SetRow[0], SetWidth, SetHeight,
+		TEXT("BOOK"), TEXT("2 CM STEP"), Step, 1.25f);
+	MakeButton(TEXT("Block"), EToyMenuPage::Objects, EToyMenuAction::SpawnBlock, SetCol[1], SetRow[0], SetWidth, SetHeight,
+		TEXT("BLOCK"), TEXT("10 CM CUBE"), Wood, 1.25f);
+	MakeButton(TEXT("Plank"), EToyMenuPage::Objects, EToyMenuAction::SpawnPlank, SetCol[0], SetRow[1], SetWidth, SetHeight,
+		TEXT("PLANK"), TEXT("60 CM RAMP"), Wood, 1.25f);
+	MakeButton(TEXT("Box"), EToyMenuPage::Objects, EToyMenuAction::SpawnBox, SetCol[1], SetRow[1], SetWidth, SetHeight,
+		TEXT("BOX"), TEXT("21 CM TALL"), Wood, 1.25f);
+	MakeButton(TEXT("Cup"), EToyMenuPage::Objects, EToyMenuAction::SpawnCup, SetCol[0], SetRow[2], SetWidth, SetHeight,
+		TEXT("CUP"), TEXT("10 CM"), FLinearColor(0.5f, 0.5f, 0.55f), 1.25f);
+	MakeButton(TEXT("Tile"), EToyMenuPage::Objects, EToyMenuAction::SpawnTile, SetCol[1], SetRow[2], SetWidth, SetHeight,
+		TEXT("TILE"), TEXT("2 CM STEP"), Step, 1.25f);
+	MakeButton(TEXT("Coaster"), EToyMenuPage::Objects, EToyMenuAction::SpawnCoaster, SetCol[0], SetRow[3], SetWidth, SetHeight,
+		TEXT("COASTER"), TEXT("1 CM STEP"), Step, 1.25f);
+	MakeButton(TEXT("ClearObjects"), EToyMenuPage::Objects, EToyMenuAction::ClearObjects, SetCol[1], SetRow[3], SetWidth, SetHeight,
+		TEXT("CLEAR ALL"), TEXT(""), FLinearColor(0.8f, 0.15f, 0.12f), 1.25f);
+	MakeButton(TEXT("ObjectsBack"), EToyMenuPage::Objects, EToyMenuAction::Back, SetCol[1], SetRow[4], SetWidth, SetHeight,
 		TEXT("BACK"), TEXT(""), FLinearColor(0.45f, 0.45f, 0.5f), 1.5f);
 }
 
@@ -275,11 +304,12 @@ void AToyMenuPanel::ShowPage(EToyMenuPage Page)
 		Button.Line2->SetVisibility(bShow);
 		Button.Zone->SetCollisionEnabled(bShow ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
 	}
-	Title->SetText(FText::FromString(Page == EToyMenuPage::Main ? TEXT("TOY BOX") : TEXT("SETTINGS")));
+	Title->SetText(FText::FromString(Page == EToyMenuPage::Main ? TEXT("TOY BOX") : Page == EToyMenuPage::Settings ? TEXT("SETTINGS") : TEXT("OBJECTS")));
 	Title->SetWorldSize(Page == EToyMenuPage::Main ? 2.6f : 2.f);
 	Hint->SetText(FText::FromString(Page == EToyMenuPage::Main
 		? (ToyLilliput::IsEnabled() ? TEXT("POKE A BUTTON - LEFT Y: SHRINK / GROW - LEFT X: MENU") : TEXT("POKE A BUTTON WITH YOUR FINGER"))
-		: TEXT("EACH PRESS CYCLES THE OPTION - SAVED AUTOMATICALLY")));
+		: Page == EToyMenuPage::Settings ? TEXT("EACH PRESS CYCLES THE OPTION - SAVED AUTOMATICALLY")
+		: TEXT("PRESS TO PLACE - GRAB IT TO MOVE - BUILD STAIRS FOR THE TINY YOU")));
 	RefreshLabels();
 }
 
@@ -343,6 +373,17 @@ void AToyMenuPanel::RunAction(EToyMenuAction Action)
 		Close();
 		return;
 	case EToyMenuAction::OpenSettings: ShowPage(EToyMenuPage::Settings); return;
+	case EToyMenuAction::OpenObjects:  ShowPage(EToyMenuPage::Objects); return;
+	case EToyMenuAction::SpawnBook:    SpawnObject(EToySpawnItem::Book); return;
+	case EToyMenuAction::SpawnBlock:   SpawnObject(EToySpawnItem::Block); return;
+	case EToyMenuAction::SpawnPlank:   SpawnObject(EToySpawnItem::Plank); return;
+	case EToyMenuAction::SpawnBox:     SpawnObject(EToySpawnItem::Box); return;
+	case EToyMenuAction::SpawnCup:     SpawnObject(EToySpawnItem::Cup); return;
+	case EToyMenuAction::SpawnTile:    SpawnObject(EToySpawnItem::Tile); return;
+	case EToyMenuAction::SpawnCoaster: SpawnObject(EToySpawnItem::Coaster); return;
+	case EToyMenuAction::ClearObjects:
+		Hint->SetText(FText::FromString(FString::Printf(TEXT("REMOVED %d OBJECTS"), AToySpawnedProp::ClearAll(GetWorld()))));
+		return;
 	case EToyMenuAction::Back:         ShowPage(EToyMenuPage::Main); return;
 	case EToyMenuAction::ResetProps:
 	{
@@ -385,6 +426,24 @@ void AToyMenuPanel::RunAction(EToyMenuAction Action)
 	case EToyMenuAction::Haptics:    ToySettings::CycleHaptics(); break;
 	}
 	RefreshLabels();
+}
+
+void AToyMenuPanel::SpawnObject(EToySpawnItem Item)
+{
+	// 小身体时面前 30cm 在小人眼里是 3.6 米外、而且东西是按大人的尺寸摆的：只在大身体时摆
+	if (ToyLilliput::GetScale() < 1.f)
+	{
+		Hint->SetText(FText::FromString(TEXT("GROW BIG TO PLACE OBJECTS (LEFT Y)")));
+		return;
+	}
+	if (!AToySpawnedProp::SpawnInFrontOfPlayer(GetWorld(), Item))
+	{
+		return;
+	}
+	const int32 Count = AToySpawnedProp::CountAll(GetWorld());
+	Hint->SetText(FText::FromString(AToySpawnedProp::bLastSpawnRemovedOldest
+		? FString::Printf(TEXT("MAX %d OBJECTS - THE OLDEST ONE WAS REMOVED"), AToySpawnedProp::MaxSpawned)
+		: FString::Printf(TEXT("%s PLACED - GRAB IT (%d / %d)"), *AToySpawnedProp::ItemLabel(Item), Count, AToySpawnedProp::MaxSpawned)));
 }
 
 void AToyMenuPanel::Flash(int32 ButtonIndex)

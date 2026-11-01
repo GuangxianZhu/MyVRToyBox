@@ -9,6 +9,7 @@ class UBoxComponent;
 class UPrimitiveComponent;
 class UTextRenderComponent;
 class UToyShapeComponent;
+enum class EToySpawnItem : uint8;
 
 UENUM()
 enum class EToyMenuAction : uint8
@@ -26,6 +27,15 @@ enum class EToyMenuAction : uint8
 	Sound,
 	Haptics,
 	ResetProps,
+	OpenObjects,
+	SpawnBook,
+	SpawnBlock,
+	SpawnPlank,
+	SpawnBox,
+	SpawnCup,
+	SpawnTile,
+	SpawnCoaster,
+	ClearObjects,
 	Back
 };
 
@@ -33,7 +43,8 @@ UENUM()
 enum class EToyMenuPage : uint8
 {
 	Main,
-	Settings
+	Settings,
+	Objects
 };
 
 /** 菜单上的一个按钮，和触屏按钮一样：按钮面、两行字、按钮面前方看不见的触发盒。只在自己那一页显示。 */
@@ -61,7 +72,7 @@ struct FToyMenuButton
 };
 
 /**
- * 进游戏时飘在面前的主菜单面板：START / SETTINGS / QUIT 一页，设置一页（两列四排）。
+ * 进游戏时飘在面前的主菜单面板：START / SETTINGS / OBJECTS / RESET PROPS / QUIT 一页，设置一页（两列五排），摆东西一页（OBJECTS，两列五排）。
  *
  * 交互和桌上的触屏完全一样：食指指尖戳进按钮前面的触发盒算一次点击（AToyHand::TickPoke），桌面模式鼠标点。
  * 开局由工作室生成并打开，摆在头前方 45cm、低 35cm 的地方，往后仰正对着眼睛；START 收起，
@@ -124,6 +135,7 @@ private:
 	void PlaceInFrontOfPlayer();
 	void RefreshLabels();
 	void Flash(int32 ButtonIndex);
+	void SpawnObject(EToySpawnItem Item);
 
 	EToyMenuPage CurrentPage = EToyMenuPage::Main;
 	bool bOpen = false;

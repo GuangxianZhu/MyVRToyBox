@@ -85,6 +85,16 @@ namespace
 			Pawn->SetActorLocationAndRotation(Target, FRotator(0.f, StudioTransform.Rotator().Yaw, 0.f));
 		}));
 
+	FAutoConsoleCommandWithWorldAndArgs WalkCommand(TEXT("toy.Walk"),
+		TEXT("测试用：往镜头水平朝向一直走几秒（和摇杆推满一样，挡墙、跨台阶、贴地都照常），每半秒把脚的位置写进日志：toy.Walk <秒>"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+		{
+			if (AToyBoxPawn* Pawn = World ? Cast<AToyBoxPawn>(UGameplayStatics::GetPlayerPawn(World, 0)) : nullptr)
+			{
+				Pawn->StartTestWalk(Args.Num() > 0 ? FCString::Atof(*Args[0]) : 3.f);
+			}
+		}));
+
 	FAutoConsoleCommandWithWorldAndArgs FigurineCommand(TEXT("toy.Figurine"),
 		TEXT("小人国：把小人偶放到工作室坐标 (X, Y) 最高的台面上（茶几、餐桌、柜子顶），朝着 Yaw（度，默认面朝 -X）：toy.Figurine <X> <Y> [Yaw]。")
 		TEXT("截图测试用，比如 toy.Figurine -440 -40 再 toy.Shrink = 站在茶几上"),
@@ -491,6 +501,22 @@ void AToyBoxPawn::Tick(float DeltaSeconds)
 	{
 		TickDesktop();
 	}
+	if (TestWalkRemaining > 0.f)
+	{
+		TestWalkRemaining -= DeltaSeconds;
+		SmoothMove(FVector2D(0.f, 1.f), DeltaSeconds);
+		TestWalkLogTimer -= DeltaSeconds;
+		if (TestWalkLogTimer <= 0.f || TestWalkRemaining <= 0.f)
+		{
+			TestWalkLogTimer = 0.25f;
+			FHitResult Under;
+			FCollisionQueryParams UnderParams(SCENE_QUERY_STAT(ToyTestWalk), false, this);
+			const FVector Feet = GetFeetLocation();
+			const bool bUnder = GetWorld()->LineTraceSingleByChannel(Under, Feet + FVector(0.f, 0.f, 20.f), Feet - FVector(0.f, 0.f, 5.f), ECC_Pawn, UnderParams);
+			UE_LOG(LogTemp, Log, TEXT("ToyBox 测试走路：脚在 %s，正下方 %s %.2f"), *Feet.ToCompactString(),
+				bUnder ? *GetNameSafe(Under.GetActor()) : TEXT("-"), bUnder ? Under.ImpactPoint.Z : 0.f);
+		}
+	}
 	if (bTiny)
 	{
 		TickTinyGround(DeltaSeconds);
@@ -673,6 +699,18 @@ void AToyBoxPawn::SnapTurn(float Degrees)
 	const FRotator Delta(0.f, Degrees, 0.f);
 	const FVector NewLocation = Pivot + Delta.RotateVector(GetActorLocation() - Pivot);
 	SetActorLocationAndRotation(NewLocation, GetActorRotation() + Delta);
+}
+
+void AToyBoxPawn::StartTestWalk(float Seconds)
+{
+	TestWalkRemaining = Seconds;
+	TestWalkLogTimer = 0.f;
+}
+
+float AToyBoxPawn::GetStepHeight() const
+{
+	const float Scaled = CapsuleLift * ToyLilliput::GetScale();
+	return bTiny ? FMath::Max(Scaled, TinyStepHeight) : Scaled;
 }
 
 void AToyBoxPawn::AddIgnoredForMove(FCollisionQueryParams& Params) const
@@ -879,7 +917,7 @@ bool AToyBoxPawn::MoveWithCollision(FVector Move, FHitResult* OutHit)
 	AddIgnoredForMove(Params);
 	// 小身体：胶囊体、离地高度、贴墙距离都按比例缩
 	const float Scale = ToyLilliput::GetScale();
-	const float Lift = CapsuleLift * Scale;
+	const float Lift = GetStepHeight();
 	const float HalfHeight = CapsuleHalfHeight * Scale;
 	const FCollisionShape Capsule = FCollisionShape::MakeCapsule(CapsuleRadius * Scale, HalfHeight);
 	// 碰到东西时停在碰撞点前这么远，不贴着。贴着停的话下一帧扫掠一开始就"嵌在里面"，以前那种情况只许往外退、不许沿墙滑，
@@ -904,6 +942,10 @@ bool AToyBoxPawn::MoveWithCollision(FVector Move, FHitResult* OutHit)
 		}
 		bBlocked = true;
 		const FVector Normal = FVector(Hit.Normal.X, Hit.Normal.Y, 0.f).GetSafeNormal();
+		if (Hit.bStartPenetrating && TestWalkRemaining > 0.f && TestWalkLogTimer <= 0.05f)
+		{
+			UE_LOG(LogTemp, Log, TEXT("ToyBox 测试走路：起点就嵌在 %s 里，法线 %s，深 %.2f"), *GetNameSafe(Hit.GetActor()), *Hit.Normal.ToCompactString(), Hit.PenetrationDepth);
+		}
 		if (Hit.bStartPenetrating)
 		{
 			// 一开始就嵌在东西里（真人走进了桌子、或者上一帧贴着停）：先水平推出来，再把往里的那部分去掉、沿表面滑
@@ -916,6 +958,18 @@ bool AToyBoxPawn::MoveWithCollision(FVector Move, FHitResult* OutHit)
 			{
 				break;
 			}
+			continue;
+		}
+		// 小身体碰到的是朝上的面（木板斜坡、台阶的边）而且不高于一步：抬上去再走，不当成墙。
+		// 胶囊体底部是圆的，斜坡陡一点（20° 以上）时还没走上去就先蹭到坡面了，只靠贴地会卡在坡脚
+		const float Rise = Hit.ImpactPoint.Z - GetFeetLocation().Z;
+		if (TestWalkRemaining > 0.f && TestWalkLogTimer <= 0.05f)
+		{
+			UE_LOG(LogTemp, Log, TEXT("ToyBox 测试走路：挡住 %s，法线 %s，接触点高出脚 %.2f，嵌入 %d"), *GetNameSafe(Hit.GetActor()), *Hit.ImpactNormal.ToCompactString(), Rise, Hit.bStartPenetrating ? 1 : 0);
+		}
+		if (bTiny && Hit.ImpactNormal.Z > 0.5f && Rise > 0.f && Rise <= Lift + CapsuleRadius * Scale)
+		{
+			AddActorWorldOffset(FVector(0.f, 0.f, Rise - Lift * 0.5f));
 			continue;
 		}
 		const float MoveSize = Move.Size();
@@ -1202,7 +1256,7 @@ bool AToyBoxPawn::IsTeleportTargetValid(const FHitResult& Hit) const
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyTeleport), false, this);
 	AddIgnoredForMove(Params);
 	const float Scale = ToyLilliput::GetScale();
-	const FVector Center = Hit.ImpactPoint + FVector(0.f, 0.f, (CapsuleLift + CapsuleHalfHeight) * Scale);
+	const FVector Center = Hit.ImpactPoint + FVector(0.f, 0.f, GetStepHeight() + CapsuleHalfHeight * Scale);
 	return !GetWorld()->OverlapAnyTestByChannel(Center, FQuat::Identity, ECC_Pawn,
 		FCollisionShape::MakeCapsule(CapsuleRadius * Scale, CapsuleHalfHeight * Scale), Params);
 }
@@ -1856,7 +1910,7 @@ void AToyBoxPawn::TickTinyGround(float DeltaSeconds)
 	const float Scale = ToyLilliput::GetScale();
 	const float Gravity = -GetWorld()->GetGravityZ() * Scale;
 	const float MaxFallSpeed = 1500.f * Scale;
-	const float StepUp = CapsuleLift * Scale;
+	const float StepUp = GetStepHeight();
 	const float Radius = CapsuleRadius * Scale * 0.5f;
 	const float NextVelocity = FMath::Max(FallVelocity - Gravity * DeltaSeconds, -MaxFallSpeed);
 	const float Drop = FMath::Max(2.f * Scale, -NextVelocity * DeltaSeconds);
@@ -1866,9 +1920,20 @@ void AToyBoxPawn::TickTinyGround(float DeltaSeconds)
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(ToyTinyGround), false, this);
 	AddIgnoredForMove(Params);
 	FHitResult Hit;
-	const FVector From = Feet + FVector(0.f, 0.f, StepUp + Radius);
 	const FVector To = Feet + FVector(0.f, 0.f, Radius - Drop);
-	if (GetWorld()->SweepSingleByChannel(Hit, From, To, FQuat::Identity, ECC_Pawn, FCollisionShape::MakeSphere(Radius), Params))
+	bool bHit = false;
+	// 从一个台阶高的地方往下找；起点就嵌在东西里（头顶上方压着下一级台阶：书、瓷砖错开叠成楼梯时，上一级伸到了脚上方）
+	// 就从低一点的地方再找，不然走到楼梯口就被下一级的边挡住、上不去这一级
+	for (const float Start : { StepUp, StepUp * 0.5f, 0.3f })
+	{
+		bHit = GetWorld()->SweepSingleByChannel(Hit, Feet + FVector(0.f, 0.f, Start + Radius), To, FQuat::Identity, ECC_Pawn,
+			FCollisionShape::MakeSphere(Radius), Params);
+		if (!bHit || !Hit.bStartPenetrating)
+		{
+			break;
+		}
+	}
+	if (bHit)
 	{
 		if (Hit.bStartPenetrating)
 		{
