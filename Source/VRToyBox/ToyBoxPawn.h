@@ -65,7 +65,9 @@ public:
 	void StopZipRide(bool bReachedEnd);
 	/** 正在滑这根（Line 为空 = 随便哪根）。 */
 	bool IsZipRiding(const AToyZipline* Line = nullptr) const;
-	/** 右手边的提示牌（线轴钉点、拉不成的原因用）。 */
+	/** 测试用（toy.Treasure goto）：小身体直接站到 Feet，身体朝 Yaw；桌面模式镜头往下看 Pitch。大身体时返回 false。 */
+	bool TeleportTinyTo(const FVector& Feet, float Yaw, float Pitch);
+	/** 右手边的提示牌（线轴钉点、拉不成的原因、寻宝用）。 */
 	void ShowPlayerToast(const FString& Title, const FString& Body) { ShowToast(Title, Body); }
 
 	/** 滑索：沿绳子方向的重力分量加速、和速度成正比的阻力、最高速度（小人眼里的厘米 / 秒，乘比例换成世界厘米）。 */

@@ -7,6 +7,7 @@
 #include "ToySettings.h"
 #include "ToyShapeComponent.h"
 #include "ToySpawnedProp.h"
+#include "ToyTreasure.h"
 #include "ToyZipline.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Components/BoxComponent.h"
@@ -53,7 +54,7 @@ namespace
 			{ TEXT("plank"), EToyMenuAction::SpawnPlank }, { TEXT("box"), EToyMenuAction::SpawnBox },
 			{ TEXT("cup"), EToyMenuAction::SpawnCup }, { TEXT("tile"), EToyMenuAction::SpawnTile },
 			{ TEXT("coaster"), EToyMenuAction::SpawnCoaster }, { TEXT("clear"), EToyMenuAction::ClearObjects },
-			{ TEXT("spool"), EToyMenuAction::SpawnSpool },
+			{ TEXT("spool"), EToyMenuAction::SpawnSpool }, { TEXT("hunt"), EToyMenuAction::NewHunt },
 		};
 		AToyMenuPanel* Menu = nullptr;
 		for (TActorIterator<AToyMenuPanel> It(World); It && !Menu; ++It)
@@ -118,16 +119,19 @@ AToyMenuPanel::AToyMenuPanel()
 	Title = MakeText(TEXT("Title"), FVector(1.5f, 0.f, 10.8f), TEXT("TOY BOX"), 2.6f, FColor::White);
 	Hint = MakeText(TEXT("Hint"), FVector(1.5f, 0.f, -12.3f), TEXT(""), 0.9f, FColor(150, 200, 255));
 
-	// 主页：大大的 START，下面并排 SETTINGS 和 OBJECTS（摆东西），最下面一排小一点的 RESET PROPS（摆件复位，原来在桌上的触屏上）和 QUIT
+	// 主页：大大的 START，下面并排 SETTINGS 和 OBJECTS（摆东西），最下面一排小一点的 RESET PROPS（摆件复位，原来在桌上的触屏上）、
+	// TREASURE（寻宝进度，按一下重新藏一轮）和 QUIT
 	MakeButton(TEXT("Start"), EToyMenuPage::Main, EToyMenuAction::Start, 0.f, 4.f, 24.f, 5.6f,
 		TEXT("START"), TEXT(""), FLinearColor(0.1f, 0.7f, 0.25f), 2.2f);
 	MakeButton(TEXT("Settings"), EToyMenuPage::Main, EToyMenuAction::OpenSettings, 7.6f, -2.8f, 14.4f, 4.4f,
 		TEXT("SETTINGS"), TEXT(""), FLinearColor(0.15f, 0.35f, 0.85f), 1.5f);
 	MakeButton(TEXT("Objects"), EToyMenuPage::Main, EToyMenuAction::OpenObjects, -7.6f, -2.8f, 14.4f, 4.4f,
 		TEXT("OBJECTS"), TEXT(""), FLinearColor(0.55f, 0.35f, 0.15f), 1.5f);
-	MakeButton(TEXT("ResetProps"), EToyMenuPage::Main, EToyMenuAction::ResetProps, 6.2f, -9.f, 11.6f, 3.4f,
+	MakeButton(TEXT("ResetProps"), EToyMenuPage::Main, EToyMenuAction::ResetProps, 12.6f, -9.f, 11.6f, 3.4f,
 		TEXT("RESET PROPS"), TEXT(""), FLinearColor(0.85f, 0.55f, 0.1f), 1.1f);
-	MakeButton(TEXT("Quit"), EToyMenuPage::Main, EToyMenuAction::Quit, -6.2f, -9.f, 11.6f, 3.4f,
+	MakeButton(TEXT("NewHunt"), EToyMenuPage::Main, EToyMenuAction::NewHunt, 0.f, -9.f, 11.6f, 3.4f,
+		TEXT("TREASURE 0/6"), TEXT("NEW HUNT"), FLinearColor(0.75f, 0.6f, 0.1f), 1.05f);
+	MakeButton(TEXT("Quit"), EToyMenuPage::Main, EToyMenuAction::Quit, -12.6f, -9.f, 11.6f, 3.4f,
 		TEXT("QUIT"), TEXT(""), FLinearColor(0.8f, 0.15f, 0.12f), 1.3f);
 
 	// 设置页：第一行字是设置名，第二行是现在的档位（RefreshLabels 填）
@@ -325,6 +329,13 @@ void AToyMenuPanel::RefreshLabels()
 		switch (Button.Action)
 		{
 		case EToyMenuAction::Start:      Button.Line1->SetText(FText::FromString(bStarted ? TEXT("RESUME") : TEXT("START"))); continue;
+		case EToyMenuAction::NewHunt:
+		{
+			int32 Found = 0, Total = 0;
+			AToyTreasure::GetProgress(GetWorld(), Found, Total);
+			Button.Line1->SetText(FText::FromString(FString::Printf(TEXT("TREASURE %d/%d"), Found, Total)));
+			continue;
+		}
 		case EToyMenuAction::Turn:       Value = ToySettings::TurnLabel(); break;
 		case EToyMenuAction::MoveSpeed:  Value = ToySettings::MoveSpeedLabel(); break;
 		case EToyMenuAction::Teleport:   Value = ToySettings::TeleportLabel(); break;
@@ -401,6 +412,14 @@ void AToyMenuPanel::RunAction(EToyMenuAction Action)
 		const int32 Objects = AToySpawnedProp::ClearAll(GetWorld());
 		const int32 Lines = AToyZipline::ClearAll(GetWorld());
 		Hint->SetText(FText::FromString(FString::Printf(TEXT("REMOVED %d OBJECTS AND %d ZIPLINES"), Objects, Lines)));
+		return;
+	}
+	case EToyMenuAction::NewHunt:
+	{
+		// 寻宝重新藏一轮（工作台上的小机器人也收掉）；RESET PROPS 不管宝物
+		const int32 Hidden = AToyTreasure::StartHunt(GetWorld());
+		Hint->SetText(FText::FromString(FString::Printf(TEXT("NEW HUNT - %d TREASURES HIDDEN - SHRINK AND LOOK FOR SPARKLES"), Hidden)));
+		RefreshLabels();
 		return;
 	}
 	case EToyMenuAction::Back:         ShowPage(EToyMenuPage::Main); return;

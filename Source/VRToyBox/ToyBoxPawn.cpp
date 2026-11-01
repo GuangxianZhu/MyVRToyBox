@@ -7,6 +7,7 @@
 #include "ToySettings.h"
 #include "ToyTouchScreen.h"
 #include "ToyStudio.h"
+#include "ToyTreasure.h"
 #include "ToyZipline.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/PlayerCameraManager.h"
@@ -1942,6 +1943,8 @@ void AToyBoxPawn::SpawnLilliput()
 	// 滑索：开局一根预设的（工作台面 → 地上，进去就能试），工作台上摆一个线轴（自己拉）
 	AToyZipline::CreatePreset(GetWorld());
 	AToyZipSpool::SpawnOnWorkbench(GetWorld());
+	// 寻宝：样板间里藏好一轮小零件
+	AToyTreasure::StartHunt(GetWorld());
 	UE_LOG(LogTemp, Log, TEXT("ToyBox 小人国：小人偶 %s 在 %s"), *GetNameSafe(Figurine),
 		Figurine ? *Figurine->GetActorLocation().ToCompactString() : TEXT("-"));
 }
@@ -2046,6 +2049,27 @@ void AToyBoxPawn::PlaceFeetAt(const FVector& Target, const FRotator& Rotation, f
 	FVector Head = bVR ? Camera->GetRelativeLocation() * HeadRatio : FVector::ZeroVector;
 	Head.Z = 0.f;
 	SetActorLocation(Target - GetActorRotation().RotateVector(Head));
+}
+
+bool AToyBoxPawn::TeleportTinyTo(const FVector& Feet, float Yaw, float Pitch)
+{
+	if (!bTiny || bSwitchingBody)
+	{
+		return false;
+	}
+	if (bZipRiding)
+	{
+		StopZipRide(false);
+	}
+	PlaceFeetAt(Feet, FRotator(0.f, Yaw, 0.f), 1.f);
+	LastGroundFeet = Feet;
+	FallVelocity = 0.f;
+	CarryVelocity = FVector::ZeroVector;
+	if (!bVR)
+	{
+		Camera->SetRelativeRotation(FRotator(Pitch, 0.f, 0.f));
+	}
+	return true;
 }
 
 void AToyBoxPawn::TickTinyGround(float DeltaSeconds)

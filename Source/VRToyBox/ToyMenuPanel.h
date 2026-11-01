@@ -37,6 +37,7 @@ enum class EToyMenuAction : uint8
 	SpawnCoaster,
 	SpawnSpool,
 	ClearObjects,
+	NewHunt,
 	Back
 };
 
@@ -73,7 +74,7 @@ struct FToyMenuButton
 };
 
 /**
- * 进游戏时飘在面前的主菜单面板：START / SETTINGS / OBJECTS / RESET PROPS / QUIT 一页，设置一页（两列五排），摆东西一页（OBJECTS，两列五排）。
+ * 进游戏时飘在面前的主菜单面板：START / SETTINGS / OBJECTS / RESET PROPS / TREASURE（寻宝进度，按 = 重新藏）/ QUIT 一页，设置一页（两列五排），摆东西一页（OBJECTS，两列五排）。
  *
  * 交互和桌上的触屏完全一样：食指指尖戳进按钮前面的触发盒算一次点击（AToyHand::TickPoke），桌面模式鼠标点。
  * 开局由工作室生成并打开，摆在头前方 45cm、低 35cm 的地方，往后仰正对着眼睛；START 收起，
